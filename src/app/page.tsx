@@ -68,7 +68,7 @@ export default async function HomePage() {
             <ShieldCheck />
             <span>
               <b>Verified payments</b>
-              <small>Admin-checked MoMo</small>
+              <small>Secure MoMo review</small>
             </span>
           </div>
           <div>
@@ -111,7 +111,7 @@ export default async function HomePage() {
             </p>
             <ul>
               <li><MapPin /> Choose pickup and delivery points</li>
-              <li><ShieldCheck /> Admin-reviewed and rider tracked</li>
+              <li><ShieldCheck /> Reviewed and delivery tracked</li>
               <li><Clock3 /> Live route distance and ETA</li>
             </ul>
           </div>

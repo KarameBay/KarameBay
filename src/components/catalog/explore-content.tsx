@@ -127,7 +127,7 @@ export function ExploreOverview({ stores }: { stores: StoreList }) {
           </p>
           <ul>
             <li>Live route distance and ETA</li>
-            <li>Admin-reviewed delivery</li>
+            <li>Reviewed delivery</li>
             <li>Tracked by a Karame rider</li>
           </ul>
         </div>
