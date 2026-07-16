@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
 import { ArrowRight, Eye, EyeOff, LoaderCircle } from "lucide-react";
-import { adminUrl, customerUrl } from "@/lib/portal-urls";
+import { customerUrl } from "@/lib/portal-urls";
 import { roleLandingPath, type Role } from "@/lib/auth/constants";
 
 type Audience = "customer" | "staff";
@@ -274,25 +274,6 @@ export function AuthForm({
               </>
             )}
           </div>
-          {mode === "login" && (
-            <div className="demo-note">
-              <b>{staff ? "Admin / rider test accounts" : "Customer test account"}</b>
-              <span>
-                {staff
-                  ? "admin@karamebay.rw · rider@karamebay.rw"
-                  : "customer@karamebay.rw"}
-              </span>
-              <span>Password: Karame@2026</span>
-            </div>
-          )}
-          <Link
-            className="portal-switch"
-            href={staff ? customerUrl("/customer/login") : adminUrl("/admin/login")}
-          >
-            {staff
-              ? "Go to Customer Portal"
-              : "Admin or rider? Open Staff Portal"}
-          </Link>
         </div>
       </main>
     </div>

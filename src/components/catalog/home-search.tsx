@@ -29,8 +29,6 @@ export function HomeSearch() {
   useEffect(() => {
     const term = query.trim();
     if (term.length < 2) {
-      setSuggestions([]);
-      setLoading(false);
       return;
     }
 
@@ -91,13 +89,19 @@ export function HomeSearch() {
         <input
           aria-autocomplete="list"
           aria-controls="home-search-suggestions"
-          aria-expanded={showPanel}
           autoComplete="off"
           maxLength={100}
           name="q"
           onChange={(event) => {
-            setQuery(event.target.value);
-            setOpen(true);
+            const value = event.target.value;
+            setQuery(value);
+            if (value.trim().length < 2) {
+              setSuggestions([]);
+              setLoading(false);
+              setOpen(false);
+            } else {
+              setOpen(true);
+            }
           }}
           onFocus={() => query.trim().length >= 2 && setOpen(true)}
           placeholder="Search stores, products or categories"
@@ -110,7 +114,7 @@ export function HomeSearch() {
         <div
           className="home-search-suggestions"
           id="home-search-suggestions"
-          role="listbox"
+          aria-label="Search suggestions"
         >
           {loading && <p className="home-search-message">Finding matches…</p>}
           {!loading && suggestions.length === 0 && (
@@ -123,7 +127,6 @@ export function HomeSearch() {
                 <button
                   key={`${suggestion.kind}-${suggestion.id}`}
                   onClick={() => chooseSuggestion(suggestion)}
-                  role="option"
                   type="button"
                 >
                   <span>

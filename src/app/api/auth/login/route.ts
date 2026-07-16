@@ -63,17 +63,15 @@ export async function POST(request: NextRequest) {
 
   const isCustomer = user.role === "CUSTOMER";
   if (user.role !== "CUSTOMER" && user.role !== "ADMIN" && user.role !== "RIDER")
-    return failure(
-      "This account type is no longer supported. Please use an admin account.",
-      403,
-    );
+    return failure("This account type is no longer supported.", 403);
   if (parsed.data.audience === "customer" && !isCustomer)
-    return failure(
-      "This is an admin or rider account. Please use the Staff Portal.",
-      403,
-    );
+    return failure("This account cannot sign in here.", 403);
   if (parsed.data.audience === "staff" && isCustomer)
-    return failure("Customer accounts sign in from the Customer Portal.", 403);
+    return failure("This account cannot sign in here.", 403);
+  if (portal === "admin" && user.role !== "ADMIN")
+    return failure("This account cannot sign in here.", 403);
+  if (portal === "rider" && user.role !== "RIDER")
+    return failure("This account cannot sign in here.", 403);
 
   await createSession(user);
   const landingPath =

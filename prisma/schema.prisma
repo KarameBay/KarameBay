@@ -17,7 +17,7 @@ model User {
   firstName    String
   lastName     String
   role         String    @default("CUSTOMER") // CUSTOMER | ADMIN | RIDER
-  status       String    @default("ACTIVE")   // ACTIVE | PENDING | SUSPENDED
+  status       String    @default("ACTIVE")   // ACTIVE | PENDING | SUSPENDED | ARCHIVED
   stores       Store[]
   sessions     Session[]
   emailVerificationChallenge EmailVerificationChallenge?

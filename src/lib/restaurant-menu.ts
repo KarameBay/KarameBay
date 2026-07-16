@@ -218,11 +218,14 @@ export function validateRestaurantConfiguration(
       (item) => item.groupId === group.id,
     );
     const count = selected?.optionIds.length ?? 0;
-    if (group.required && count < group.minChoices) {
+    const minimumChoices = group.required
+      ? Math.max(1, group.minChoices)
+      : group.minChoices;
+    if (count < minimumChoices) {
       errors.push(
         group.maxChoices === 1
           ? `Please choose one ${group.name.toLowerCase()}.`
-          : `Please choose at least ${group.minChoices} options for ${group.name.toLowerCase()}.`,
+          : `Please choose at least ${minimumChoices} options for ${group.name.toLowerCase()}.`,
       );
       continue;
     }

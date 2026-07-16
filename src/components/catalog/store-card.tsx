@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock3, Package, Store as StoreIcon } from "lucide-react";
+import { ArrowUpRight, Bike, Clock3, Star, Store as StoreIcon } from "lucide-react";
 import { StoreArtwork } from "./store-artwork";
 
 type StoreCardData = {
@@ -10,6 +10,7 @@ type StoreCardData = {
   opensAt: string;
   closesAt: string;
   estimatedDeliveryMinutes: number;
+  rating: number;
   logoUrl: string | null;
   coverUrl: string | null;
   _count: { products: number };
@@ -43,8 +44,12 @@ export function StoreCard({ store }: { store: StoreCardData }) {
             {store.estimatedDeliveryMinutes + 5} min
           </span>
           <span>
-            <Package />
-            {store._count.products} products
+            <Bike />
+            From 500 RWF
+          </span>
+          <span>
+            <Star />
+            {store.rating.toFixed(1)}
           </span>
         </div>
       </div>

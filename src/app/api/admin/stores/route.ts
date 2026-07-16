@@ -55,7 +55,6 @@ function slugify(value: string) {
 async function uniqueSlug(base: string, excludeId?: string) {
   let slug = base;
   let counter = 2;
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const existing = await db.store.findFirst({
       where: {

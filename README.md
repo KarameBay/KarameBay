@@ -1,6 +1,6 @@
 # Karame Bay — Phase 1
 
-Karame Bay is a multi-vendor delivery marketplace for Kigali. Phase 1 contains the customer catalog, persistent single-store cart, OpenStreetMap/OSRM delivery routing, Mobile Money checkout, customer tracking, and separate Admin, Store Owner, and Rider workspaces.
+Karame Bay is a multi-vendor delivery marketplace for Kigali. Phase 1 contains the customer catalog, persistent single-store cart, OpenStreetMap/OSRM delivery routing, Mobile Money checkout, customer tracking, and isolated Customer, Admin, and Rider sessions.
 
 OCR and screenshot catalog import are intentionally not included yet.
 
@@ -11,36 +11,28 @@ Stores are classified with one of two independent normalized engines:
 - `RESTAURANT`: menu categories, subcategories, products, variants, choice groups, choices, add-ons, combo components, dietary metadata and special-instruction support.
 - `MARKETPLACE`: departments, categories, products, units, decimal-quantity rules, inventory, low-stock thresholds, discounts and stock history.
 
-Java House Kigali Heights uses the Restaurant Menu Engine. Kimironko Market and Zinia Kicukiro Market use separate Marketplace Catalog Engine records. The previous `Product`/`Category` models remain temporarily as an owner-dashboard compatibility bridge and are mirrored into the correct engine until the dedicated visual builders replace them.
+Java House Kigali Heights uses the Restaurant Menu Engine. Marketplace stores use the normalized Marketplace Catalog Engine. Store, menu, catalog, order, payment, and rider operations are managed by administrators.
 
 ## Local setup
 
 ```bash
 npm install
-npm run db:setup
+npm run db:generate
 npm run dev
 ```
 
 Open:
 
 - Customer portal: `http://127.0.0.1:3000/customer/login`
-- Staff portal: `http://localhost:3000/staff/login`
+- Admin portal: `http://localhost:3000/admin/login`
+- Rider portal: `http://localhost:3000/rider/login`
 - Marketplace: `http://127.0.0.1:3000/stores`
 
-The separate local hostnames intentionally keep Customer and Staff cookies isolated, allowing both portals to stay signed in simultaneously in the same browser.
+Role-specific HTTP-only cookies keep Customer, Admin, and Rider sessions isolated, allowing all three portals to remain signed in simultaneously.
 
-## Seed accounts
+## Development seed safety
 
-All seed accounts use the development password `Karame@2026`.
-
-| Role        | Email                          |
-| ----------- | ------------------------------ |
-| Customer    | `customer@karamebay.rw`        |
-| Rider       | `rider@karamebay.rw`           |
-| Admin       | `admin@karamebay.rw`           |
-| Store Owner | `java.owner@karamebay.rw`      |
-| Store Owner | `kimironko.owner@karamebay.rw` |
-| Store Owner | `zinia.owner@karamebay.rw`     |
+The development seed is destructive and is disabled by default. It will not run in production. To use it with a disposable local database, explicitly set `ALLOW_DEVELOPMENT_SEED=true` and provide a unique `SEED_ACCOUNT_PASSWORD` of at least 12 characters.
 
 ## Verification
 

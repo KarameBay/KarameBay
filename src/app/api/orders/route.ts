@@ -285,8 +285,8 @@ export async function POST(request: NextRequest) {
       { error: "This store is not currently accepting orders." },
       { status: 409 },
     );
-  const productById = new Map<string, any>(
-    products.map((product) => [product.id, product]),
+  const productById = new Map(
+    products.map((product) => [product.id, product] as const),
   );
   let itemsSubtotalRwf = 0;
   for (const inputItem of input.items) {
@@ -298,21 +298,19 @@ export async function POST(request: NextRequest) {
       groupSelectionMode: addOn.groupSelectionMode ?? undefined,
       selectionMode: addOn.selectionMode ?? "SINGLE",
     }));
+    const configuration = {
+      variant: inputItem.variant ?? null,
+      selections: inputItem.selections ?? [],
+      addOns: normalizedAddOns,
+      specialInstructions: inputItem.specialInstructions,
+    };
     const unitPrice =
-      catalogEngine === "RESTAURANT"
-        ? computeRestaurantUnitPrice(product, {
-            variant: inputItem.variant ?? null,
-            selections: inputItem.selections ?? [],
-            addOns: normalizedAddOns,
-            specialInstructions: inputItem.specialInstructions,
-          })
+      "basePriceRwf" in product
+        ? computeRestaurantUnitPrice(product, configuration)
         : product.priceRwf;
-    if (catalogEngine === "RESTAURANT") {
+    if ("basePriceRwf" in product) {
       const validationErrors = validateRestaurantConfiguration(product, {
-        variant: inputItem.variant ?? null,
-        selections: inputItem.selections ?? [],
-        addOns: normalizedAddOns,
-        specialInstructions: inputItem.specialInstructions,
+        ...configuration,
       });
       if (validationErrors.length) {
         return NextResponse.json(
@@ -391,7 +389,7 @@ export async function POST(request: NextRequest) {
               selectionMode: addOn.selectionMode ?? "SINGLE",
             }));
             const unitPrice =
-              catalogEngine === "RESTAURANT"
+              "basePriceRwf" in product
                 ? computeRestaurantUnitPrice(product, {
                     variant: inputItem.variant ?? null,
                     selections: inputItem.selections ?? [],

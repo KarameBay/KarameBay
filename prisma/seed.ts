@@ -3,7 +3,22 @@ import { hash } from "bcryptjs";
 import { PASSWORD_HASH_ROUNDS } from "../src/lib/auth/constants";
 
 const db = new PrismaClient();
-const password = "Karame@2026";
+if (process.env.NODE_ENV === "production") {
+  throw new Error("Database seeding is disabled in production.");
+}
+if (process.env.ALLOW_DEVELOPMENT_SEED !== "true") {
+  throw new Error(
+    "Development seeding is locked. Set ALLOW_DEVELOPMENT_SEED=true only for a disposable database.",
+  );
+}
+function requiredSeedPassword() {
+  const value = process.env.SEED_ACCOUNT_PASSWORD;
+  if (!value || value.length < 12) {
+    throw new Error("SEED_ACCOUNT_PASSWORD must contain at least 12 characters.");
+  }
+  return value;
+}
+const password = requiredSeedPassword();
 
 function normalizedProductName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();

@@ -37,7 +37,6 @@ async function uniqueStoreSlug(
 ) {
   let slug = base;
   let counter = 2;
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const existing = await findExisting(slug, excludeId);
     if (!existing) return slug;
@@ -401,7 +400,7 @@ export async function POST(request: Request) {
       productId: product.id,
       name: input.name,
       required: input.required,
-      minChoices: input.minChoices,
+      minChoices: input.required ? Math.max(1, input.minChoices) : input.minChoices,
       maxChoices: input.maxChoices,
       sortOrder: input.id
         ? undefined

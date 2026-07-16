@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Save } from "lucide-react";
@@ -24,7 +25,7 @@ export function CustomerProfileForm({ user }: { user: { firstName: string; lastN
       <label>Email address<input name="email" type="email" defaultValue={user.email} required /><small>Changing your email requires verification.</small></label>
       <label>Phone number<input name="phone" inputMode="tel" defaultValue={user.phone} required /><small>Stored securely as +2507XXXXXXXX. No SMS verification is required.</small></label>
       <label>Profile photo <small>(optional)</small><input name="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" /></label>
-      {user.profilePhotoUrl && <img className="customer-profile-photo" src={user.profilePhotoUrl} alt="Current profile" />}
+      {user.profilePhotoUrl && <Image className="customer-profile-photo" src={user.profilePhotoUrl} alt="Current profile" width={96} height={96} />}
       {error && <p className="form-error" role="alert">{error}</p>}{message && <p className="verification-success">{message}</p>}
       <button className="auth-submit" disabled={saving}>{saving ? <LoaderCircle className="spin" /> : <><Save /> Save profile</>}</button>
     </form>

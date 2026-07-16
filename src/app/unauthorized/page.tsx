@@ -10,8 +10,7 @@ export default function Page() {
         page.
       </p>
       <div className="role-actions">
-        <Link href="/customer/account">Customer account</Link>
-        <Link href="/admin">Staff portal</Link>
+        <Link href="/">Return to Karame Bay</Link>
       </div>
     </main>
   );

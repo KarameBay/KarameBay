@@ -1,4 +1,6 @@
 const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+const testPassword = process.env.TEST_ACCOUNT_PASSWORD;
+if (!testPassword) throw new Error("TEST_ACCOUNT_PASSWORD is required.");
 
 const accounts = [
   {
@@ -32,7 +34,7 @@ async function main() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         email: account.email,
-        password: "Karame@2026",
+        password: testPassword,
         audience: account.audience,
       }),
     });

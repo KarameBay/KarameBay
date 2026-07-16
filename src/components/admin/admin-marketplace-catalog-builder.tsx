@@ -1,5 +1,8 @@
 "use client";
 
+/* Changing the selected market intentionally resets its dependent editor state. */
+/* eslint-disable react-hooks/set-state-in-effect */
+import Image from "next/image";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, PackagePlus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -109,7 +112,7 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
     } finally {
       setLoading(false);
     }
-  }, [market?.id, page, search]);
+  }, [market, page, search]);
 
   useEffect(() => {
     const timer = window.setTimeout(loadProducts, search ? 250 : 0);
@@ -299,7 +302,7 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
             {!loading && products.map((item) => {
               const unit = item.units.find((value) => value.isDefault) ?? item.units[0];
               return <article key={item.id}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}<img src={productImage(item.imageUrl, { catalogEngine: "MARKETPLACE", productName: item.name })} alt="" />
+                <Image src={productImage(item.imageUrl, { catalogEngine: "MARKETPLACE", productName: item.name })} alt="" width={64} height={64} />
                 <div><b>{item.name}</b><small>{item.category.name} · {unit?.label ?? "Each"}</small><span>{formatRwf(unit?.priceRwf ?? 0)} · Stock {item.inventory?.stockQuantity ?? 0}</span></div>
                 <button type="button" className="secondary" onClick={() => chooseProduct(item)} aria-label={`Edit ${item.name}`}><Pencil /></button>
                 <button type="button" className="secondary danger" onClick={() => deleteProduct(item)} aria-label={`Delete ${item.name}`}><Trash2 /></button>

@@ -11,7 +11,7 @@ import {
 } from "./constants";
 import { signSession, verifySession } from "./token";
 
-function useSecureCookies() {
+function shouldUseSecureCookies() {
   return (
     process.env.NODE_ENV === "production" &&
     process.env.SESSION_COOKIE_SECURE !== "false"
@@ -47,7 +47,7 @@ export async function createSession(user: { id: string; role: string }) {
   const jar = await cookies();
   jar.set(SESSION_COOKIE_BY_ROLE[role], token, {
     httpOnly: true,
-    secure: useSecureCookies(),
+    secure: shouldUseSecureCookies(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
@@ -60,7 +60,7 @@ export async function createSession(user: { id: string; role: string }) {
 function cookieOptions(maxAge = SESSION_DURATION_SECONDS) {
   return {
     httpOnly: true,
-    secure: useSecureCookies(),
+    secure: shouldUseSecureCookies(),
     sameSite: "lax" as const,
     path: "/",
     maxAge,

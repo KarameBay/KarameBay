@@ -270,24 +270,6 @@ export async function notifyPaymentVerified(
     "Customer confirmed MoMo payment",
     "A customer payment has been verified by admin",
   );
-  const subject = "Your Karame Bay payment has been verified";
-  const body = [
-    `Hello ${input.customer.firstName},`,
-    "",
-    `Your payment for order ${input.order.orderNumber} from ${input.store.name} has been verified.`,
-    `Order total: RWF ${input.order.grandTotalRwf.toLocaleString("en-RW")}.`,
-    "",
-    "Your order is now moving to the next step.",
-    "",
-    "Thank you for choosing Karame Bay.",
-  ].join("\n");
-  void sendCustomerEmailNotification({
-    userId: input.order.customerId,
-    orderId: input.order.id,
-    recipientEmail: input.customer.email,
-    subject,
-    body,
-  });
 }
 
 export async function notifyOrderAccepted(

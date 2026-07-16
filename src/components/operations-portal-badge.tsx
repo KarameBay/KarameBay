@@ -11,7 +11,7 @@ export function OperationsPortalBadge({
   return (
     <aside
       className="operations-portal-badge"
-      aria-label="Staff portal controls"
+      aria-label="Portal account controls"
     >
       <span>
         <BriefcaseBusiness />

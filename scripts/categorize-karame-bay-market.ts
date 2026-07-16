@@ -1,12 +1,5 @@
 import { db } from "../src/lib/db";
 
-type TaxonomyItem = {
-  department: string;
-  departmentOrder: number;
-  category: string;
-  categoryOrder: number;
-};
-
 const TAXONOMY = {
   fruits: ["Fresh Produce", 10, "Fresh Fruits", 10],
   leafy: ["Fresh Produce", 10, "Leafy Greens", 20],

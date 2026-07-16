@@ -15,7 +15,6 @@ import { StoreCard } from "@/components/catalog/store-card";
 import { HomeSearch } from "@/components/catalog/home-search";
 import { PublicFooter } from "@/components/catalog/public-footer";
 import { getStores } from "@/lib/catalog";
-import { adminUrl } from "@/lib/portal-urls";
 
 export const dynamic = "force-dynamic";
 
@@ -159,7 +158,6 @@ export default async function HomePage() {
             <div>
               <a href="tel:+250789950707">078 995 0707</a>
               <a href="tel:+250791889095">079 188 9095</a>
-              <Link href={adminUrl("/admin/login")}>Staff portal</Link>
             </div>
           </div>
           <div className="home-campaigns">

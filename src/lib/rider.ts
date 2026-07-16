@@ -62,7 +62,7 @@ export function serializeRiderDelivery<
 }
 
 export async function getRiderDashboardData(riderId: string) {
-  const [profileRow, availableRows, assignedRows] = await Promise.all([
+  const [profileRow, availableRows, activeRows, completedRows, earningsRow] = await Promise.all([
     db.riderProfile.findUnique({
       where: { userId: riderId },
     }),
@@ -91,6 +91,7 @@ export async function getRiderDashboardData(riderId: string) {
         _count: { select: { items: true } },
       },
       orderBy: { createdAt: "asc" },
+      take: 20,
     }),
     db.order.findMany({
       where: {
@@ -104,7 +105,6 @@ export async function getRiderDashboardData(riderId: string) {
           },
           { status: "PICKED_UP" },
           { status: "ON_THE_WAY" },
-          { status: "DELIVERED" },
         ],
       },
       include: {
@@ -118,7 +118,26 @@ export async function getRiderDashboardData(riderId: string) {
       },
       orderBy: { updatedAt: "desc" },
     }),
+    db.order.findMany({
+      where: { riderId, status: "DELIVERED" },
+      include: {
+        ...deliveryInclude,
+        riderAssignments: {
+          where: { riderId },
+          orderBy: { assignedAt: "desc" as const },
+          take: 1,
+          select: { status: true },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 30,
+    }),
+    db.order.aggregate({
+      where: { riderId, status: "DELIVERED" },
+      _sum: { deliveryFeeRwf: true },
+    }),
   ]);
+  const assignedRows = [...activeRows, ...completedRows];
   return {
     profile: profileRow
       ? {
@@ -135,8 +154,6 @@ export async function getRiderDashboardData(riderId: string) {
       ...serializeRiderDelivery(order),
       assignmentStatus: riderAssignments[0]?.status ?? null,
     })),
-    earnings: assignedRows
-      .filter((order) => order.status === "DELIVERED")
-      .reduce((sum, order) => sum + order.deliveryFeeRwf, 0),
+    earnings: earningsRow._sum.deliveryFeeRwf ?? 0,
   };
 }

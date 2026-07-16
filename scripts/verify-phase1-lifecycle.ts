@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 const db = new PrismaClient();
 const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+const testPassword = process.env.TEST_ACCOUNT_PASSWORD;
+if (!testPassword) throw new Error("TEST_ACCOUNT_PASSWORD is required.");
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -23,7 +25,7 @@ async function request(path: string, options: RequestInit = {}, cookie = "") {
 async function login(email: string, audience: "customer" | "staff") {
   const { response, data } = await request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: "Karame@2026", audience }),
+    body: JSON.stringify({ email, password: testPassword, audience }),
   });
   check(response.ok, `Login failed for ${email}: ${data.error}`);
   const setCookie = response.headers.get("set-cookie") ?? "";

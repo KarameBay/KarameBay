@@ -2,6 +2,9 @@
   "name": "karame-bay",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0 <23"
+  },
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
@@ -17,7 +20,10 @@
     "test:customer-verification": "tsx scripts/verify-customer-verification.ts",
     "test:password-reset": "tsx scripts/verify-password-reset.ts",
     "test:role-logins": "tsx scripts/verify-role-logins.ts",
+    "test:role-isolation": "tsx scripts/verify-production-role-isolation.ts",
     "test:parcel-delivery": "tsx scripts/verify-parcel-lifecycle.ts",
+    "audit:production": "tsx scripts/audit-production-readiness.ts",
+    "fix:production-integrity": "tsx scripts/apply-production-integrity-fixes.ts --apply",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:setup": "prisma db push && npm run db:seed",

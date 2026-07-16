@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Camera, Mail, MapPin, Phone } from "lucide-react";
-import { adminUrl } from "@/lib/portal-urls";
 
 const INSTAGRAM_URL =
   "https://www.instagram.com/karame_transport_delivery?igsh=bHh4Mjdya2M2c2lp";
@@ -33,7 +32,6 @@ export function PublicFooter() {
         <b>Karame Bay</b>
         <Link href="/about">About us</Link>
         <Link href="/contact">Contact us</Link>
-        <Link href={adminUrl("/admin/login")}>Staff portal</Link>
       </nav>
 
       <address>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { OperationsPortalBadge } from "@/components/operations-portal-badge";
@@ -20,6 +21,7 @@ const trackedStatuses = [
 ] as const;
 
 const KIGALI_OFFSET_MS = 2 * 60 * 60 * 1_000;
+const ORDER_PAGE_SIZE = 30;
 
 function kigaliBoundary(kind: "day" | "week" | "month") {
   const shifted = new Date(Date.now() + KIGALI_OFFSET_MS);
@@ -32,8 +34,14 @@ function kigaliBoundary(kind: "day" | "week" | "month") {
   return new Date(shifted.getTime() - KIGALI_OFFSET_MS);
 }
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await requireRole("ADMIN");
+  const requestedPage = Number((await searchParams).page ?? "1");
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const today = kigaliBoundary("day");
   const week = kigaliBoundary("week");
   const month = kigaliBoundary("month");
@@ -85,7 +93,8 @@ export default async function Page() {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 60,
+      skip: (page - 1) * ORDER_PAGE_SIZE,
+      take: ORDER_PAGE_SIZE,
     }),
     db.order.groupBy({
       by: ["status"],
@@ -349,7 +358,7 @@ export default async function Page() {
                 <article className="admin-rider-card" key={rider.id}>
                   <div className="admin-rider-avatar">
                     {profile?.photoUrl ? (
-                      <img src={profile.photoUrl} alt="" />
+                      <Image src={profile.photoUrl} alt="" width={56} height={56} />
                     ) : (
                       <span>
                         {rider.firstName[0]}
@@ -381,6 +390,23 @@ export default async function Page() {
         </section>
 
         <AdminOrdersClient orders={ordersView} riders={riders} />
+        <nav className="catalog-pages" aria-label="Order pages">
+          <Link
+            href={`/admin/orders?page=${Math.max(1, page - 1)}`}
+            aria-disabled={page <= 1}
+          >
+            Previous
+          </Link>
+          <span>
+            Page {page} of {Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE))}
+          </span>
+          <Link
+            href={`/admin/orders?page=${Math.min(Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE)), page + 1)}`}
+            aria-disabled={page >= Math.ceil(totalOrders / ORDER_PAGE_SIZE)}
+          >
+            Next
+          </Link>
+        </nav>
       </main>
       <OperationsPortalBadge role="Admin" destination="/admin/login" />
     </>

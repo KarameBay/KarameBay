@@ -3,6 +3,12 @@ import { PrismaClient } from "@prisma/client";
 
 const db = new PrismaClient();
 const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+function requiredTestPassword() {
+  const value = process.env.TEST_ACCOUNT_PASSWORD;
+  if (!value) throw new Error("TEST_ACCOUNT_PASSWORD is required.");
+  return value;
+}
+const testPassword = requiredTestPassword();
 const createdParcelIds: string[] = [];
 let temporaryRiderId = "";
 
@@ -26,7 +32,7 @@ async function request(path: string, options: RequestInit = {}, cookie = "") {
 async function login(email: string, audience: "customer" | "staff") {
   const { response, data } = await request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: "Karame@2026", audience }),
+    body: JSON.stringify({ email, password: testPassword, audience }),
   });
   check(response.ok, `Login failed for ${email}: ${data.error ?? response.status}`);
   const role = data.user?.role as "CUSTOMER" | "ADMIN" | "RIDER";
@@ -195,7 +201,7 @@ async function main() {
       lastName: "Relief Rider",
       role: "RIDER",
       status: "ACTIVE",
-      passwordHash: await hash("Karame@2026", 10),
+      passwordHash: await hash(testPassword, 10),
       riderProfile: { create: { riderStatus: "AVAILABLE", vehicleType: "MOTORCYCLE" } },
     },
     select: { id: true },
