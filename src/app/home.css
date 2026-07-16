@@ -1,0 +1,467 @@
+.home-hero {
+  min-height: 610px;
+  position: relative;
+  overflow: hidden;
+  background: #f5efe1;
+}
+.home-hero-image {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(247, 242, 228, 0.98) 4%,
+      rgba(247, 242, 228, 0.84) 38%,
+      rgba(247, 242, 228, 0.06) 70%
+    ),
+    url("/images/karame-rider-hero.png");
+  background-size: auto 100%;
+  background-position: right center;
+  background-repeat: no-repeat;
+}
+.home-hero-content {
+  position: relative;
+  max-width: 1280px;
+  margin: auto;
+  padding: 100px 24px;
+}
+.home-hero h1 {
+  font: 800 58px/1.04 var(--font-display);
+  letter-spacing: -3.4px;
+  margin: 20px 0;
+  max-width: 680px;
+}
+.home-hero h1 i {
+  color: var(--green);
+  font-style: normal;
+}
+.home-hero-content > p {
+  max-width: 520px;
+  color: #59665e;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.home-search-shell {
+  position: relative;
+  width: min(590px, 100%);
+  margin-top: 28px;
+  z-index: 5;
+}
+.home-search {
+  width: min(590px, 100%);
+  height: 62px;
+  background: #fff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 6px 6px 18px;
+  box-shadow: 0 12px 35px #24342b1f;
+  margin: 0;
+}
+.home-search svg {
+  width: 19px;
+  color: #819088;
+}
+.home-search input {
+  border: 0;
+  outline: 0;
+  min-width: 0;
+  flex: 1;
+}
+.home-search button {
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 22px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 800;
+}
+.home-search-suggestions {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border: 1px solid #eadfce;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 22px 50px #38250f26;
+}
+.home-search-suggestions > button {
+  width: 100%;
+  min-height: 61px;
+  padding: 9px 13px;
+  border: 0;
+  border-bottom: 1px solid #f0e9de;
+  background: #fff;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+}
+.home-search-suggestions > button:last-child {
+  border-bottom: 0;
+}
+.home-search-suggestions > button:hover,
+.home-search-suggestions > button:focus-visible {
+  background: #fff8e9;
+  outline: 0;
+}
+.home-search-suggestions > button > span:first-child {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f8edd8;
+  color: var(--green);
+  display: grid;
+  place-items: center;
+}
+.home-search-suggestions > button svg {
+  width: 18px;
+}
+.home-search-suggestions > button > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.home-search-suggestions b {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-search-suggestions small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-search-suggestions em {
+  padding: 5px 8px;
+  border-radius: 20px;
+  background: #f7f1e6;
+  color: #8f651e;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.home-search-message {
+  margin: 0;
+  padding: 17px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+.home-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 16px;
+}
+.home-actions a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.home-actions svg {
+  width: 15px;
+}
+.home-trust {
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
+  min-height: 96px;
+  margin: -38px auto 0;
+  padding: 24px 30px;
+  border-radius: 15px;
+  background: var(--ink);
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  box-shadow: var(--shadow);
+}
+.home-trust > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 25px;
+  border-right: 1px solid #365046;
+}
+.home-trust > div:last-child {
+  border: 0;
+}
+.home-trust svg {
+  width: 23px;
+  color: var(--lime);
+}
+.home-trust span {
+  display: flex;
+  flex-direction: column;
+}
+.home-trust b {
+  font-size: 12px;
+}
+.home-trust small {
+  margin-top: 3px;
+  color: #aebdb5;
+  font-size: 9px;
+}
+.home-stores,
+.home-delivery-brand {
+  max-width: 1440px;
+  margin: auto;
+  padding-inline: clamp(16px, 2.2vw, 28px);
+}
+.home-stores { padding-block: 56px 30px; }
+.home-delivery-brand { padding-block: 72px; }
+.home-parcel-service {
+  max-width: 1232px;
+  margin: 0 auto 58px;
+  padding: 24px 28px;
+  border: 1px solid #eadcc4;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(226, 163, 39, 0.18), transparent 34%),
+    linear-gradient(135deg, #fffaf0, #fff 70%);
+  box-shadow: 0 18px 50px rgba(67, 44, 16, 0.08);
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+.home-parcel-icon {
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+.home-parcel-icon svg { width: 29px; height: 29px; color: var(--lime); }
+.home-parcel-service h2 {
+  margin: 5px 0 6px;
+  font: 800 27px var(--font-display);
+  letter-spacing: -1px;
+}
+.home-parcel-service p { margin: 0; max-width: 680px; color: var(--muted); line-height: 1.55; }
+.home-parcel-service ul { list-style: none; display: flex; flex-wrap: wrap; gap: 12px; padding: 0; margin: 11px 0 0; }
+.home-parcel-service li { display: flex; align-items: center; gap: 5px; color: #675c4e; font-size: 10px; font-weight: 700; }
+.home-parcel-service li svg { width: 14px; color: var(--green); }
+.home-parcel-service > a {
+  min-height: 52px;
+  padding: 0 20px;
+  border-radius: 13px;
+  background: var(--green);
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.home-parcel-service > a svg { width: 16px; }
+.home-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 22px;
+}
+.home-section-title h2,
+.home-how h2,
+.home-delivery-brand h2 {
+  font: 800 34px var(--font-display);
+  letter-spacing: -1.5px;
+  margin: 7px 0;
+}
+.home-section-title p,
+.home-delivery-brand p {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.7;
+}
+.home-section-title > a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.home-section-title svg {
+  width: 15px;
+}
+.home-how {
+  padding: 85px max(24px, calc((100% - 1232px) / 2));
+  background: #f6f4ed;
+}
+.home-how > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 27px;
+}
+.home-how article {
+  position: relative;
+  padding: 27px;
+  border-radius: 15px;
+  background: #fff;
+}
+.home-how article > svg {
+  width: 31px;
+  color: var(--green);
+}
+.home-how article > span {
+  position: absolute;
+  right: 23px;
+  top: 18px;
+  color: #dce3dd;
+  font: 800 27px var(--font-display);
+}
+.home-how h3 {
+  font: 800 16px var(--font-display);
+  margin: 20px 0 7px;
+}
+.home-how p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+.home-delivery-brand {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 65px;
+  align-items: center;
+}
+.home-delivery-brand > div:first-child > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 23px;
+}
+.home-delivery-brand a {
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.home-delivery-brand a:last-child {
+  background: var(--orange);
+  color: #17120b;
+}
+.home-campaigns {
+  height: 430px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  overflow: hidden;
+}
+.home-campaigns img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 15px;
+}
+@media (max-width: 850px) {
+  .home-trust {
+    margin: 0;
+    border-radius: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .home-trust > div {
+    border: 0;
+    padding: 0;
+  }
+  .home-delivery-brand {
+    grid-template-columns: 1fr;
+  }
+  .home-campaigns {
+    height: 370px;
+  }
+  .home-stores { padding-block: 52px 28px; }
+  .home-parcel-service { margin: 0 24px 48px; grid-template-columns: 58px 1fr; padding: 22px; }
+  .home-parcel-icon { width: 58px; height: 58px; }
+  .home-parcel-service > a { grid-column: 1 / -1; }
+}
+@media (max-width: 680px) {
+  .home-hero {
+    min-height: 580px;
+  }
+  .home-hero-image {
+    background-image:
+      linear-gradient(
+        0deg,
+        rgba(247, 242, 228, 0.99) 6%,
+        rgba(247, 242, 228, 0.84) 58%,
+        rgba(247, 242, 228, 0.08) 86%
+      ),
+      url("/images/karame-rider-hero.png");
+    background-size: auto 100%;
+    background-position: right center;
+  }
+  .home-hero-content {
+    padding: 220px 17px 45px;
+  }
+  .home-hero h1 {
+    font-size: 38px;
+    letter-spacing: -2px;
+  }
+  .home-hero-content > p {
+    font-size: 13px;
+  }
+  .home-search {
+    height: 57px;
+  }
+  .home-search button {
+    height: 45px;
+    padding: 0 13px;
+  }
+  .home-trust {
+    padding: 21px 16px;
+  }
+  .home-trust > div:nth-child(n + 3) {
+    display: none;
+  }
+  .home-stores,
+  .home-delivery-brand,
+  .home-how {
+    padding: 52px 15px;
+  }
+  .home-stores { padding-top: 42px; padding-bottom: 24px; }
+  .home-parcel-service { margin: 0 15px 40px; padding: 18px; grid-template-columns: 1fr; gap: 13px; }
+  .home-parcel-icon { width: 54px; height: 54px; border-radius: 16px; }
+  .home-parcel-service h2 { font-size: 25px; }
+  .home-parcel-service ul { display: grid; gap: 8px; }
+  .home-parcel-service > a { grid-column: auto; width: 100%; }
+  .home-section-title > a {
+    display: none;
+  }
+  .home-how > div {
+    grid-template-columns: 1fr;
+  }
+  .home-campaigns {
+    height: 360px;
+    grid-template-columns: 78% 78%;
+    overflow: auto;
+  }
+}

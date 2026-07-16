@@ -1,0 +1,58 @@
+{
+  "name": "karame-bay",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test:phase1": "tsx scripts/verify-phase1-lifecycle.ts",
+    "test:catalog-engines": "tsx scripts/verify-catalog-engines.ts",
+    "test:esoko-importer": "tsx scripts/verify-esoko-importer.ts",
+    "test:tuma250-importer": "tsx scripts/verify-tuma250-importer.ts",
+    "images:market:audit": "tsx scripts/audit-market-product-images.ts",
+    "images:market:enrich": "tsx scripts/enrich-market-product-images.ts --apply",
+    "test:customer-verification": "tsx scripts/verify-customer-verification.ts",
+    "test:password-reset": "tsx scripts/verify-password-reset.ts",
+    "test:role-logins": "tsx scripts/verify-role-logins.ts",
+    "test:parcel-delivery": "tsx scripts/verify-parcel-lifecycle.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:setup": "prisma db push && npm run db:seed",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.6.1",
+    "jose": "^6.2.3",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.22.0",
+    "next": "16.2.9",
+    "prisma": "^6.19.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-leaflet": "^5.0.0",
+    "read-excel-file": "^6.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "es-abstract": "^1.24.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "tsx": "^4.22.4",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "8.5.15"
+  }
+}

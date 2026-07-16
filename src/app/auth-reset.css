@@ -1,0 +1,245 @@
+.auth-forgot-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+
+.auth-forgot-link a {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-forgot-link a:hover {
+  text-decoration: underline;
+}
+
+.password-reset-card {
+  position: relative;
+}
+
+.reset-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.reset-progress li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.reset-progress li::before {
+  content: "";
+  height: 3px;
+  border-radius: 999px;
+  background: #e7e9e3;
+}
+
+.reset-progress li > span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f1f2ee;
+  color: #788079;
+  font-size: 9px;
+}
+
+.reset-progress li > span svg {
+  width: 13px;
+  height: 13px;
+}
+
+.reset-progress .is-current,
+.reset-progress .is-complete {
+  color: var(--ink);
+}
+
+.reset-progress .is-current::before,
+.reset-progress .is-complete::before {
+  background: var(--orange);
+}
+
+.reset-progress .is-current > span,
+.reset-progress .is-complete > span {
+  color: white;
+  background: var(--orange);
+}
+
+.reset-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  margin-bottom: 24px;
+}
+
+.reset-back-link:hover {
+  color: var(--green);
+}
+
+.reset-back-link svg {
+  width: 15px;
+}
+
+.reset-form-icon,
+.reset-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #f4ead8;
+  color: var(--green);
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+}
+
+.reset-form-icon svg,
+.reset-success-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.password-reset-card .kicker,
+.reset-success-card .kicker {
+  display: flex;
+}
+
+.password-reset-card > p {
+  line-height: 1.65;
+}
+
+.reset-code-input {
+  font-size: 20px !important;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.password-guidance {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.reset-account-note {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.reset-verified-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #cfe1c8;
+  border-radius: 10px;
+  background: #f1f7ee;
+  color: #3f6530;
+}
+
+.reset-verified-notice > svg {
+  width: 20px;
+  flex: 0 0 auto;
+}
+
+.reset-verified-notice > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.form-success {
+  padding: 11px;
+  border-radius: 8px;
+  background: #f1f7ee;
+  color: #3f6530;
+  font-size: 11px;
+}
+
+.reset-code-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.reset-code-actions button,
+.reset-code-actions a {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--orange);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.reset-code-actions button:disabled {
+  color: #9a9f99;
+  cursor: not-allowed;
+}
+
+.auth-submit-link {
+  text-decoration: none;
+  margin-top: 24px;
+}
+
+.reset-success-card {
+  text-align: center;
+}
+
+.reset-success-card .reset-success-icon {
+  margin: 0 auto 20px;
+  background: #eaf3e5;
+  color: #4e7d37;
+}
+
+.reset-success-card .kicker {
+  justify-content: center;
+}
+
+.reset-success-card > p {
+  line-height: 1.65;
+}
+
+.password-reset-screen .auth-brand {
+  background:
+    linear-gradient(145deg, rgba(40, 31, 20, 0.9), rgba(52, 36, 16, 0.82)),
+    url("/images/karame-rider-hero.png") 68% center / cover;
+}
+
+@media (max-width: 800px) {
+  .password-reset-screen .auth-brand {
+    min-height: 220px;
+  }
+
+  .reset-back-link {
+    margin-bottom: 18px;
+  }
+}

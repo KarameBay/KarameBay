@@ -1,0 +1,1 @@
+.order-success-actions{display:flex;justify-content:center;gap:8px}.order-success-actions a{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-size:9px;font-weight:800}.order-success-actions a:last-child{background:#eef2ec;color:var(--ink)}

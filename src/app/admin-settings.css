@@ -1,0 +1,357 @@
+.admin-settings-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 4% 110px;
+}
+
+.admin-settings-page > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-settings-page h1 {
+  font: 800 30px var(--font-display);
+  letter-spacing: -1.4px;
+  margin: 6px 0;
+}
+
+.admin-settings-page p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.admin-settings-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.admin-settings-card + .admin-settings-card {
+  margin-top: 18px;
+}
+
+.admin-settings-alert {
+  border-radius: 14px;
+  padding: 16px 18px;
+  border: 1px solid transparent;
+}
+
+.admin-settings-alert b {
+  display: block;
+  font: 800 18px var(--font-display);
+  margin: 5px 0 6px;
+}
+
+.admin-settings-alert p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 12px;
+}
+
+.admin-settings-alert.ready {
+  background: #eef7ec;
+  border-color: #cfe4d0;
+}
+
+.admin-settings-alert.warning {
+  background: #fff6e7;
+  border-color: #f0d8a1;
+}
+
+.admin-test-email {
+  display: grid;
+  gap: 12px;
+  max-width: 440px;
+}
+
+.admin-test-email label {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-test-email input {
+  height: 46px;
+  border: 1px solid #dbe1dc;
+  border-radius: 10px;
+  padding: 0 12px;
+}
+
+.admin-test-email button {
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.admin-test-email-success {
+  color: #176b45;
+  font-size: 12px;
+  margin: 0;
+}
+
+.admin-test-email-error {
+  color: #9e332b;
+  font-size: 12px;
+  margin: 0;
+}
+
+.parcel-settings {
+  display: grid;
+  gap: 18px;
+}
+
+.parcel-settings-heading,
+.parcel-settings-section-head,
+.parcel-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.parcel-settings-heading {
+  justify-content: flex-start;
+}
+
+.parcel-settings-heading h2,
+.parcel-settings-section-head h3 {
+  margin: 3px 0;
+  font: 800 20px var(--font-display);
+}
+
+.parcel-settings-heading p,
+.parcel-settings-section-head small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.parcel-settings-icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: #c58018;
+}
+
+.parcel-settings-icon svg,
+.parcel-settings-save svg,
+.parcel-editor-footer button svg {
+  width: 17px;
+}
+
+.parcel-pricing-form {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fbfaf7;
+}
+
+.parcel-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.parcel-settings-fields.pricing-core {
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+}
+
+.parcel-field {
+  display: grid;
+  gap: 6px;
+  color: #312b23;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.parcel-field input,
+.parcel-field select,
+.parcel-field textarea {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 11px;
+  border: 1px solid #ddd7cc;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 12px var(--font-body);
+}
+
+.parcel-field textarea {
+  min-height: 72px;
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+.parcel-wide {
+  grid-column: 1 / -1;
+}
+
+.parcel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #373127;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.parcel-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c58018;
+}
+
+.parcel-surcharge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.parcel-surcharge-grid fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 13px;
+  border: 1px solid #e1ddd5;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.parcel-surcharge-grid fieldset.enabled {
+  border-color: #d8b26f;
+  box-shadow: inset 3px 0 #c58018;
+}
+
+.parcel-surcharge-fields {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.parcel-surcharge-fields > small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.parcel-settings-save,
+.parcel-editor-footer button {
+  width: fit-content;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #241d14;
+  color: #fff;
+  font-weight: 800;
+}
+
+.parcel-settings-save:disabled,
+.parcel-editor-footer button:disabled {
+  opacity: .55;
+}
+
+.parcel-config-panels {
+  display: grid;
+  gap: 9px;
+}
+
+.parcel-config-panels details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  overflow: clip;
+}
+
+.parcel-config-panels summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  list-style: none;
+}
+
+.parcel-config-panels summary::-webkit-details-marker {
+  display: none;
+}
+
+.parcel-config-panels summary span {
+  min-width: 28px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #7a4b09;
+  background: #f5e5c8;
+  text-align: center;
+  font-size: 10px;
+}
+
+.parcel-compact-editor {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  background: #fbfaf7;
+}
+
+.parcel-compact-editor > .parcel-field:first-child,
+.parcel-compact-editor > .parcel-settings-fields,
+.parcel-compact-editor > .parcel-editor-footer {
+  grid-column: 1 / -1;
+}
+
+.parcel-editor-footer {
+  padding-top: 4px;
+}
+
+@media (max-width: 700px) {
+  .admin-settings-page {
+    padding: 26px 14px 95px;
+  }
+
+  .admin-settings-page > header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .parcel-settings-section-head,
+  .parcel-editor-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .parcel-settings-fields,
+  .parcel-settings-fields.pricing-core,
+  .parcel-surcharge-grid,
+  .parcel-compact-editor {
+    grid-template-columns: 1fr;
+  }
+}

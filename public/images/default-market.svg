@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" role="img" aria-labelledby="title">
+  <title id="title">Market product placeholder</title>
+  <rect width="768" height="768" fill="#fff"/>
+  <g fill="none" stroke="#000" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M124 234h454l-49 272H171z"/>
+    <path d="M578 234l39-101h58"/>
+    <path d="M176 506h348l67 65H174"/>
+    <circle cx="205" cy="622" r="30"/>
+    <circle cx="545" cy="622" r="30"/>
+    <path d="M218 244v245M292 244v251M366 244v258M440 244v265M514 244v251M145 332h414M158 419h384" stroke-width="18"/>
+  </g>
+</svg>
