@@ -8,10 +8,16 @@ import {
   MapPin,
   PackageSearch,
   Phone,
+  MessageCircle,
   ShoppingBag,
 } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { PublicFooter } from "@/components/catalog/public-footer";
+import {
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_E164,
+  SUPPORT_WHATSAPP_URL,
+} from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Contact Us | Karame Bay",
@@ -37,11 +43,17 @@ export default function ContactPage() {
         </section>
 
         <section className="public-info-section public-contact-grid" aria-label="Karame Bay contact options">
-          <a href="tel:+250789950707">
+          <a href={`tel:${SUPPORT_PHONE_E164}`}>
             <span><Phone /></span>
             <small>PRIMARY PHONE</small>
-            <strong>078 995 0707</strong>
+            <strong>{SUPPORT_PHONE_DISPLAY}</strong>
             <em>Open phone</em>
+          </a>
+          <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">
+            <span><MessageCircle /></span>
+            <small>WHATSAPP SUPPORT</small>
+            <strong>{SUPPORT_PHONE_DISPLAY}</strong>
+            <em>Start WhatsApp chat</em>
           </a>
           <a href="tel:+250791889095">
             <span><Phone /></span>

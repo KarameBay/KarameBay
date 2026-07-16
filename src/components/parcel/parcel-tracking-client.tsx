@@ -11,10 +11,11 @@ import {
   RefreshCw,
   Route,
   ShieldCheck,
-  UserRound,
+  MessageCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatRwf } from "@/lib/catalog";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/contact";
 import { formatKigaliDateTime } from "@/lib/date-format";
 import { ParcelRouteMapLoader } from "./parcel-route-map-loader";
 import {
@@ -390,7 +391,14 @@ export function ParcelTrackingClient({ reference }: { reference: string }) {
               <div className="total"><dt>Total</dt><dd>{formatRwf(parcel.totalRwf)}</dd></div>
             </dl>
           </section>
-          <a className="parcel-support-link" href="tel:+250789950707"><UserRound /> Contact Karame Bay support</a>
+          <a
+            className="parcel-support-link"
+            href={SUPPORT_WHATSAPP_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle /> WhatsApp Karame Bay support
+          </a>
         </aside>
       </div>
     </main>

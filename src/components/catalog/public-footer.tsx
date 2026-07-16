@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { Camera, Mail, MapPin, Phone } from "lucide-react";
+import { Camera, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import {
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_E164,
+  SUPPORT_WHATSAPP_URL,
+} from "@/lib/contact";
 
 const INSTAGRAM_URL =
   "https://www.instagram.com/karame_transport_delivery?igsh=bHh4Mjdya2M2c2lp";
@@ -36,7 +41,10 @@ export function PublicFooter() {
 
       <address>
         <b>Contact</b>
-        <a href="tel:+250789950707"><Phone /> 078 995 0707</a>
+        <a href={`tel:${SUPPORT_PHONE_E164}`}><Phone /> {SUPPORT_PHONE_DISPLAY}</a>
+        <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">
+          <MessageCircle /> WhatsApp support
+        </a>
         <a href="tel:+250791889095"><Phone /> 079 188 9095</a>
         <a href="mailto:karamebay3@gmail.com"><Mail /> karamebay3@gmail.com</a>
         <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">

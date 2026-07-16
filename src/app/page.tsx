@@ -15,6 +15,11 @@ import { StoreCard } from "@/components/catalog/store-card";
 import { HomeSearch } from "@/components/catalog/home-search";
 import { PublicFooter } from "@/components/catalog/public-footer";
 import { getStores } from "@/lib/catalog";
+import {
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_E164,
+  SUPPORT_WHATSAPP_URL,
+} from "@/lib/contact";
 
 export const dynamic = "force-dynamic";
 
@@ -156,7 +161,8 @@ export default async function HomePage() {
               motorcycle and van, every day.
             </p>
             <div>
-              <a href="tel:+250789950707">078 995 0707</a>
+              <a href={`tel:${SUPPORT_PHONE_E164}`}>{SUPPORT_PHONE_DISPLAY}</a>
+              <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">WhatsApp support</a>
               <a href="tel:+250791889095">079 188 9095</a>
             </div>
           </div>
