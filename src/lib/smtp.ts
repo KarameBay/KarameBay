@@ -1,3 +1,4 @@
+import dns from "node:dns/promises";
 import net from "net";
 import tls from "tls";
 import { getBusinessProfile } from "@/lib/business-profile";
@@ -149,8 +150,9 @@ function describeError(error: unknown): SmtpFailure {
 }
 
 async function connectPlain(host: string, port: number): Promise<net.Socket> {
+  const [address] = await dns.resolve4(host);
   return new Promise((resolve, reject) => {
-    const socket = net.connect(port, host);
+    const socket = net.connect({ host: address ?? host, port });
     socket.setTimeout(15_000, () =>
       socket.destroy(new Error("SMTP connection timed out.")),
     );
@@ -160,8 +162,9 @@ async function connectPlain(host: string, port: number): Promise<net.Socket> {
 }
 
 async function connectSecure(host: string, port: number): Promise<tls.TLSSocket> {
+  const [address] = await dns.resolve4(host);
   return new Promise((resolve, reject) => {
-    const socket = tls.connect({ host, port, servername: host });
+    const socket = tls.connect({ host: address ?? host, port, servername: host });
     socket.setTimeout(15_000, () =>
       socket.destroy(new Error("SMTP TLS connection timed out.")),
     );
