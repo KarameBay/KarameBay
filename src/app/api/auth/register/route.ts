@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
     console.warn("Email verification delivery failed during registration", {
       userId: user.id,
       error: delivery.error,
+      details: "details" in delivery ? delivery.details : undefined,
     });
   }
   const landingPath = `/customer/verify-email?delivery=${delivery.ok ? "sent" : "failed"}`;

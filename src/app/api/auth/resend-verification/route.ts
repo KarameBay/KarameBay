@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     console.warn("Email verification resend failed", {
       userId: user.id,
       error: sent.error,
+      details: "details" in sent ? sent.details : undefined,
     });
     return NextResponse.json({ error: "The email could not be sent. Please try again shortly." }, { status: 503 });
   }

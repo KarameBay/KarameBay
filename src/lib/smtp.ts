@@ -20,6 +20,13 @@ type MailMessage = {
   fromAddress?: string;
 };
 
+type SmtpFailure = {
+  message: string;
+  name?: string;
+  code?: string;
+  cause?: string;
+};
+
 function cleanEnv(value: string | undefined) {
   const trimmed = value?.trim();
   if (!trimmed) return undefined;
@@ -119,6 +126,26 @@ function expectSmtp(response: string, expectedCodes: number[], action: string) {
   if (!expectedCodes.includes(code)) {
     throw new Error(`SMTP ${action} failed: ${lastLine || "No response"}`);
   }
+}
+
+function describeError(error: unknown): SmtpFailure {
+  if (!(error instanceof Error)) {
+    return { message: typeof error === "string" ? error : "SMTP delivery failed." };
+  }
+  const maybeCode =
+    "code" in error && typeof error.code === "string" ? error.code : undefined;
+  const cause =
+    error.cause instanceof Error
+      ? error.cause.message || error.cause.name
+      : typeof error.cause === "string"
+        ? error.cause
+        : undefined;
+  return {
+    message: error.message || maybeCode || error.name || "SMTP delivery failed.",
+    name: error.name,
+    code: maybeCode,
+    cause,
+  };
 }
 
 async function connectPlain(host: string, port: number): Promise<net.Socket> {
@@ -231,9 +258,11 @@ export async function sendSmtpMail(message: MailMessage) {
     socket.end();
     return { ok: true as const };
   } catch (error) {
+    const failure = describeError(error);
     return {
       ok: false as const,
-      error: error instanceof Error ? error.message : "SMTP delivery failed.",
+      error: failure.message,
+      details: failure,
     };
   } finally {
     socket?.destroy();
