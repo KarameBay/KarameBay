@@ -20,20 +20,31 @@ type MailMessage = {
   fromAddress?: string;
 };
 
+function cleanEnv(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 function getConfig(): MailConfig | null {
-  const {
-    GMAIL_SMTP_HOST,
-    GMAIL_SMTP_PORT,
-    GMAIL_SMTP_SECURE,
-    GMAIL_SMTP_USER,
-    GMAIL_SMTP_APP_PASSWORD,
-    EMAIL_FROM_NAME,
-    EMAIL_FROM_ADDRESS,
-  } = process.env;
+  const GMAIL_SMTP_HOST = cleanEnv(process.env.GMAIL_SMTP_HOST);
+  const GMAIL_SMTP_PORT = cleanEnv(process.env.GMAIL_SMTP_PORT);
+  const GMAIL_SMTP_SECURE = cleanEnv(process.env.GMAIL_SMTP_SECURE);
+  const GMAIL_SMTP_USER = cleanEnv(process.env.GMAIL_SMTP_USER);
+  const GMAIL_SMTP_APP_PASSWORD = cleanEnv(process.env.GMAIL_SMTP_APP_PASSWORD);
+  const EMAIL_FROM_NAME = cleanEnv(process.env.EMAIL_FROM_NAME);
+  const EMAIL_FROM_ADDRESS = cleanEnv(process.env.EMAIL_FROM_ADDRESS);
   if (!GMAIL_SMTP_USER || !GMAIL_SMTP_APP_PASSWORD)
     return null;
   const host = GMAIL_SMTP_HOST ?? "smtp.gmail.com";
-  const port = Number(GMAIL_SMTP_PORT ?? "587");
+  const port = Number(GMAIL_SMTP_PORT || "587");
+  if (!Number.isInteger(port) || port < 0 || port >= 65_536) return null;
   const fromAddress = EMAIL_FROM_ADDRESS ?? GMAIL_SMTP_USER;
   return {
     host,
