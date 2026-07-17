@@ -113,6 +113,36 @@ async function sendCommand(
   return readResponse(socket, buffer);
 }
 
+function expectSmtp(response: string, expectedCodes: number[], action: string) {
+  const lastLine = response.split(/\r?\n/).filter(Boolean).at(-1) ?? "";
+  const code = Number(lastLine.slice(0, 3));
+  if (!expectedCodes.includes(code)) {
+    throw new Error(`SMTP ${action} failed: ${lastLine || "No response"}`);
+  }
+}
+
+async function connectPlain(host: string, port: number): Promise<net.Socket> {
+  return new Promise((resolve, reject) => {
+    const socket = net.connect(port, host);
+    socket.setTimeout(15_000, () =>
+      socket.destroy(new Error("SMTP connection timed out.")),
+    );
+    socket.once("connect", () => resolve(socket));
+    socket.once("error", reject);
+  });
+}
+
+async function connectSecure(host: string, port: number): Promise<tls.TLSSocket> {
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect({ host, port, servername: host });
+    socket.setTimeout(15_000, () =>
+      socket.destroy(new Error("SMTP TLS connection timed out.")),
+    );
+    socket.once("secureConnect", () => resolve(socket));
+    socket.once("error", reject);
+  });
+}
+
 async function upgradeToTls(
   socket: net.Socket,
   host: string,
@@ -140,75 +170,65 @@ export async function sendSmtpMail(message: MailMessage) {
   }
 
   const buffer = { value: "" };
-  const socket = net.connect(config.port, config.host);
+  let socket: net.Socket | tls.TLSSocket | null = null;
 
   try {
-    socket.setTimeout(15_000);
-    await readResponse(socket, buffer);
-    await sendCommand(socket, buffer, `EHLO ${config.host}`);
-    if (!config.secure) {
-      await sendCommand(socket, buffer, "STARTTLS");
+    if (config.secure) {
+      socket = await connectSecure(config.host, config.port);
+      expectSmtp(await readResponse(socket, buffer), [220], "greeting");
+    } else {
+      socket = await connectPlain(config.host, config.port);
+      expectSmtp(await readResponse(socket, buffer), [220], "greeting");
+      expectSmtp(
+        await sendCommand(socket, buffer, `EHLO ${config.host}`),
+        [250],
+        "EHLO",
+      );
+      expectSmtp(await sendCommand(socket, buffer, "STARTTLS"), [220], "STARTTLS");
       const tlsSocket = await upgradeToTls(socket, config.host);
+      socket = tlsSocket;
       buffer.value = "";
-      await sendCommand(tlsSocket, buffer, `EHLO ${config.host}`);
-      await sendCommand(tlsSocket, buffer, "AUTH LOGIN");
-      await sendCommand(
-        tlsSocket,
-        buffer,
-        Buffer.from(config.user).toString("base64"),
-      );
-      await sendCommand(
-        tlsSocket,
-        buffer,
-        Buffer.from(config.password).toString("base64"),
-      );
-      await sendCommand(
-        tlsSocket,
-        buffer,
-        `MAIL FROM:<${message.fromAddress ?? config.fromAddress}>`,
-      );
-      await sendCommand(tlsSocket, buffer, `RCPT TO:<${message.to}>`);
-      await sendCommand(tlsSocket, buffer, "DATA");
-      tlsSocket.write(`${formatHeaders(message, config)}\r\n.\r\n`);
-      await readResponse(tlsSocket, buffer);
-      await sendCommand(tlsSocket, buffer, "QUIT");
-      tlsSocket.end();
-      return { ok: true as const };
     }
 
-    const tlsSocket = tls.connect({
-      socket,
-      servername: config.host,
-    });
-    await new Promise<void>((resolve, reject) => {
-      tlsSocket.once("secureConnect", () => resolve());
-      tlsSocket.once("error", reject);
-    });
-    buffer.value = "";
-    await readResponse(tlsSocket, buffer);
-    await sendCommand(tlsSocket, buffer, `EHLO ${config.host}`);
-    await sendCommand(tlsSocket, buffer, "AUTH LOGIN");
-    await sendCommand(
-      tlsSocket,
-      buffer,
-      Buffer.from(config.user).toString("base64"),
+    expectSmtp(
+      await sendCommand(socket, buffer, `EHLO ${config.host}`),
+      [250],
+      "EHLO",
     );
-    await sendCommand(
-      tlsSocket,
-      buffer,
-      Buffer.from(config.password).toString("base64"),
+    expectSmtp(await sendCommand(socket, buffer, "AUTH LOGIN"), [334], "AUTH");
+    expectSmtp(
+      await sendCommand(socket, buffer, Buffer.from(config.user).toString("base64")),
+      [334],
+      "username",
     );
-    await sendCommand(
-      tlsSocket,
-      buffer,
-      `MAIL FROM:<${message.fromAddress ?? config.fromAddress}>`,
+    expectSmtp(
+      await sendCommand(
+        socket,
+        buffer,
+        Buffer.from(config.password).toString("base64"),
+      ),
+      [235],
+      "password",
     );
-    await sendCommand(tlsSocket, buffer, `RCPT TO:<${message.to}>`);
-    await sendCommand(tlsSocket, buffer, "DATA");
-    tlsSocket.write(`${formatHeaders(message, config)}\r\n.\r\n`);
-    await readResponse(tlsSocket, buffer);
-    await sendCommand(tlsSocket, buffer, "QUIT");
-    tlsSocket.end();
+    expectSmtp(
+      await sendCommand(
+        socket,
+        buffer,
+        `MAIL FROM:<${message.fromAddress ?? config.fromAddress}>`,
+      ),
+      [250],
+      "sender",
+    );
+    expectSmtp(
+      await sendCommand(socket, buffer, `RCPT TO:<${message.to}>`),
+      [250, 251],
+      "recipient",
+    );
+    expectSmtp(await sendCommand(socket, buffer, "DATA"), [354], "DATA");
+    socket.write(`${formatHeaders(message, config)}\r\n.\r\n`);
+    expectSmtp(await readResponse(socket, buffer), [250], "message delivery");
+    await sendCommand(socket, buffer, "QUIT").catch(() => null);
+    socket.end();
     return { ok: true as const };
   } catch (error) {
     return {
@@ -216,6 +236,6 @@ export async function sendSmtpMail(message: MailMessage) {
       error: error instanceof Error ? error.message : "SMTP delivery failed.",
     };
   } finally {
-    socket.destroy();
+    socket?.destroy();
   }
 }
