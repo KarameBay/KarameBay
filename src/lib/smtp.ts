@@ -13,6 +13,12 @@ type MailConfig = {
   fromAddress: string;
 };
 
+type ResendConfig = {
+  apiKey: string;
+  fromName: string;
+  fromAddress: string;
+};
+
 type MailMessage = {
   to: string;
   subject: string;
@@ -65,6 +71,18 @@ function getConfig(): MailConfig | null {
   };
 }
 
+function getResendConfig(): ResendConfig | null {
+  const RESEND_API_KEY = cleanEnv(process.env.RESEND_API_KEY);
+  const EMAIL_FROM_NAME = cleanEnv(process.env.EMAIL_FROM_NAME);
+  const EMAIL_FROM_ADDRESS = cleanEnv(process.env.EMAIL_FROM_ADDRESS);
+  if (!RESEND_API_KEY || !EMAIL_FROM_ADDRESS) return null;
+  return {
+    apiKey: RESEND_API_KEY,
+    fromName: EMAIL_FROM_NAME ?? "Karame Bay",
+    fromAddress: EMAIL_FROM_ADDRESS,
+  };
+}
+
 function escapeSubject(subject: string) {
   return subject.replaceAll(/\r?\n/g, " ").trim();
 }
@@ -85,6 +103,58 @@ function formatHeaders(message: MailMessage, config: MailConfig) {
     "Content-Transfer-Encoding: 8bit",
   ];
   return `${headers.join("\r\n")}\r\n\r\n${normalizeBody(message.text)}`;
+}
+
+function formatSender(name: string, address: string) {
+  const safeName = name.replaceAll(/[<>"\r\n]/g, "").trim();
+  return safeName ? `${safeName} <${address}>` : address;
+}
+
+async function sendResendMail(message: MailMessage, config: ResendConfig) {
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: formatSender(
+          message.fromName ?? config.fromName,
+          message.fromAddress ?? config.fromAddress,
+        ),
+        to: [message.to],
+        subject: escapeSubject(message.subject),
+        text: message.text,
+      }),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      const error =
+        typeof body?.message === "string"
+          ? body.message
+          : typeof body?.error === "string"
+            ? body.error
+            : `Resend API returned ${response.status}`;
+      return {
+        ok: false as const,
+        error,
+        details: {
+          message: error,
+          name: "ResendApiError",
+          code: String(response.status),
+        },
+      };
+    }
+    return { ok: true as const };
+  } catch (error) {
+    const failure = describeError(error);
+    return {
+      ok: false as const,
+      error: failure.message,
+      details: failure,
+    };
+  }
 }
 
 async function readResponse(
@@ -190,12 +260,15 @@ async function upgradeToTls(
 export async function sendSmtpMail(message: MailMessage) {
   const business = await getBusinessProfile();
   message = { ...message, fromName: message.fromName ?? business.businessName };
+  const resendConfig = getResendConfig();
+  if (resendConfig) return sendResendMail(message, resendConfig);
+
   const config = getConfig();
   if (!config) {
     return {
       ok: false as const,
       error:
-        "Gmail SMTP is not configured. Add GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD to .env.",
+        "Email delivery is not configured. Add RESEND_API_KEY and EMAIL_FROM_ADDRESS, or configure SMTP.",
     };
   }
 

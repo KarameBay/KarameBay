@@ -12,8 +12,13 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   const user = await requireRole("ADMIN");
-  const smtpReady = Boolean(
-    process.env.GMAIL_SMTP_USER && process.env.GMAIL_SMTP_APP_PASSWORD,
+  const emailProvider = process.env.RESEND_API_KEY
+    ? "RESEND"
+    : process.env.GMAIL_SMTP_USER && process.env.GMAIL_SMTP_APP_PASSWORD
+      ? "SMTP"
+      : null;
+  const emailReady = Boolean(
+    emailProvider && process.env.EMAIL_FROM_ADDRESS,
   );
   const [businessProfile, parcelPricing, parcelSizes, parcelCapacities, parcelCategories, prohibitedRules] =
     await Promise.all([
@@ -71,20 +76,22 @@ export default async function AdminSettingsPage() {
         </header>
         <AdminBusinessProfileForm profile={businessProfile} />
         <section className="admin-settings-card">
-          <div className={`admin-settings-alert ${smtpReady ? "ready" : "warning"}`}>
+          <div className={`admin-settings-alert ${emailReady ? "ready" : "warning"}`}>
             <div>
               <span className="catalog-kicker">
-                {smtpReady ? "GMAIL SMTP READY" : "GMAIL SMTP NOT SET"}
+                {emailReady
+                  ? `${emailProvider} EMAIL READY`
+                  : "EMAIL DELIVERY NOT SET"}
               </span>
               <b>
-                {smtpReady
+                {emailReady
                   ? "Automatic customer emails are enabled."
-                  : "Automatic customer emails need your Gmail app password."}
+                  : "Automatic customer emails need an email provider."}
               </b>
               <p>
-                {smtpReady
+                {emailReady
                   ? "Accepted and delivered orders will send customer emails automatically."
-                  : "Turn on 2-Step Verification in Google Account security, then create a 16-digit app password and add it to .env."}
+                  : "Add Resend API credentials or SMTP credentials in Railway production variables."}
               </p>
             </div>
           </div>

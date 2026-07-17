@@ -688,7 +688,7 @@ export async function sendTestEmail(recipientEmail: string) {
 
 This is a test email from the ${business.businessName} notification system.
 
-If you received this email, Gmail SMTP is working correctly.
+If you received this email, Karame Bay email delivery is working correctly.
 
 Regards,
 ${business.businessName} Team`;
