@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     "Contact Karame Bay for customer, order, parcel, and delivery support in Kigali.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ContactPage() {
   const business = await getBusinessProfile();
   return (
