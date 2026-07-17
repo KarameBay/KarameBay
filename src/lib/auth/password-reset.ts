@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendSmtpMail } from "@/lib/smtp";
 import { PASSWORD_HASH_ROUNDS } from "@/lib/auth/constants";
+import { getBusinessProfile } from "@/lib/business-profile";
 
 export const PASSWORD_RESET_CODE_TTL_MS = 10 * 60_000;
 export const PASSWORD_RESET_RESEND_COOLDOWN_MS = 60_000;
@@ -30,6 +31,7 @@ export async function issuePasswordResetCode(input: {
   email: string;
   firstName: string;
 }) {
+  const business = await getBusinessProfile();
   const existing = await db.passwordResetChallenge.findUnique({
     where: { userId: input.userId },
     select: { lastSentAt: true },
@@ -64,18 +66,18 @@ export async function issuePasswordResetCode(input: {
 
   const delivery = await sendSmtpMail({
     to: input.email,
-    subject: "Reset Your Karame Bay Password",
+    subject: `Reset Your ${business.businessName} Password`,
     text: [
       `Hello ${input.firstName},`,
       "",
-      "We received a request to reset your Karame Bay customer password.",
+      `We received a request to reset your ${business.businessName} customer password.`,
       `Your password reset code is: ${code}`,
       "",
       "This code expires in 10 minutes.",
-      "Do not share this code with anyone. Karame Bay staff will never ask for it.",
+      `Do not share this code with anyone. ${business.businessName} staff will never ask for it.`,
       "If you did not request this reset, you can safely ignore this email.",
       "",
-      "Karame Bay",
+      business.businessName,
       "Kigali, delivered.",
     ].join("\n"),
   });

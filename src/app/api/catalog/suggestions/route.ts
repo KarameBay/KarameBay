@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+const containsInsensitive = (term: string) => ({
+  contains: term,
+  mode: Prisma.QueryMode.insensitive,
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,23 +23,32 @@ export async function GET(request: Request) {
         where: {
           status: "APPROVED",
           OR: [
-            { name: { contains: term } },
-            { type: { contains: term } },
-            { description: { contains: term } },
+            { name: containsInsensitive(term) },
+            { type: containsInsensitive(term) },
+            { description: containsInsensitive(term) },
+            { storeType: { is: { name: containsInsensitive(term) } } },
+            { storeType: { is: { customerSectionName: containsInsensitive(term) } } },
           ],
+          storeType: { is: { isActive: true } },
         },
         orderBy: [{ featured: "desc" }, { name: "asc" }],
         take: 3,
-        select: { id: true, name: true, slug: true, type: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          type: true,
+          storeType: { select: { name: true } },
+        },
       }),
       db.restaurantProduct.findMany({
         where: {
           isAvailable: true,
           seasonal: false,
-          store: { status: "APPROVED" },
+          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
           OR: [
-            { name: { contains: term } },
-            { category: { name: { contains: term } } },
+            { name: containsInsensitive(term) },
+            { category: { name: containsInsensitive(term) } },
           ],
         },
         orderBy: [{ featured: "desc" }, { name: "asc" }],
@@ -48,12 +63,12 @@ export async function GET(request: Request) {
       db.marketplaceProduct.findMany({
         where: {
           isAvailable: true,
-          store: { status: "APPROVED" },
+          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
           OR: [
-            { name: { contains: term } },
-            { brand: { contains: term } },
-            { category: { name: { contains: term } } },
-            { department: { name: { contains: term } } },
+            { name: containsInsensitive(term) },
+            { brand: containsInsensitive(term) },
+            { category: { name: containsInsensitive(term) } },
+            { department: { name: containsInsensitive(term) } },
           ],
         },
         orderBy: [{ featured: "desc" }, { name: "asc" }],
@@ -68,8 +83,8 @@ export async function GET(request: Request) {
       db.restaurantCategory.findMany({
         where: {
           isActive: true,
-          name: { contains: term },
-          store: { status: "APPROVED" },
+          name: containsInsensitive(term),
+          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
         },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         take: 3,
@@ -82,8 +97,8 @@ export async function GET(request: Request) {
       }),
       db.marketplaceCategory.findMany({
         where: {
-          name: { contains: term },
-          department: { store: { status: "APPROVED" } },
+          name: containsInsensitive(term),
+          department: { store: { status: "APPROVED", storeType: { is: { isActive: true } } } },
         },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         take: 3,
@@ -101,7 +116,7 @@ export async function GET(request: Request) {
       id: store.id,
       kind: "store" as const,
       label: store.name,
-      subtitle: store.type === "RESTAURANT" ? "Restaurant" : "Market",
+      subtitle: store.storeType?.name ?? "Store",
       href: `/stores/${store.slug}`,
     })),
     ...restaurantProducts.map((product) => ({

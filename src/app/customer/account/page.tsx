@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Bell, MapPin, Package, Settings, ShieldUser, ShoppingBag, UserRound } from "lucide-react";
+import { Bell, LifeBuoy, MapPin, Package, Settings, ShieldUser, ShoppingBag, Star, UserRound } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { CustomerPortalShell } from "@/components/customer/customer-portal-shell";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { getBusinessProfile } from "@/lib/business-profile";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,14 @@ const tiles = [
   { href: "/customer/orders", label: "My Orders", icon: ShoppingBag, note: "Track your deliveries and history." },
   { href: "/customer/parcels", label: "My Parcel Deliveries", icon: Package, note: "Send packages and follow each handover." },
   { href: "/customer/notifications", label: "Notifications", icon: Bell, note: "See order and parcel delivery updates." },
+  { href: "/customer/reviews", label: "My Reviews", icon: Star, note: "View and edit recent ratings." },
+  { href: "/customer/help", label: "Help & Support", icon: LifeBuoy, note: "Contact support and read policies." },
 ];
 
 export default async function CustomerAccountPage() {
   const user = await requireRole("CUSTOMER");
-  const [orders, parcels, addresses, unreadOrderNotifications, unreadParcelNotifications] = await Promise.all([
+  const [business, orders, parcels, addresses, unreadOrderNotifications, unreadParcelNotifications] = await Promise.all([
+    getBusinessProfile(),
     db.order.count({ where: { customerId: user.id } }),
     db.parcelDelivery.count({ where: { customerId: user.id } }),
     db.address.count({ where: { userId: user.id } }),
@@ -80,12 +84,12 @@ export default async function CustomerAccountPage() {
             <div>
               <b>Help and support</b>
               <p>
-                Need help? Contact Karame Bay support or call the delivery
+                Need help? Contact {business.businessName} support or call the delivery
                 team.
               </p>
             </div>
           </div>
-          <Link href="/contact">Contact support</Link>
+          <Link href="/customer/help">Open Help &amp; Support</Link>
         </section>
       </CustomerPortalShell>
     </>

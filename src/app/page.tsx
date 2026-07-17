@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Apple,
   ArrowRight,
   Bike,
   Clock3,
   MapPin,
   Package,
+  Play,
   ShieldCheck,
   ShoppingBag,
   Store,
@@ -15,16 +17,13 @@ import { StoreCard } from "@/components/catalog/store-card";
 import { HomeSearch } from "@/components/catalog/home-search";
 import { PublicFooter } from "@/components/catalog/public-footer";
 import { getStores } from "@/lib/catalog";
-import {
-  SUPPORT_PHONE_DISPLAY,
-  SUPPORT_PHONE_E164,
-  SUPPORT_WHATSAPP_URL,
-} from "@/lib/contact";
+import { getBusinessProfile } from "@/lib/business-profile";
+import { phoneDisplay, phoneHref, whatsappHref } from "@/lib/contact";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const stores = await getStores();
+  const [stores, business] = await Promise.all([getStores(), getBusinessProfile()]);
   return (
     <div className="app-shell">
       <BrowseHeader />
@@ -38,8 +37,8 @@ export default async function HomePage() {
               <br /> right at your <i>door.</i>
             </h1>
             <p>
-              Restaurants, trusted markets, and reliable Karame delivery in one
-              simple marketplace.
+              Local stores, trusted businesses, and reliable Karame delivery in
+              one simple marketplace.
             </p>
             <HomeSearch />
             <div className="home-actions">
@@ -88,7 +87,7 @@ export default async function HomePage() {
         <section className="home-stores">
           <div className="home-section-title">
             <div>
-              <span className="catalog-kicker">PHASE 1 STORES</span>
+              <span className="catalog-kicker">AVAILABLE STORES</span>
               <h2>What can we bring you?</h2>
               <p>Live products and availability from the Karame Bay catalog.</p>
             </div>
@@ -161,9 +160,8 @@ export default async function HomePage() {
               motorcycle and van, every day.
             </p>
             <div>
-              <a href={`tel:${SUPPORT_PHONE_E164}`}>{SUPPORT_PHONE_DISPLAY}</a>
-              <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">WhatsApp support</a>
-              <a href="tel:+250791889095">079 188 9095</a>
+              <a href={phoneHref(business.supportPhone)}>{phoneDisplay(business.supportPhone)}</a>
+              <a href={whatsappHref(business.whatsappNumber, business.businessName)} target="_blank" rel="noreferrer">WhatsApp support</a>
             </div>
           </div>
           <div className="home-campaigns">
@@ -179,6 +177,21 @@ export default async function HomePage() {
               width={784}
               height={1080}
             />
+          </div>
+        </section>
+
+        <section className="home-app-coming" aria-labelledby="mobile-apps-title">
+          <div>
+            <span className="catalog-kicker">KARAME BAY MOBILE</span>
+            <h2 id="mobile-apps-title">Your deliveries, soon in your pocket.</h2>
+            <p>
+              The Karame Bay mobile apps are being prepared for Android and
+              iPhone. Keep using the website while we get them ready.
+            </p>
+          </div>
+          <div className="home-app-badges" aria-label="Mobile apps coming soon">
+            <span aria-disabled="true"><Play /><small>Coming soon on</small><b>Google Play</b></span>
+            <span aria-disabled="true"><Apple /><small>Coming soon on the</small><b>App Store</b></span>
           </div>
         </section>
       </main>

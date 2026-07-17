@@ -1,0 +1,93 @@
+.support-page { width: min(1280px, calc(100% - 2rem)); margin: 0 auto; padding: 4rem 0; }
+.support-hero { max-width: 780px; margin-bottom: 2.5rem; }
+.support-hero h1 { margin: .5rem 0 1rem; font-size: clamp(2.4rem, 5vw, 4.8rem); line-height: .98; }
+.support-hero p { color: #686157; font-size: 1.15rem; line-height: 1.7; }
+.support-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 2rem; }
+.support-document { display: grid; gap: 1rem; }
+.support-document section, .support-contact-card { border: 1px solid #e2ddd3; border-radius: 1.25rem; padding: 1.5rem; background: #fff; }
+.support-document h2 { margin: 0 0 .75rem; font-size: 1.45rem; }
+.support-document p, .support-document li { color: #686157; line-height: 1.65; }
+.support-document p { margin: .45rem 0; }
+.support-document ul { margin: .75rem 0 0; padding-left: 1.25rem; }
+.support-contact-card { position: sticky; top: 6.5rem; display: grid; gap: .8rem; box-shadow: 0 1rem 3rem rgba(36, 27, 16, .08); }
+.support-contact-card h2 { margin: 0 0 .5rem; }
+.support-contact-card a:not(:last-child) { display: flex; align-items: center; gap: .8rem; color: #20190f; text-decoration: none; border: 1px solid #ece7de; border-radius: .9rem; padding: .8rem; }
+.support-contact-card a svg { width: 1.2rem; color: #bf7d18; }
+.support-contact-card a span { display: grid; min-width: 0; }
+.support-contact-card a small { color: #766e63; }
+.support-contact-card a b { overflow-wrap: anywhere; }
+.support-contact-card > p { display: flex; gap: .5rem; margin: 0; color: #686157; }
+.support-contact-card > p svg { width: 1.1rem; flex: 0 0 auto; }
+@media (max-width: 850px) { .support-layout { grid-template-columns: 1fr; } .support-contact-card { position: static; } }
+@media (max-width: 560px) { .support-page { width: min(100% - 1rem, 1280px); padding: 2rem 0; } .support-document section, .support-contact-card { padding: 1.1rem; border-radius: 1rem; } }
+
+.customer-rating-page { width: min(960px, calc(100% - 2rem)); margin: 0 auto; padding: 3rem 0 5rem; }
+.customer-rating-page > a { color: #6f4a12; font-weight: 800; text-decoration: none; }
+.customer-rating-page > header { margin: 2rem 0; }
+.customer-rating-page > header h1 { margin: .5rem 0; font-size: clamp(2.3rem, 5vw, 4.5rem); }
+.customer-rating-page > header p { color: #696157; font-size: 1.1rem; }
+.customer-review-form { display: grid; gap: 1.25rem; }
+.customer-review-form > section, .review-unavailable { border: 1px solid #e1ddd4; border-radius: 1.3rem; padding: 1.6rem; background: #fff; }
+.customer-review-form h2 { margin: .35rem 0 1.35rem; }
+.review-aspect-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; }
+.star-rating-field { min-width: 0; margin: 0; border: 1px solid #ece6db; border-radius: 1rem; padding: 1rem; }
+.star-rating-field legend { padding: 0 .35rem; font-weight: 800; }
+.star-rating-field legend em { margin-left: .5rem; color: #9f640c; font-size: .7rem; font-style: normal; text-transform: uppercase; }
+.star-rating-field > div { display: flex; gap: .25rem; }
+.star-rating-field button { border: 0; padding: .25rem; color: #c9c3b8; background: transparent; cursor: pointer; }
+.star-rating-field button svg { width: 1.7rem; height: 1.7rem; fill: currentColor; }
+.star-rating-field button.selected { color: #d18a1a; }
+.star-rating-field > small { display: block; margin-top: .25rem; color: #777065; }
+.review-comment { display: grid; gap: .55rem; margin-top: 1rem; font-weight: 800; }
+.review-comment small { color: #766e63; font-weight: 500; }
+.review-comment textarea { min-height: 8rem; resize: vertical; border: 1px solid #ddd7cc; border-radius: 1rem; padding: 1rem; font: inherit; }
+.review-submit { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 3.6rem; border: 0; border-radius: 1rem; color: #fff; background: #bf7d18; font-weight: 900; cursor: pointer; }
+.review-submit svg { width: 1.25rem; }
+.review-form-message { border-radius: .8rem; padding: .8rem 1rem; color: #9a2f24; background: #fff0ed; }
+.review-edit-note { text-align: center; color: #6d665c; }
+.my-reviews-list { display: grid; gap: 1rem; }
+.my-reviews-list > article { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border: 1px solid #e1ddd4; border-radius: 1.1rem; padding: 1.25rem; }
+.my-reviews-list h2 { margin: .25rem 0; }
+.my-reviews-list p { color: #625b51; }
+.my-reviews-list blockquote { display: grid; gap: .25rem; margin: .8rem 0 0; border-left: 3px solid #bf7d18; padding-left: .8rem; color: #5f584e; }
+.review-stars { display: inline-flex; color: #ccc4b7; }
+.review-stars svg { width: 1.1rem; fill: currentColor; }
+.review-stars svg.filled { color: #d18a1a; }
+.customer-order-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.customer-help-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.customer-help-grid a { display: grid; gap: .35rem; min-width: 0; border: 1px solid #e1ddd4; border-radius: 1rem; padding: 1.2rem; color: #1d1811; text-decoration: none; }
+.customer-help-grid svg { color: #bf7d18; }
+.customer-help-grid span { overflow-wrap: anywhere; color: #696157; }
+.customer-help-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; margin-top: 1rem; }
+.customer-help-links a { border: 1px solid #e6e0d6; border-radius: .8rem; padding: .85rem 1rem; color: #3f3426; text-decoration: none; font-weight: 800; }
+@media (max-width: 760px) { .review-aspect-grid, .customer-help-grid { grid-template-columns: 1fr; } .customer-help-links { grid-template-columns: 1fr; } .my-reviews-list > article { display: grid; } }
+.store-reviews-section { margin-top: 3rem; }
+.store-review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.store-review-grid article { border: 1px solid #e1ddd4; border-radius: 1rem; padding: 1.1rem; background: #fff; }
+.store-review-grid h3 { margin: .5rem 0; }
+.store-review-grid p, .store-review-grid small { color: #675f54; line-height: 1.55; }
+.store-review-grid blockquote { display: grid; gap: .25rem; margin: .75rem 0 0; border-left: 3px solid #bf7d18; padding-left: .7rem; }
+@media (max-width: 900px) { .store-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .store-review-grid { grid-template-columns: 1fr; } }
+.admin-review-list { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.admin-review-list > article { border: 1px solid #ded9cf; border-radius: 1rem; padding: 1.2rem; background: #fff; }
+.admin-review-list header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.admin-review-list h2 { margin: .25rem 0; }
+.admin-review-list header p, .admin-review-list > article > p { color: #675f54; }
+.admin-rider-review, .admin-review-list blockquote { margin-top: .8rem; border-radius: .8rem; padding: .8rem; background: #f7f4ee; }
+.admin-rider-review { display: flex; flex-wrap: wrap; gap: .5rem 1rem; }
+.admin-rider-review p { flex-basis: 100%; margin: 0; }
+.admin-review-list blockquote { display: grid; gap: .25rem; margin-left: 0; margin-right: 0; }
+.admin-review-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.admin-review-actions button { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid #ded8cc; border-radius: .7rem; padding: .65rem .8rem; background: #f8f5ef; font-weight: 800; cursor: pointer; }
+.admin-review-actions button svg { width: 1rem; }
+.admin-review-message { color: #9a2f24; background: #fff0ed; padding: .8rem; border-radius: .8rem; }
+.admin-rating-overview { margin: 2rem 0; }
+.admin-rating-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admin-rating-columns > article { border: 1px solid #ded9cf; border-radius: 1rem; padding: 1rem; background: #fff; }
+.admin-rating-columns h3 { margin-top: 0; }
+.admin-rating-columns ol { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.admin-rating-columns li { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid #eee8de; padding-top: .65rem; }
+.admin-rating-columns li span { display: grid; }
+.admin-rating-columns li small { color: #756d62; }
+@media (max-width: 760px) { .admin-rating-columns { grid-template-columns: 1fr; } }

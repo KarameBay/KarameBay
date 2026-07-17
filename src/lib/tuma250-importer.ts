@@ -3,9 +3,7 @@ import { stagePriceRows, type StagedPriceRow } from "@/lib/esoko-importer";
 
 export const TUMA250_SOURCE = "TUMA250";
 export const TUMA250_PRODUCTS_URL = "https://tuma250.com/wp-json/wc/store/v1/products";
-export const TUMA250_ALLOWED_STORE_SLUGS = ["kimironko-market", "zinia-kicukiro-market"] as const;
 
-type TargetStoreSlug = (typeof TUMA250_ALLOWED_STORE_SLUGS)[number];
 type TumaPrices = {
   price?: string;
   currency_code?: string;
@@ -13,6 +11,13 @@ type TumaPrices = {
 };
 type TumaAttribute = { name?: string; value?: string };
 type TumaVariationReference = { id?: number; attributes?: TumaAttribute[] };
+type TumaCategory = {
+  id?: number;
+  name?: string;
+  slug?: string;
+  parent?: number;
+  count?: number;
+};
 type TumaProduct = {
   id?: number;
   name?: string;
@@ -22,11 +27,18 @@ type TumaProduct = {
   attributes?: TumaAttribute[];
 };
 
-const CATEGORY_CONFIG = [
+const DEFAULT_CATEGORY_CONFIG = [
   { sourceId: 152, sourceName: "Meat, Fish & Poultry", departmentName: "Fresh Food", departmentSlug: "fresh-food", categorySlug: "meat-fish-poultry" },
   { sourceId: 295, sourceName: "Fruits & Vegetables", departmentName: "Fresh Food", departmentSlug: "fresh-food", categorySlug: "fruits-vegetables" },
   { sourceId: 156, sourceName: "Groceries", departmentName: "Groceries", departmentSlug: "groceries", categorySlug: "groceries" },
 ] as const;
+type TumaCategoryConfig = {
+  sourceId: number;
+  sourceName: string;
+  departmentName: string;
+  departmentSlug: string;
+  categorySlug: string;
+};
 
 function decodeHtml(value: string) {
   const named: Record<string, string> = {
@@ -53,6 +65,19 @@ function inferredUnit(name: string) {
   return match ? match[0].replace(/\s+/g, " ") : "Item";
 }
 
+function slugify(value: string) {
+  return (
+    decodeHtml(value)
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^\w\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .slice(0, 80) || "category"
+  );
+}
+
 function variationUnit(attributes: TumaAttribute[] | undefined, fallbackName: string) {
   const values = (attributes ?? []).map((attribute) => decodeHtml(String(attribute.value || ""))).filter(Boolean);
   return values.length ? values.join(" / ") : inferredUnit(fallbackName);
@@ -62,7 +87,7 @@ async function fetchTumaJson(url: string) {
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": "KarameBay-CatalogImporter/1.0 (+manual admin review; no images; contact karamebay3@gmail.com)",
+      "User-Agent": "KarameBay-CatalogImporter/1.0 (+manual admin review; no images)",
     },
     cache: "no-store",
     signal: AbortSignal.timeout(45_000),
@@ -111,8 +136,71 @@ async function fetchCategoryProducts(categoryId: number) {
   return [...asProducts(first.payload), ...remaining.flat()];
 }
 
-async function ensureTargetCategories(storeId: string) {
-  for (const config of CATEGORY_CONFIG) {
+function asCategories(payload: unknown) {
+  if (!Array.isArray(payload)) throw new Error("Tuma250 returned an unexpected category format.");
+  return payload.filter((value): value is TumaCategory => Boolean(value && typeof value === "object"));
+}
+
+async function fetchCategoryPage(page: number) {
+  const url = new URL("https://tuma250.com/wp-json/wc/store/v1/products/categories");
+  url.searchParams.set("per_page", "100");
+  url.searchParams.set("page", String(page));
+  const result = await fetchTumaJson(url.toString());
+  return { categories: asCategories(result.payload), pages: Math.max(1, Number(result.headers.get("x-wp-totalpages")) || 1) };
+}
+
+export async function fetchTuma250Categories() {
+  const first = await fetchCategoryPage(1);
+  const remaining = await mapWithConcurrency(
+    Array.from({ length: first.pages - 1 }, (_, index) => index + 2),
+    3,
+    fetchCategoryPage,
+  );
+  const rows = [...first.categories, ...remaining.flatMap((page) => page.categories)];
+  const byId = new Map(rows.map((category) => [Number(category.id), category]));
+  return rows
+    .map((category) => {
+      const id = Number(category.id);
+      const name = decodeHtml(String(category.name || ""));
+      if (!Number.isInteger(id) || id <= 0 || !name) return null;
+      const parent = byId.get(Number(category.parent));
+      const parentName = parent ? decodeHtml(String(parent.name || "")) : "";
+      return {
+        id,
+        name,
+        slug: slugify(String(category.slug || name)),
+        parentId: Number(category.parent) || null,
+        parentName,
+        count: Number(category.count) || 0,
+        label: parentName ? `${parentName} / ${name}` : name,
+      };
+    })
+    .filter((category): category is NonNullable<typeof category> => Boolean(category))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+async function resolveCategoryConfig(sourceIds?: number[]): Promise<TumaCategoryConfig[]> {
+  if (!sourceIds?.length) return [...DEFAULT_CATEGORY_CONFIG];
+  const selectedIds = [...new Set(sourceIds.filter((id) => Number.isInteger(id) && id > 0))];
+  if (!selectedIds.length) return [...DEFAULT_CATEGORY_CONFIG];
+  const categories = await fetchTuma250Categories();
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  return selectedIds.map((sourceId) => {
+    const category = byId.get(sourceId);
+    if (!category) throw new Error(`Tuma250 category ${sourceId} was not found.`);
+    const departmentName = category.parentName || category.name;
+    return {
+      sourceId,
+      sourceName: category.name,
+      departmentName,
+      departmentSlug: slugify(departmentName),
+      categorySlug: category.slug,
+    };
+  });
+}
+
+async function ensureTargetCategories(storeId: string, configs: TumaCategoryConfig[]) {
+  for (const config of configs) {
     const department = await db.marketplaceDepartment.upsert({
       where: { storeId_slug: { storeId, slug: config.departmentSlug } },
       update: { name: config.departmentName },
@@ -169,17 +257,16 @@ export function parseTumaProductRow(options: {
   };
 }
 
-export async function fetchAndStageTuma250Catalog(adminId: string, targetStoreSlug: string) {
-  if (!TUMA250_ALLOWED_STORE_SLUGS.includes(targetStoreSlug as TargetStoreSlug))
-    throw new Error("Choose Kimironko Market or Zinia Kicukiro Market.");
+export async function fetchAndStageTuma250Catalog(adminId: string, targetStoreSlug: string, sourceCategoryIds?: number[]) {
   const store = await db.store.findFirst({
     where: { slug: targetStoreSlug, catalogEngine: "MARKETPLACE" },
     select: { id: true, name: true },
   });
-  if (!store) throw new Error("The selected market is not configured.");
+  if (!store) throw new Error("Choose a retail catalog store. Restaurant stores cannot use price import.");
 
   const observedAt = new Date();
-  const categoryResults = await mapWithConcurrency([...CATEGORY_CONFIG], 2, async (config) => ({
+  const categoryConfigs = await resolveCategoryConfig(sourceCategoryIds);
+  const categoryResults = await mapWithConcurrency(categoryConfigs, 2, async (config) => ({
     config,
     products: await fetchCategoryProducts(config.sourceId),
   }));
@@ -220,7 +307,7 @@ export async function fetchAndStageTuma250Catalog(adminId: string, targetStoreSl
   rows.push(...variationRows.filter((row): row is StagedPriceRow => row !== null));
   if (!rows.length) throw new Error("Tuma250 returned no valid RWF product prices for the selected categories.");
 
-  await ensureTargetCategories(store.id);
+  await ensureTargetCategories(store.id, categoryConfigs);
   return stagePriceRows({
     adminId,
     source: TUMA250_SOURCE,

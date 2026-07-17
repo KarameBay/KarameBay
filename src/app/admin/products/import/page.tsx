@@ -3,11 +3,12 @@ import { AdminPriceImporter } from "@/components/admin/admin-price-importer";
 import { OperationsPortalBadge } from "@/components/operations-portal-badge";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { fetchTuma250Categories } from "@/lib/tuma250-importer";
 
 export const dynamic = "force-dynamic";
 const PAGE_SIZE = 50;
 
-export default async function KimironkoPriceImportPage({
+export default async function MarketPriceImportPage({
   searchParams,
 }: {
   searchParams: Promise<{ batch?: string; page?: string; store?: string }>;
@@ -15,12 +16,17 @@ export default async function KimironkoPriceImportPage({
   const admin = await requireRole("ADMIN");
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
-  const storeSlug = params.store === "zinia-kicukiro-market" ? "zinia-kicukiro-market" : "kimironko-market";
-  const store = await db.store.findFirst({
-    where: { slug: storeSlug, catalogEngine: "MARKETPLACE" },
-    select: { id: true, name: true },
+  const retailStores = await db.store.findMany({
+    where: { catalogEngine: "MARKETPLACE", status: { not: "ARCHIVED" } },
+    select: { id: true, slug: true, name: true, isOpen: true, status: true },
+    orderBy: [{ featured: "desc" }, { name: "asc" }],
   });
-  if (!store) throw new Error("The selected market is not configured.");
+  const requestedStore = params.store
+    ? retailStores.find((row) => row.slug === params.store)
+    : null;
+  const store = requestedStore ?? retailStores[0] ?? null;
+  if (!store) throw new Error("Create a retail catalog store before using price import.");
+  const storeSlug = store.slug;
 
   const batches = await db.priceImportBatch.findMany({
     where: { storeId: store.id },
@@ -28,7 +34,12 @@ export default async function KimironkoPriceImportPage({
     take: 30,
   });
   const selectedBatch = batches.find((batch) => batch.id === params.batch) ?? batches[0] ?? null;
-  const [records, recordCount, products, departments, batchPendingCount] = await Promise.all([
+  const tumaCategoriesPromise = fetchTuma250Categories().catch(() => [
+    { id: 152, name: "Meat, Fish & Poultry", slug: "meat-fish-poultry", parentId: null, parentName: "Fresh Food", count: 0, label: "Fresh Food / Meat, Fish & Poultry" },
+    { id: 295, name: "Fruits & Vegetables", slug: "fruits-vegetables", parentId: null, parentName: "Fresh Food", count: 0, label: "Fresh Food / Fruits & Vegetables" },
+    { id: 156, name: "Groceries", slug: "groceries", parentId: null, parentName: "", count: 0, label: "Groceries" },
+  ]);
+  const [records, recordCount, products, departments, batchPendingCount, tumaCategories] = await Promise.all([
     selectedBatch
       ? db.priceImportRecord.findMany({
           where: { batchId: selectedBatch.id },
@@ -64,6 +75,7 @@ export default async function KimironkoPriceImportPage({
     selectedBatch
       ? db.priceImportRecord.count({ where: { batchId: selectedBatch.id, importStatus: "PENDING_REVIEW" } })
       : Promise.resolve(0),
+    tumaCategoriesPromise,
   ]);
 
   const batchRows = batches.map((batch) => ({
@@ -94,7 +106,7 @@ export default async function KimironkoPriceImportPage({
           </div>
           <div className="admin-header-actions">
             <Link href="/admin">Dashboard</Link>
-            <Link href="/admin/products">Market engine</Link>
+            <Link href="/admin/products">Retail catalog</Link>
             <Link href="/admin/stores">Stores</Link>
           </div>
         </header>
@@ -103,6 +115,7 @@ export default async function KimironkoPriceImportPage({
           key={`${storeSlug}:${selectedBatch?.id ?? "no-batch"}`}
           targetStoreSlug={storeSlug}
           targetStoreName={store.name}
+          storeOptions={retailStores.map((row) => ({ slug: row.slug, name: row.name }))}
           batches={batchRows}
           selectedBatch={selectedRow}
           records={records.map((record) => ({
@@ -131,6 +144,7 @@ export default async function KimironkoPriceImportPage({
             unit: product.units[0]?.label ?? null,
           }))}
           categories={categoryOptions}
+          tumaCategories={tumaCategories}
           page={page}
           pages={Math.max(1, Math.ceil(recordCount / PAGE_SIZE))}
           batchPendingCount={batchPendingCount}

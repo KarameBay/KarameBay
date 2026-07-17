@@ -31,9 +31,11 @@ export async function PATCH(request: NextRequest) {
   const firstName = names.shift()!;
   const lastName = names.join(" ");
   const photo = formData.get("profilePhoto");
-  let profilePhotoUrl: string | null | undefined;
+  let profilePhoto:
+    | Awaited<ReturnType<typeof saveProfilePhoto>>
+    | undefined;
   try {
-    profilePhotoUrl = photo instanceof File && photo.size > 0 ? await saveProfilePhoto(photo) : undefined;
+    profilePhoto = photo instanceof File && photo.size > 0 ? await saveProfilePhoto(photo) : undefined;
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid profile photo." }, { status: 400 });
   }
@@ -46,7 +48,7 @@ export async function PATCH(request: NextRequest) {
         lastName,
         email: parsed.data.email,
         phone: parsed.data.phone,
-        ...(profilePhotoUrl ? { profilePhotoUrl } : {}),
+        ...(profilePhoto ? { profilePhotoUrl: profilePhoto.url, profilePhotoPublicId: profilePhoto.publicId } : {}),
         ...(emailChanged ? { emailVerifiedAt: null } : {}),
       },
     });

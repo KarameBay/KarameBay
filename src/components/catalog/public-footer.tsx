@@ -1,26 +1,18 @@
 import Link from "next/link";
 import { Camera, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
-import {
-  SUPPORT_PHONE_DISPLAY,
-  SUPPORT_PHONE_E164,
-  SUPPORT_WHATSAPP_URL,
-} from "@/lib/contact";
+import { getBusinessProfile } from "@/lib/business-profile";
+import { mailHref, phoneDisplay, phoneHref, whatsappHref } from "@/lib/contact";
 
-const INSTAGRAM_URL =
-  "https://www.instagram.com/karame_transport_delivery?igsh=bHh4Mjdya2M2c2lp";
-
-export function PublicFooter() {
+export async function PublicFooter() {
+  const business = await getBusinessProfile();
   return (
     <footer className="public-footer">
       <div className="public-footer-brand">
-        <Link href="/" aria-label="Karame Bay home">
-          Karame<span>Bay</span>
+        <Link href="/" aria-label={`${business.businessName} home`}>
+          {business.businessName}
         </Link>
-        <p>
-          Kigali&apos;s local marketplace for food, everyday shopping, and
-          parcel delivery.
-        </p>
-        <span><MapPin /> Serving Kigali, Rwanda</span>
+        <p>Kigali&apos;s local marketplace for food, everyday shopping, and parcel delivery.</p>
+        <span><MapPin /> {business.businessAddress}</span>
       </div>
 
       <nav aria-label="Customer services">
@@ -34,25 +26,24 @@ export function PublicFooter() {
       </nav>
 
       <nav aria-label="Company information">
-        <b>Karame Bay</b>
+        <b>{business.businessName}</b>
         <Link href="/about">About us</Link>
         <Link href="/contact">Contact us</Link>
+        <Link href="/help">Help center</Link>
+        <Link href="/faq">FAQ</Link>
+        <Link href="/privacy">Privacy policy</Link>
+        <Link href="/terms">Terms &amp; conditions</Link>
       </nav>
 
       <address>
         <b>Contact</b>
-        <a href={`tel:${SUPPORT_PHONE_E164}`}><Phone /> {SUPPORT_PHONE_DISPLAY}</a>
-        <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">
-          <MessageCircle /> WhatsApp support
-        </a>
-        <a href="tel:+250791889095"><Phone /> 079 188 9095</a>
-        <a href="mailto:karamebay3@gmail.com"><Mail /> karamebay3@gmail.com</a>
-        <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
-          <Camera /> Instagram
-        </a>
+        <a href={phoneHref(business.supportPhone)}><Phone /> {phoneDisplay(business.supportPhone)}</a>
+        <a href={whatsappHref(business.whatsappNumber, business.businessName)} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp support</a>
+        <a href={mailHref(business.supportEmail)}><Mail /> {business.supportEmail}</a>
+        {business.instagramUrl && <a href={business.instagramUrl} target="_blank" rel="noreferrer"><Camera /> Instagram</a>}
       </address>
 
-      <small>© 2026 Karame Bay · Made in Rwanda</small>
+      <small>© {new Date().getFullYear()} {business.businessName} · Made in Rwanda</small>
     </footer>
   );
 }

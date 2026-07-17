@@ -10,6 +10,8 @@ type ProductCardData = {
   catalogEngine: "RESTAURANT" | "MARKETPLACE";
   name: string;
   priceRwf: number;
+  containerChargePerUnitRwf?: number;
+  containerChargeFlatRwf?: number;
   unitLabel: string | null;
   imageUrl: string | null;
   isAvailable: boolean;
@@ -20,10 +22,12 @@ export function ProductCard({
   product,
   storeName,
   detailHref,
+  ageConfirmationRequired = false,
 }: {
   product: ProductCardData;
   storeName: string;
   detailHref?: string;
+  ageConfirmationRequired?: boolean;
 }) {
   const imageSrc = productImage(product.imageUrl, {
     catalogEngine: product.catalogEngine,
@@ -75,7 +79,10 @@ export function ProductCard({
               catalogEngine: product.catalogEngine,
               name: product.name,
               priceRwf: product.priceRwf,
+              containerChargePerUnitRwf: product.containerChargePerUnitRwf ?? 0,
+              containerChargeFlatRwf: product.containerChargeFlatRwf ?? 0,
               imageUrl: imageSrc,
+              ageConfirmationRequired,
             }}
             disabled={!product.isAvailable}
           />

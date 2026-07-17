@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { AdminBusinessProfileForm } from "@/components/admin/admin-business-profile-form";
 import { AdminParcelSettings } from "@/components/admin/admin-parcel-settings";
 import { AdminTestEmailForm } from "@/components/admin/admin-test-email-form";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { OperationsPortalBadge } from "@/components/operations-portal-badge";
 import { requireRole } from "@/lib/auth/session";
+import { getBusinessProfile } from "@/lib/business-profile";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -13,8 +15,9 @@ export default async function AdminSettingsPage() {
   const smtpReady = Boolean(
     process.env.GMAIL_SMTP_USER && process.env.GMAIL_SMTP_APP_PASSWORD,
   );
-  const [parcelPricing, parcelSizes, parcelCapacities, parcelCategories, prohibitedRules] =
+  const [businessProfile, parcelPricing, parcelSizes, parcelCapacities, parcelCategories, prohibitedRules] =
     await Promise.all([
+      getBusinessProfile(),
       db.parcelPricingSetting.findUnique({
         where: { id: "parcel" },
         select: {
@@ -66,6 +69,7 @@ export default async function AdminSettingsPage() {
             <Link href="/admin">Back to dashboard</Link>
           </div>
         </header>
+        <AdminBusinessProfileForm profile={businessProfile} />
         <section className="admin-settings-card">
           <div className={`admin-settings-alert ${smtpReady ? "ready" : "warning"}`}>
             <div>

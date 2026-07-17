@@ -174,6 +174,16 @@ function validItems(value: unknown): CartItem[] {
           ? (data.basePriceRwf as number)
           : undefined,
       priceRwf: data.priceRwf as number,
+      containerChargePerUnitRwf:
+        typeof data.containerChargePerUnitRwf === "number" &&
+        Number.isFinite(data.containerChargePerUnitRwf)
+          ? Math.max(0, Math.round(data.containerChargePerUnitRwf))
+          : 0,
+      containerChargeFlatRwf:
+        typeof data.containerChargeFlatRwf === "number" &&
+        Number.isFinite(data.containerChargeFlatRwf)
+          ? Math.max(0, Math.round(data.containerChargeFlatRwf))
+          : 0,
       imageUrl:
         typeof data.imageUrl === "string" ? data.imageUrl : null,
       detailHref:
@@ -189,6 +199,7 @@ function validItems(value: unknown): CartItem[] {
         typeof data.specialInstructions === "string"
           ? data.specialInstructions
           : undefined,
+      ageConfirmationRequired: data.ageConfirmationRequired === true,
       quantity: Math.min(99, data.quantity as number),
     };
 
@@ -310,7 +321,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       hydrated,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       itemsSubtotal: items.reduce(
-        (sum, item) => sum + item.priceRwf * item.quantity,
+        (sum, item) => sum + item.priceRwf * item.quantity + (item.containerChargeFlatRwf ?? 0),
         0,
       ),
       addItem,

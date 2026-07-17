@@ -19,9 +19,7 @@ export default async function MarketsPage({
 }) {
   const { q = "" } = await searchParams;
   const query = q.trim().slice(0, 100);
-  const stores = (await getStores(query)).filter(
-    (store) => store.catalogEngine === "MARKETPLACE",
-  );
+  const stores = await getStores(query, "markets");
 
   return (
     <div className="app-shell">

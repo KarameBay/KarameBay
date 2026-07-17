@@ -13,11 +13,8 @@ import {
 } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { PublicFooter } from "@/components/catalog/public-footer";
-import {
-  SUPPORT_PHONE_DISPLAY,
-  SUPPORT_PHONE_E164,
-  SUPPORT_WHATSAPP_URL,
-} from "@/lib/contact";
+import { getBusinessProfile } from "@/lib/business-profile";
+import { mailHref, phoneDisplay, phoneHref, whatsappHref } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Contact Us | Karame Bay",
@@ -25,10 +22,8 @@ export const metadata: Metadata = {
     "Contact Karame Bay for customer, order, parcel, and delivery support in Kigali.",
 };
 
-const INSTAGRAM_URL =
-  "https://www.instagram.com/karame_transport_delivery?igsh=bHh4Mjdya2M2c2lp";
-
-export default function ContactPage() {
+export default async function ContactPage() {
+  const business = await getBusinessProfile();
   return (
     <div className="app-shell public-info-shell">
       <BrowseHeader />
@@ -37,45 +32,39 @@ export default function ContactPage() {
           <span className="catalog-kicker">CONTACT KARAME BAY</span>
           <h1>How can we help with your delivery?</h1>
           <p>
-            Reach the Karame team for store orders, parcel deliveries, account
+            Reach the {business.businessName} team for store orders, parcel deliveries, account
             questions, or delivery support across Kigali.
           </p>
         </section>
 
         <section className="public-info-section public-contact-grid" aria-label="Karame Bay contact options">
-          <a href={`tel:${SUPPORT_PHONE_E164}`}>
+          <a href={phoneHref(business.supportPhone)}>
             <span><Phone /></span>
             <small>PRIMARY PHONE</small>
-            <strong>{SUPPORT_PHONE_DISPLAY}</strong>
+            <strong>{phoneDisplay(business.supportPhone)}</strong>
             <em>Open phone</em>
           </a>
-          <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noreferrer">
+          <a href={whatsappHref(business.whatsappNumber, business.businessName)} target="_blank" rel="noreferrer">
             <span><MessageCircle /></span>
             <small>WHATSAPP SUPPORT</small>
-            <strong>{SUPPORT_PHONE_DISPLAY}</strong>
+            <strong>{phoneDisplay(business.whatsappNumber)}</strong>
             <em>Start WhatsApp chat</em>
           </a>
-          <a href="tel:+250791889095">
-            <span><Phone /></span>
-            <small>ALTERNATIVE NUMBER</small>
-            <strong>079 188 9095</strong>
-            <em>Open phone</em>
-          </a>
-          <a href="mailto:karamebay3@gmail.com">
+          <a href={mailHref(business.supportEmail)}>
             <span><Mail /></span>
             <small>EMAIL SUPPORT</small>
-            <strong>karamebay3@gmail.com</strong>
+            <strong>{business.supportEmail}</strong>
             <em>Write an email</em>
           </a>
-          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
+          {business.instagramUrl && <a href={business.instagramUrl} target="_blank" rel="noreferrer">
             <span><Camera /></span>
             <small>FOLLOW KARAME</small>
             <strong>Instagram</strong>
             <em>Open profile</em>
-          </a>
+          </a>}
         </section>
 
-        <section className="public-info-section public-contact-support">
+        <section className="public-info-section public-contact-support" id="report-issue">
           <div>
             <span className="catalog-kicker">GET FASTER HELP</span>
             <h2>Have the right details ready.</h2>
@@ -102,8 +91,8 @@ export default function ContactPage() {
         <section className="public-info-section public-contact-note">
           <MapPin />
           <div>
-            <b>Serving Kigali, Rwanda</b>
-            <p>Use the map pin and exact address details during booking so the delivery route is accurate.</p>
+            <b>{business.businessAddress}</b>
+            <p>{business.businessHours}. Use the map pin and exact address details during booking.</p>
           </div>
           <Clock3 />
           <div>

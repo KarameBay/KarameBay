@@ -22,6 +22,8 @@ const schema = z.object({
         lineKey: z.string().optional(),
         priceRwf: z.number().int().nonnegative(),
         basePriceRwf: z.number().int().nonnegative().optional(),
+        containerChargePerUnitRwf: z.number().int().nonnegative().optional(),
+        containerChargeFlatRwf: z.number().int().nonnegative().optional(),
         variant: z
           .object({
             id: z.string(),
@@ -71,6 +73,7 @@ const schema = z.object({
   expectedItemsSubtotalRwf: z.number().int().nonnegative(),
   expectedDeliveryFeeRwf: z.number().int().nonnegative(),
   paymentConfirmed: z.literal(true),
+  ageConfirmed: z.boolean().default(false),
 });
 function orderNumber() {
   const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
@@ -126,7 +129,7 @@ export async function POST(request: NextRequest) {
       ? await db.restaurantProduct.findMany({
           where: { id: { in: uniqueIds } },
           include: {
-            store: true,
+            store: { include: { storeType: true } },
             variants: {
               orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
             },
@@ -157,7 +160,7 @@ export async function POST(request: NextRequest) {
       ? await db.marketplaceProduct.findMany({
           where: { id: { in: uniqueIds } },
           include: {
-            store: true,
+            store: { include: { storeType: true } },
             inventory: true,
             units: {
               where: { isDefault: true, isAvailable: true },
@@ -174,6 +177,8 @@ export async function POST(request: NextRequest) {
           name: product.name,
           imageUrl: product.imageUrl,
           basePriceRwf: product.basePriceRwf,
+          containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+          containerChargeFlatRwf: product.containerChargeFlatRwf,
           unitLabel: null as string | null,
           isAvailable: product.isAvailable && !product.seasonal,
           store: product.store,
@@ -248,10 +253,13 @@ export async function POST(request: NextRequest) {
               name: product.name,
               imageUrl: product.imageUrl,
               priceRwf: unit.priceRwf,
+              containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+              containerChargeFlatRwf: product.containerChargeFlatRwf,
               unitLabel: unit.label,
               isAvailable:
                 product.isAvailable &&
-                (product.inventory?.stockQuantity ?? 0) > 0,
+                (!(product.store.storeType?.stockTrackingRequired ?? true) ||
+                  (product.inventory?.stockQuantity ?? 0) > 0),
               store: product.store,
             },
           ];
@@ -277,8 +285,14 @@ export async function POST(request: NextRequest) {
       { error: "One or more products are currently unavailable." },
       { status: 409 },
     );
+  if (products[0].store.storeType?.ageConfirmationRequired && !input.ageConfirmed)
+    return NextResponse.json(
+      { error: "Confirm that you meet the age requirement before placing this order." },
+      { status: 400 },
+    );
   if (
     products[0].store.status !== "APPROVED" ||
+    !products[0].store.storeType?.isActive ||
     !isStoreOpenInKigali(products[0].store)
   )
     return NextResponse.json(
@@ -306,8 +320,8 @@ export async function POST(request: NextRequest) {
     };
     const unitPrice =
       "basePriceRwf" in product
-        ? computeRestaurantUnitPrice(product, configuration)
-        : product.priceRwf;
+        ? computeRestaurantUnitPrice(product, configuration) + product.containerChargePerUnitRwf
+        : product.priceRwf + product.containerChargePerUnitRwf;
     if ("basePriceRwf" in product) {
       const validationErrors = validateRestaurantConfiguration(product, {
         ...configuration,
@@ -326,7 +340,20 @@ export async function POST(request: NextRequest) {
         { status: 409 },
       );
     }
-    itemsSubtotalRwf += unitPrice * inputItem.quantity;
+    const flatCharge = product.containerChargeFlatRwf;
+    if (
+      flatCharge !== (inputItem.containerChargeFlatRwf ?? 0) ||
+      product.containerChargePerUnitRwf !== (inputItem.containerChargePerUnitRwf ?? 0)
+    ) {
+      return NextResponse.json(
+        {
+          error: "A product container charge changed. Please review your cart again.",
+          code: "QUOTE_CHANGED",
+        },
+        { status: 409 },
+      );
+    }
+    itemsSubtotalRwf += unitPrice * inputItem.quantity + flatCharge;
   }
   if (itemsSubtotalRwf !== input.expectedItemsSubtotalRwf)
     return NextResponse.json(
@@ -395,8 +422,9 @@ export async function POST(request: NextRequest) {
                     selections: inputItem.selections ?? [],
                     addOns: normalizedAddOns,
                     specialInstructions: inputItem.specialInstructions,
-                  })
-                : product.priceRwf;
+                  }) + product.containerChargePerUnitRwf
+                : product.priceRwf + product.containerChargePerUnitRwf;
+            const flatCharge = product.containerChargeFlatRwf;
             return {
               catalogEngine,
               restaurantProductId:
@@ -407,7 +435,7 @@ export async function POST(request: NextRequest) {
               productImageUrl: product.imageUrl,
               unitPriceRwf: unitPrice,
               quantity: inputItem.quantity,
-              lineTotalRwf: unitPrice * inputItem.quantity,
+              lineTotalRwf: unitPrice * inputItem.quantity + flatCharge,
               unitLabel: product.unitLabel,
               variantName: inputItem.variant?.name ?? null,
               specialInstructions: inputItem.specialInstructions ?? null,
@@ -416,6 +444,8 @@ export async function POST(request: NextRequest) {
                 variant: inputItem.variant ?? null,
                 selections: inputItem.selections ?? [],
                 addOns: normalizedAddOns,
+                containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+                containerChargeFlatRwf: flatCharge,
                 addOnOptions: normalizedAddOns.map((addOn) => ({
                   id: addOn.id,
                   groupName: addOn.groupName ?? null,

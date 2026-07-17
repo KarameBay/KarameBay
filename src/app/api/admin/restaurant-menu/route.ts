@@ -63,6 +63,8 @@ const categorySchema = z.object({
   name: z.string().trim().min(2).optional(),
   slug: z.string().trim().optional(),
   description: nullableText,
+  imageUrl: nullableText,
+  imagePublicId: nullableText,
   sortOrder: z.coerce.number().int().min(0).default(0),
 });
 
@@ -76,7 +78,10 @@ const productSchema = z.object({
   slug: z.string().trim().optional(),
   description: nullableText,
   basePriceRwf: z.coerce.number().int().min(0).default(0),
+  containerChargePerUnitRwf: z.coerce.number().int().min(0).default(0),
+  containerChargeFlatRwf: z.coerce.number().int().min(0).default(0),
   imageUrl: nullableText,
+  imagePublicId: nullableText,
   isAvailable: booleanish.default(true),
 });
 
@@ -243,6 +248,8 @@ export async function POST(request: Request) {
       slug,
       name: input.name,
       description: input.description || null,
+      imageUrl: input.imageUrl || null,
+      imagePublicId: input.imagePublicId || null,
       sortOrder: input.id
         ? undefined
         : await nextSortOrder(() =>
@@ -274,7 +281,13 @@ export async function POST(request: Request) {
       });
       if (!existing)
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
-      await db.restaurantProduct.delete({ where: { id: input.id } });
+      await db.$transaction(async (tx) => {
+        await tx.orderItem.updateMany({
+          where: { restaurantProductId: input.id },
+          data: { restaurantProductId: null },
+        });
+        await tx.restaurantProduct.delete({ where: { id: input.id } });
+      });
       revalidatePath("/admin/menus");
       revalidatePath("/admin/products");
       revalidatePath(`/stores/${existing.store.slug}`);
@@ -319,7 +332,10 @@ export async function POST(request: Request) {
       name: input.name,
       description: input.description || null,
       basePriceRwf: input.basePriceRwf,
+      containerChargePerUnitRwf: input.containerChargePerUnitRwf,
+      containerChargeFlatRwf: input.containerChargeFlatRwf,
       imageUrl: input.imageUrl || null,
+      imagePublicId: input.imagePublicId || null,
       isAvailable: input.isAvailable,
     };
     if (input.id) {

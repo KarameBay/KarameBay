@@ -3,6 +3,7 @@ import { AdminMarketplaceCatalogBuilder } from "@/components/admin/admin-marketp
 import { OperationsPortalBadge } from "@/components/operations-portal-badge";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { storeTypeCapabilities } from "@/lib/store-types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function AdminProductsPage() {
       id: true,
       name: true,
       slug: true,
+      storeType: true,
       _count: { select: { marketplaceProducts: true } },
       marketplaceDepartments: {
         select: {
@@ -31,12 +33,25 @@ export default async function AdminProductsPage() {
     orderBy: { name: "asc" },
   });
 
-  const markets = stores.map((store) => ({
+  const retailStores = stores.map((store) => ({
     id: store.id,
     name: store.name,
     slug: store.slug,
     departments: store.marketplaceDepartments,
     productCount: store._count.marketplaceProducts,
+    storeTypeName: store.storeType?.name ?? "Retail",
+    capabilities: store.storeType
+      ? storeTypeCapabilities(store.storeType)
+      : {
+          optionalProductFields: ["description", "image", "sku", "featured"] as Array<
+            "description" | "image" | "sku" | "featured"
+          >,
+          stockTrackingRequired: true,
+          ageConfirmationRequired: false,
+          productUnitsEnabled: true,
+          brandsEnabled: true,
+          departmentsEnabled: true,
+        },
   }));
 
   return (
@@ -45,10 +60,10 @@ export default async function AdminProductsPage() {
         <header className="admin-dashboard-header">
           <div>
             <span className="catalog-kicker">KARAME BAY ADMIN</span>
-            <h1>Market catalog engine</h1>
+            <h1>Retail catalog engine</h1>
             <p>
-              Manage market departments, categories, products, prices, stock,
-              availability, and product images.
+              Manage products for every store type assigned to the reusable
+              Retail Catalog Engine.
             </p>
           </div>
           <div className="admin-header-actions">
@@ -60,7 +75,7 @@ export default async function AdminProductsPage() {
           </div>
         </header>
 
-        <AdminMarketplaceCatalogBuilder markets={markets} />
+        <AdminMarketplaceCatalogBuilder markets={retailStores} />
       </main>
       <OperationsPortalBadge
         role={`${user.firstName} · Admin`}

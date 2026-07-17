@@ -7,6 +7,13 @@ export async function GET() {
       slug: store.slug,
       name: store.name,
       type: store.type,
+      storeType: store.storeType
+        ? {
+            slug: store.storeType.slug,
+            name: store.storeType.name,
+            customerSectionName: store.storeType.customerSectionName,
+          }
+        : null,
       isOpen: store.isOpen,
       opensAt: store.opensAt,
       closesAt: store.closesAt,

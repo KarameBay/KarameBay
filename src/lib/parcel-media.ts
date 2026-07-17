@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const MEDIA_KINDS = new Set(["parcel", "pickup", "delivery"]);
@@ -21,10 +20,6 @@ function detectImage(bytes: Uint8Array) {
   return null;
 }
 
-function mediaRoot() {
-  return path.resolve(process.cwd(), "storage", "parcel-media");
-}
-
 export async function saveParcelMedia(file: File, kind: "parcel" | "pickup" | "delivery") {
   if (!MEDIA_KINDS.has(kind)) throw new Error("Invalid parcel media type.");
   if (!file.size || file.size > MAX_IMAGE_BYTES)
@@ -32,24 +27,17 @@ export async function saveParcelMedia(file: File, kind: "parcel" | "pickup" | "d
   const bytes = new Uint8Array(await file.arrayBuffer());
   const image = detectImage(bytes);
   if (!image) throw new Error("Only valid JPG, PNG, and WebP images are allowed.");
-  const directory = path.join(mediaRoot(), kind);
-  await mkdir(directory, { recursive: true });
   const filename = `${randomUUID()}.${image.extension}`;
-  await writeFile(path.join(directory, filename), bytes, { flag: "wx" });
+  const uploaded = await uploadImageToCloudinary(bytes, filename, `parcel-proofs/${kind}`);
   return {
-    storageKey: `${kind}/${filename}`,
+    storageKey: uploaded.publicId,
+    url: uploaded.url,
+    publicId: uploaded.publicId,
+    resourceType: uploaded.resourceType,
     contentType: image.contentType,
     sizeBytes: file.size,
+    width: uploaded.width,
+    height: uploaded.height,
+    format: uploaded.format,
   };
 }
-
-export async function readParcelMedia(storageKey: string) {
-  const root = mediaRoot();
-  const resolved = path.resolve(root, storageKey);
-  if (!resolved.startsWith(`${root}${path.sep}`)) throw new Error("Invalid parcel media path.");
-  const data = await readFile(resolved);
-  const image = detectImage(data);
-  if (!image) throw new Error("Invalid parcel media file.");
-  return { data, contentType: image.contentType };
-}
-

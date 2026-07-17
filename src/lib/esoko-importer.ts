@@ -153,7 +153,7 @@ export async function fetchPublicJson(
   const timeout = configNumber("ESOKO_REQUEST_TIMEOUT_MS", 45_000, 5_000, 90_000);
   const retries = configNumber("ESOKO_MAX_RETRIES", 1, 0, 2);
   const delay = configNumber("ESOKO_REQUEST_DELAY_MS", 1_500, 500, 10_000);
-  const userAgent = process.env.ESOKO_USER_AGENT || "KarameBay-MarketPriceImporter/1.0 (+manual admin import; contact karamebay3@gmail.com)";
+  const userAgent = process.env.ESOKO_USER_AGENT || "KarameBay-MarketPriceImporter/1.0 (+manual admin import)";
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     if (attempt) await new Promise((resolve) => setTimeout(resolve, delay * attempt));
@@ -404,7 +404,7 @@ export async function logFailedImportAttempt(
         source === ESOKO_SOURCE
           ? process.env.ESOKO_PRICE_TRENDS_URL || "https://esoko.rw/price-trends"
           : "Admin file upload",
-      targetMarket: "Kimironko Market",
+      targetMarket: "Karame Bay Market",
       snapshotDate,
       storeId: store.id,
       startedById: adminId,
@@ -607,9 +607,9 @@ export async function approvePriceRecords(adminId: string, inputs: PriceApproval
         });
       }
     }, {
-      // Bulk approvals can be slightly slower on SQLite databases stored in a
-      // synced folder. Prisma's 5-second default caused otherwise valid
-      // approvals to expire while committing.
+      // Bulk approvals can be slightly slower on small managed databases.
+      // Prisma's 5-second default caused otherwise valid approvals to expire
+      // while committing.
       maxWait: 15_000,
       timeout: 60_000,
     });

@@ -32,6 +32,7 @@ export function CheckoutReview() {
   const [quote, setQuote] = useState<SavedDeliveryQuote | null>(null);
   const [address, setAddress] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -48,7 +49,8 @@ export function CheckoutReview() {
   }, []);
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!quote || !confirmed || !cart.items.length) return;
+    const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
+    if (!quote || !confirmed || (requiresAgeConfirmation && !ageConfirmed) || !cart.items.length) return;
     setSubmitting(true);
     setError("");
     try {
@@ -63,6 +65,8 @@ export function CheckoutReview() {
             lineKey: item.lineKey ?? item.id,
             priceRwf: item.priceRwf,
             basePriceRwf: item.basePriceRwf ?? item.priceRwf,
+            containerChargePerUnitRwf: item.containerChargePerUnitRwf ?? 0,
+            containerChargeFlatRwf: item.containerChargeFlatRwf ?? 0,
             variant: item.variant ?? null,
             selections: item.selections ?? [],
             addOns: item.addOns ?? [],
@@ -74,6 +78,7 @@ export function CheckoutReview() {
           expectedItemsSubtotalRwf: cart.itemsSubtotal,
           expectedDeliveryFeeRwf: quote.deliveryFeeRwf,
           paymentConfirmed: confirmed,
+          ageConfirmed,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -127,6 +132,7 @@ export function CheckoutReview() {
       </main>
     );
   const total = cart.itemsSubtotal + quote.deliveryFeeRwf;
+  const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
   return (
     <main className="review-page">
       <Link className="review-back" href="/checkout/delivery">
@@ -161,6 +167,14 @@ export function CheckoutReview() {
                   <small>
                     {formatRwf(item.priceRwf)} × {item.quantity}
                   </small>
+                  {(item.containerChargePerUnitRwf || item.containerChargeFlatRwf) ? (
+                    <small>
+                      Container charge: {[
+                        item.containerChargePerUnitRwf ? `${formatRwf(item.containerChargePerUnitRwf)} each` : "",
+                        item.containerChargeFlatRwf ? `${formatRwf(item.containerChargeFlatRwf)} once` : "",
+                      ].filter(Boolean).join(" + ")}
+                    </small>
+                  ) : null}
                   {item.variant && <small>{item.variant.name}</small>}
                   {item.selections?.map((selection) => (
                     <small key={selection.groupId}>
@@ -180,7 +194,7 @@ export function CheckoutReview() {
                   ))}
                   {item.specialInstructions ? <small>{item.specialInstructions}</small> : null}
                 </span>
-                <strong>{formatRwf(item.priceRwf * item.quantity)}</strong>
+                <strong>{formatRwf(item.priceRwf * item.quantity + (item.containerChargeFlatRwf ?? 0))}</strong>
               </article>
             ))}
           </section>
@@ -258,6 +272,19 @@ export function CheckoutReview() {
                 </small>
               </span>
             </label>
+            {requiresAgeConfirmation ? (
+              <label className="payment-confirm">
+                <input
+                  type="checkbox"
+                  checked={ageConfirmed}
+                  onChange={(event) => setAgeConfirmed(event.target.checked)}
+                />
+                <span>
+                  <b>I confirm that I meet the legal age requirement</b>
+                  <small>Karame Bay or the rider may request identification at delivery.</small>
+                </span>
+              </label>
+            ) : null}
           </section>
         </div>
         <aside className="review-summary">
@@ -291,7 +318,7 @@ export function CheckoutReview() {
           {error && <div className="review-error">{error}</div>}
           <button
             className="place-order"
-            disabled={!confirmed || address.trim().length < 5 || submitting}
+            disabled={!confirmed || (requiresAgeConfirmation && !ageConfirmed) || address.trim().length < 5 || submitting}
           >
             {submitting ? "Submitting order…" : "Submit order"}
             <ArrowRight />

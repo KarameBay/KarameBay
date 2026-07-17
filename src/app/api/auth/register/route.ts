@@ -51,12 +51,15 @@ export async function POST(request: NextRequest) {
       409,
     );
   let profilePhotoUrl: string | null = null;
+  let profilePhotoPublicId: string | null = null;
   try {
-    profilePhotoUrl = await saveProfilePhoto(
+    const profilePhoto = await saveProfilePhoto(
       formData?.get("profilePhoto") instanceof File
         ? (formData.get("profilePhoto") as File)
         : null,
     );
+    profilePhotoUrl = profilePhoto?.url ?? null;
+    profilePhotoPublicId = profilePhoto?.publicId ?? null;
   } catch (error) {
     return failure(error instanceof Error ? error.message : "Invalid profile photo.", 400);
   }
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         profilePhotoUrl,
+        profilePhotoPublicId,
         emailVerifiedAt: null,
         passwordHash: await hash(password, PASSWORD_HASH_ROUNDS),
         role: "CUSTOMER",

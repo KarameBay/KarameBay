@@ -20,6 +20,7 @@ export default async function CustomerOrdersPage() {
       createdAt: true,
       store: { select: { name: true } },
       payment: { select: { status: true } },
+      review: { select: { id: true, editableUntil: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -67,9 +68,14 @@ export default async function CustomerOrdersPage() {
                   </small>
                 </div>
                 <b>{formatRwf(order.grandTotalRwf)}</b>
-                <Link href={`/orders/${order.orderNumber}/track`}>
-                  Track order
-                </Link>
+                <div className="customer-order-actions">
+                  <Link href={`/orders/${order.orderNumber}/track`}>Track order</Link>
+                  {order.status === "DELIVERED" && (
+                    <Link href={`/customer/orders/${order.orderNumber}/review`}>
+                      {order.review ? (order.review.editableUntil > new Date() ? "Edit review" : "View review") : "Rate order"}
+                    </Link>
+                  )}
+                </div>
               </article>
             ))
           ) : (

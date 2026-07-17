@@ -50,7 +50,10 @@ type MenuStore = {
     slug: string;
     description: string | null;
     basePriceRwf: number;
+    containerChargePerUnitRwf: number;
+    containerChargeFlatRwf: number;
     imageUrl: string | null;
+    imagePublicId?: string | null;
     isAvailable: boolean;
     categoryId: string;
     category: { id: string; name: string; slug: string };
@@ -123,7 +126,10 @@ const emptyProduct = () => ({
   slug: "",
   description: "",
   basePriceRwf: "0",
+  containerChargePerUnitRwf: "0",
+  containerChargeFlatRwf: "0",
   imageUrl: "",
+  imagePublicId: "",
   isAvailable: true,
 });
 
@@ -297,7 +303,10 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
       slug: firstProduct.slug,
       description: firstProduct.description ?? "",
       basePriceRwf: String(firstProduct.basePriceRwf),
+      containerChargePerUnitRwf: String(firstProduct.containerChargePerUnitRwf ?? 0),
+      containerChargeFlatRwf: String(firstProduct.containerChargeFlatRwf ?? 0),
       imageUrl: firstProduct.imageUrl ?? "",
+      imagePublicId: firstProduct.imagePublicId ?? "",
       isAvailable: firstProduct.isAvailable,
     });
   }, [selectedStoreId, selectedStore, selectedProductId]);
@@ -312,7 +321,10 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
       slug: selectedProduct.slug,
       description: selectedProduct.description ?? "",
       basePriceRwf: String(selectedProduct.basePriceRwf),
+      containerChargePerUnitRwf: String(selectedProduct.containerChargePerUnitRwf ?? 0),
+      containerChargeFlatRwf: String(selectedProduct.containerChargeFlatRwf ?? 0),
       imageUrl: selectedProduct.imageUrl ?? "",
+      imagePublicId: selectedProduct.imagePublicId ?? "",
       isAvailable: selectedProduct.isAvailable,
     });
     setVariantForm({
@@ -404,7 +416,9 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
       setMessage(successMessage);
       router.refresh();
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : "Could not save menu item.");
+      const message = exception instanceof Error ? exception.message : "Could not save menu item.";
+      setError(message);
+      window.alert(message);
     } finally {
       setSaving(false);
     }
@@ -814,7 +828,10 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                   slug: productForm.slug,
                   description: productForm.description,
                   basePriceRwf: Number(productForm.basePriceRwf),
+                  containerChargePerUnitRwf: Number(productForm.containerChargePerUnitRwf),
+                  containerChargeFlatRwf: Number(productForm.containerChargeFlatRwf),
                   imageUrl: productForm.imageUrl,
+                  imagePublicId: productForm.imagePublicId,
                   isAvailable: productForm.isAvailable,
                 },
                 "Product saved.",
@@ -870,6 +887,28 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                   }
                 />
               </label>
+              <label>
+                Container per quantity
+                <input
+                  type="number"
+                  min="0"
+                  value={productForm.containerChargePerUnitRwf}
+                  onChange={(event) =>
+                    setProductForm((current) => ({ ...current, containerChargePerUnitRwf: event.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Container once
+                <input
+                  type="number"
+                  min="0"
+                  value={productForm.containerChargeFlatRwf}
+                  onChange={(event) =>
+                    setProductForm((current) => ({ ...current, containerChargeFlatRwf: event.target.value }))
+                  }
+                />
+              </label>
               <label style={{ gridColumn: "1 / -1" }}>
                 Description
                 <input
@@ -887,8 +926,12 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                 label="Product image"
                 purpose="product"
                 value={productForm.imageUrl}
-                onChange={(imageUrl) =>
-                  setProductForm((current) => ({ ...current, imageUrl }))
+                onChange={(imageUrl, imagePublicId) =>
+                  setProductForm((current) => ({
+                    ...current,
+                    imageUrl,
+                    imagePublicId: imagePublicId ?? current.imagePublicId,
+                  }))
                 }
                 help="Choose a clear product photo from your computer or phone."
               />
@@ -1021,7 +1064,10 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                         slug: product.slug,
                         description: product.description ?? "",
                         basePriceRwf: String(product.basePriceRwf),
+                        containerChargePerUnitRwf: String(product.containerChargePerUnitRwf ?? 0),
+                        containerChargeFlatRwf: String(product.containerChargeFlatRwf ?? 0),
                         imageUrl: product.imageUrl ?? "",
+                        imagePublicId: product.imagePublicId ?? "",
                         isAvailable: product.isAvailable,
                       })
                     }
@@ -1087,7 +1133,10 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                         slug: product.slug,
                         description: product.description ?? "",
                         basePriceRwf: String(product.basePriceRwf),
+                        containerChargePerUnitRwf: String(product.containerChargePerUnitRwf ?? 0),
+                        containerChargeFlatRwf: String(product.containerChargeFlatRwf ?? 0),
                         imageUrl: product.imageUrl ?? "",
+                        imagePublicId: product.imagePublicId ?? "",
                         isAvailable: product.isAvailable,
                       })
                     }
@@ -1256,7 +1305,7 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
               </section>
 
               <section>
-                <h3>Choice groups</h3>
+                <h3>Product choice groups</h3>
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -1288,7 +1337,7 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                         onChange={(event) =>
                           setGroupForm((current) => ({ ...current, name: event.target.value }))
                         }
-                        placeholder="Choice of accompaniment"
+                        placeholder="Bottle vibe, choice of eggs, accompaniment"
                       />
                     </label>
                     <label>

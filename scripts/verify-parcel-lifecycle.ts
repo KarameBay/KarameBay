@@ -9,6 +9,7 @@ function requiredTestPassword() {
   return value;
 }
 const testPassword = requiredTestPassword();
+let loginSequence = 40;
 const createdParcelIds: string[] = [];
 let temporaryRiderId = "";
 
@@ -29,10 +30,12 @@ async function request(path: string, options: RequestInit = {}, cookie = "") {
   return { response, data };
 }
 
-async function login(email: string, audience: "customer" | "staff") {
+async function login(email: string, portal: "customer" | "admin" | "rider") {
+  const audience = portal === "customer" ? "customer" : "staff";
   const { response, data } = await request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: testPassword, audience }),
+    headers: { "x-forwarded-for": `198.51.100.${loginSequence++}` },
+    body: JSON.stringify({ email, password: testPassword, audience, portal }),
   });
   check(response.ok, `Login failed for ${email}: ${data.error ?? response.status}`);
   const role = data.user?.role as "CUSTOMER" | "ADMIN" | "RIDER";
@@ -103,8 +106,8 @@ async function cleanup() {
 
 async function main() {
   const customerCookie = await login("customer@karamebay.rw", "customer");
-  const adminCookie = await login("admin@karamebay.rw", "staff");
-  const riderCookie = await login("rider@karamebay.rw", "staff");
+  const adminCookie = await login("admin@karamebay.rw", "admin");
+  const riderCookie = await login("rider@karamebay.rw", "rider");
 
   const invalidPhone = await createParcel(customerCookie, { pickupPhone: "123" });
   check(invalidPhone.response.status === 400, "Invalid parcel phone was accepted");

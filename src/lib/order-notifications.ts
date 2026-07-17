@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { sendSmtpMail } from "@/lib/smtp";
 import { OrderStatus } from "@/lib/order-status";
+import { getBusinessProfile, SYSTEM_BUSINESS_DEFAULTS } from "@/lib/business-profile";
 
 type Role = "CUSTOMER" | "ADMIN" | "RIDER";
 type Channel = "INTERNAL" | "EMAIL";
@@ -32,36 +33,10 @@ type EmailLogInput = {
 let emailLogSchemaReady: Promise<void> | null = null;
 
 async function ensureEmailLogTable() {
-  emailLogSchemaReady ??= (async () => {
-    await db.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "EmailNotificationLog" (
-        "id" TEXT PRIMARY KEY NOT NULL,
-        "notificationId" TEXT,
-        "userId" TEXT,
-        "orderId" TEXT,
-        "recipientEmail" TEXT NOT NULL,
-        "subject" TEXT NOT NULL,
-        "body" TEXT NOT NULL,
-        "channel" TEXT NOT NULL DEFAULT 'EMAIL',
-        "status" TEXT NOT NULL,
-        "errorMessage" TEXT,
-        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "sentAt" DATETIME
-      )
-    `;
-    await db.$executeRaw`
-      CREATE INDEX IF NOT EXISTS "EmailNotificationLog_userId_createdAt_idx"
-      ON "EmailNotificationLog"("userId", "createdAt")
-    `;
-    await db.$executeRaw`
-      CREATE INDEX IF NOT EXISTS "EmailNotificationLog_orderId_createdAt_idx"
-      ON "EmailNotificationLog"("orderId", "createdAt")
-    `;
-    await db.$executeRaw`
-      CREATE INDEX IF NOT EXISTS "EmailNotificationLog_status_createdAt_idx"
-      ON "EmailNotificationLog"("status", "createdAt")
-    `;
-  })();
+  // The table is created by Prisma migrations. This function remains as a
+  // compatibility boundary for older callers but intentionally performs no
+  // runtime DDL, so Railway startup never mutates schema unexpectedly.
+  emailLogSchemaReady ??= Promise.resolve();
   return emailLogSchemaReady;
 }
 
@@ -69,35 +44,21 @@ async function createEmailLog(input: EmailLogInput) {
   const id = randomUUID();
   try {
     await ensureEmailLogTable();
-    await db.$executeRaw`
-      INSERT INTO EmailNotificationLog (
+    await db.emailNotificationLog.create({
+      data: {
         id,
-        notificationId,
-        userId,
-        orderId,
-        recipientEmail,
-        subject,
-        body,
-        channel,
-        status,
-        errorMessage,
-        createdAt,
-        sentAt
-      ) VALUES (
-        ${id},
-        ${input.notificationId ?? null},
-        ${input.userId ?? null},
-        ${input.orderId ?? null},
-        ${input.recipientEmail},
-        ${input.subject},
-        ${input.body},
-        "EMAIL",
-        ${input.status},
-        ${input.errorMessage ?? null},
-        ${new Date()},
-        ${input.sentAt ?? null}
-      )
-    `;
+        notificationId: input.notificationId ?? null,
+        userId: input.userId ?? null,
+        orderId: input.orderId ?? null,
+        recipientEmail: input.recipientEmail,
+        subject: input.subject,
+        body: input.body,
+        channel: "EMAIL",
+        status: input.status,
+        errorMessage: input.errorMessage ?? null,
+        sentAt: input.sentAt ?? null,
+      },
+    });
   } catch {
     return null;
   }
@@ -109,14 +70,14 @@ async function updateEmailLog(
   input: Partial<EmailLogInput> & { status: "PENDING" | "SENT" | "FAILED" },
 ) {
   try {
-    await db.$executeRaw`
-      UPDATE EmailNotificationLog
-      SET
-        status = ${input.status},
-        errorMessage = ${input.errorMessage ?? null},
-        sentAt = ${input.sentAt ?? null}
-      WHERE id = ${id}
-    `;
+    await db.emailNotificationLog.update({
+      where: { id },
+      data: {
+        status: input.status,
+        errorMessage: input.errorMessage ?? null,
+        sentAt: input.sentAt ?? null,
+      },
+    });
   } catch {}
 }
 
@@ -285,6 +246,8 @@ export async function notifyOrderAccepted(
     customer: { firstName: string; lastName: string; email: string };
   },
 ) {
+  const business = await tx.businessProfile.findUnique({ where: { id: "business" }, select: { businessName: true } });
+  const businessName = business?.businessName ?? SYSTEM_BUSINESS_DEFAULTS.businessName;
   const preparation = input.store.preparationMinutes
     ? `${input.store.preparationMinutes} minutes`
     : "soon";
@@ -311,17 +274,17 @@ export async function notifyOrderAccepted(
     "Store accepted order",
     `${input.store.name} accepted order ${input.order.orderNumber}`,
   );
-  const subject = "Your Karame Bay Order Has Been Accepted 🎉";
+  const subject = `Your ${businessName} Order Has Been Accepted 🎉`;
   const body = [
     `Hello ${input.customer.firstName},`,
     "",
-    `Your Karame Bay order ${input.order.orderNumber} from ${input.store.name} has been accepted.`,
+    `Your ${businessName} order ${input.order.orderNumber} from ${input.store.name} has been accepted.`,
     `Total amount: RWF ${input.order.grandTotalRwf.toLocaleString("en-RW")}`,
     preparation === "soon"
       ? ""
       : `Estimated preparation time: ${preparation}.`,
     "",
-    "Thank you for ordering with Karame Bay.",
+    `Thank you for ordering with ${businessName}.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -462,13 +425,15 @@ export async function notifyDelivered(
     rider: { firstName: string; lastName: string };
   },
 ) {
+  const business = await tx.businessProfile.findUnique({ where: { id: "business" }, select: { businessName: true } });
+  const businessName = business?.businessName ?? SYSTEM_BUSINESS_DEFAULTS.businessName;
   await createInternalNotification(tx, {
     userId: input.order.customerId,
     userRole: "CUSTOMER",
     orderId: input.order.id,
     type: "ORDER_DELIVERED",
     title: "Order delivered",
-    message: `Your Karame Bay order ${input.order.orderNumber} has been delivered.`,
+    message: `Your ${businessName} order ${input.order.orderNumber} has been delivered.`,
   });
   await createInternalNotification(tx, {
     userId: input.store.ownerId,
@@ -485,14 +450,14 @@ export async function notifyDelivered(
     "Rider completed delivery",
     `Delivery completed for ${input.order.orderNumber}`,
   );
-  const subject = "Your Karame Bay Order Has Been Delivered ✅";
+  const subject = `Your ${businessName} Order Has Been Delivered ✅`;
   const body = [
     `Hello ${input.customer.firstName},`,
     "",
-    `Your Karame Bay order ${input.order.orderNumber} from ${input.store.name} has been delivered.`,
+    `Your ${businessName} order ${input.order.orderNumber} from ${input.store.name} has been delivered.`,
     `Total amount: RWF ${input.order.grandTotalRwf.toLocaleString("en-RW")}`,
     "",
-    "Thank you for choosing Karame Bay.",
+    `Thank you for choosing ${businessName}.`,
     "We would love your feedback and rating on your delivery experience.",
   ].join("\n");
   void writeNotificationEmail(
@@ -717,15 +682,16 @@ export async function sendCustomerEmailNotification(input: {
 }
 
 export async function sendTestEmail(recipientEmail: string) {
-  const subject = "Karame Bay Email System Test";
+  const business = await getBusinessProfile();
+  const subject = `${business.businessName} Email System Test`;
   const body = `Hello,
 
-This is a test email from the Karame Bay notification system.
+This is a test email from the ${business.businessName} notification system.
 
 If you received this email, Gmail SMTP is working correctly.
 
 Regards,
-Karame Bay Team`;
+${business.businessName} Team`;
   return sendCustomerEmailNotification({
     recipientEmail,
     subject,

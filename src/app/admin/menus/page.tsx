@@ -62,7 +62,10 @@ export default async function AdminMenusPage() {
           slug: true,
           description: true,
           basePriceRwf: true,
+          containerChargePerUnitRwf: true,
+          containerChargeFlatRwf: true,
           imageUrl: true,
+          imagePublicId: true,
           isAvailable: true,
           categoryId: true,
           category: {
@@ -198,7 +201,7 @@ export default async function AdminMenusPage() {
         <div className="admin-header-actions">
           <Link href="/admin">Dashboard</Link>
           <Link href="/admin/stores">Stores</Link>
-          <Link href="/admin/products">Market engine</Link>
+          <Link href="/admin/products">Retail catalog</Link>
           <Link href="/admin/riders">Riders</Link>
         </div>
       </header>

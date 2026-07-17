@@ -167,6 +167,46 @@ export default async function Page({
     }),
   ]);
 
+  const [storeRatingGroups, riderRatingGroups] = await Promise.all([
+    db.review.groupBy({
+      by: ["storeId"],
+      where: { moderationStatus: "VISIBLE" },
+      _avg: { storeRating: true },
+      _count: { _all: true },
+    }),
+    db.review.groupBy({
+      by: ["riderId"],
+      where: { moderationStatus: "VISIBLE", riderId: { not: null }, riderOverallRating: { not: null } },
+      _avg: { riderOverallRating: true },
+      _count: { _all: true },
+    }),
+  ]);
+  const storeTypeOperations = await db.storeType.findMany({
+    orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+    include: {
+      stores: {
+        where: { status: "APPROVED" },
+        select: {
+          _count: {
+            select: {
+              orders: true,
+              restaurantProducts: true,
+              marketplaceProducts: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  const [ratedStores, ratedRiders] = await Promise.all([
+    db.store.findMany({ where: { id: { in: storeRatingGroups.map((row) => row.storeId) } }, select: { id: true, name: true } }),
+    db.user.findMany({ where: { id: { in: riderRatingGroups.flatMap((row) => row.riderId ? [row.riderId] : []) } }, select: { id: true, firstName: true, lastName: true } }),
+  ]);
+  const storeNameById = new Map(ratedStores.map((store) => [store.id, store.name]));
+  const riderNameById = new Map(ratedRiders.map((rider) => [rider.id, `${rider.firstName} ${rider.lastName}`]));
+  const storeRankings = storeRatingGroups.map((row) => ({ id: row.storeId, name: storeNameById.get(row.storeId) ?? "Unknown store", rating: row._avg.storeRating ?? 0, count: row._count._all })).sort((a, b) => b.rating - a.rating);
+  const riderRankings = riderRatingGroups.flatMap((row) => row.riderId ? [{ id: row.riderId, name: riderNameById.get(row.riderId) ?? "Unknown rider", rating: row._avg.riderOverallRating ?? 0, count: row._count._all }] : []).sort((a, b) => b.rating - a.rating);
+
   const orderStatusCounts = Object.fromEntries(
     trackedStatuses.map((status) => [status, 0]),
   ) as Record<(typeof trackedStatuses)[number], number>;
@@ -187,10 +227,10 @@ export default async function Page({
   ];
 
   const dashboardCards = [
-    { label: "Food / market orders today", value: todayOrders },
-    { label: "Food / market orders this week", value: weekOrders },
-    { label: "Food / market orders this month", value: monthOrders },
-    { label: "Total food / market orders", value: totalOrders },
+    { label: "Store orders today", value: todayOrders },
+    { label: "Store orders this week", value: weekOrders },
+    { label: "Store orders this month", value: monthOrders },
+    { label: "Total store orders", value: totalOrders },
     { label: "Pending orders", value: orderStatusCounts.PENDING },
     { label: "Accepted orders", value: orderStatusCounts.ACCEPTED },
     { label: "Preparing orders", value: orderStatusCounts.PREPARING },
@@ -282,11 +322,13 @@ export default async function Page({
             <Link href="/admin/stores">Stores</Link>
             <Link href="/admin/parcels">Parcel deliveries</Link>
             <Link href="/admin/menus">Restaurant menus</Link>
-            <Link href="/admin/products">Market engine</Link>
+            <Link href="/admin/products">Retail catalog</Link>
             <Link href="/admin/products/import">Price import</Link>
             <Link href="/admin/riders">Riders</Link>
             <Link href="/admin/customers">Customers</Link>
+            <Link href="/admin/reviews">Reviews</Link>
             <Link href="/admin/reports">Reports</Link>
+            <Link href="/admin/settings">Settings</Link>
             <NotificationBell />
             <Link href="/admin/login">Admin sign-in</Link>
           </div>
@@ -301,12 +343,29 @@ export default async function Page({
           ))}
         </section>
 
-        <h2 className="admin-section-title">Food and market operations</h2>
-        <section className="admin-dashboard-grid" aria-label="Food and market statistics">
+        <h2 className="admin-section-title">Store operations</h2>
+        <section className="admin-dashboard-grid" aria-label="Store order statistics">
           {dashboardCards.map((card) => (
             <article className="admin-dashboard-card" key={card.label}>
               <small>{card.label}</small>
               <b>{card.value}</b>
+            </article>
+          ))}
+        </section>
+
+        <div className="admin-section-heading">
+          <h2 className="admin-section-title">Store types</h2>
+          <Link href="/admin/stores#store-types">Manage store types</Link>
+        </div>
+        <section className="admin-dashboard-grid" aria-label="Dynamic store type statistics">
+          {storeTypeOperations.map((storeType) => (
+            <article className="admin-dashboard-card" key={storeType.id}>
+              <small>{storeType.customerSectionName}</small>
+              <b>{storeType.stores.length} {storeType.stores.length === 1 ? "store" : "stores"}</b>
+              <span>
+                {storeType.stores.reduce((total, store) => total + store._count.orders, 0)} orders ·{" "}
+                {storeType.stores.reduce((total, store) => total + store._count.restaurantProducts + store._count.marketplaceProducts, 0)} products
+              </span>
             </article>
           ))}
         </section>
@@ -389,6 +448,16 @@ export default async function Page({
           </div>
         </section>
 
+        <section className="admin-rating-overview">
+          <div className="admin-section-heading"><h2 className="admin-section-title">Ratings overview</h2><Link href="/admin/reviews">Moderate reviews</Link></div>
+          <div className="admin-rating-columns">
+            <RatingRanking title="Top rated stores" rows={storeRankings.slice(0, 5)} />
+            <RatingRanking title="Lowest rated stores" rows={[...storeRankings].reverse().slice(0, 5)} />
+            <RatingRanking title="Top rated riders" rows={riderRankings.slice(0, 5)} />
+            <RatingRanking title="Lowest rated riders" rows={[...riderRankings].reverse().slice(0, 5)} />
+          </div>
+        </section>
+
         <AdminOrdersClient orders={ordersView} riders={riders} />
         <nav className="catalog-pages" aria-label="Order pages">
           <Link
@@ -411,4 +480,8 @@ export default async function Page({
       <OperationsPortalBadge role="Admin" destination="/admin/login" />
     </>
   );
+}
+
+function RatingRanking({ title, rows }: { title: string; rows: { id: string; name: string; rating: number; count: number }[] }) {
+  return <article><h3>{title}</h3>{rows.length ? <ol>{rows.map((row) => <li key={row.id}><span>{row.name}<small>{row.count} {row.count === 1 ? "review" : "reviews"}</small></span><b>{row.rating.toFixed(1)} / 5</b></li>)}</ol> : <p>No ratings yet.</p>}</article>;
 }

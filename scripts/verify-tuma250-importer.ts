@@ -10,7 +10,7 @@ const simple = parseTumaProductRow({
     prices: { price: "1750", currency_code: "RWF", currency_minor_unit: 0 },
   },
   categoryName: "Fruits & Vegetables",
-  marketName: "Kimironko Market",
+  marketName: "Karame Bay Market",
   observedAt,
 });
 assert(simple);
@@ -33,7 +33,7 @@ const variation = parseTumaProductRow({
   parentId: 200,
   inheritedName: "Peeled &amp; Chopped Cassava",
   categoryName: "Fruits & Vegetables",
-  marketName: "Zinia Kicukiro Market",
+  marketName: "Karame Bay Market",
   observedAt,
 });
 assert(variation);
@@ -44,7 +44,7 @@ assert.equal(variation.unit, "1kg");
 assert.equal(parseTumaProductRow({
   product: { id: 303, name: "Wrong currency", prices: { price: "10", currency_code: "USD", currency_minor_unit: 2 } },
   categoryName: "Groceries",
-  marketName: "Kimironko Market",
+  marketName: "Karame Bay Market",
   observedAt,
 }), null);
 

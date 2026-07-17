@@ -3,7 +3,7 @@
 import { ChangeEvent, useId, useRef, useState } from "react";
 import { ImageIcon, LoaderCircle, Trash2, Upload } from "lucide-react";
 
-type ImagePurpose = "store-logo" | "store-cover" | "product";
+type ImagePurpose = "store-logo" | "store-cover" | "store-type" | "product";
 
 export function AdminImageUpload({
   label,
@@ -15,7 +15,7 @@ export function AdminImageUpload({
   label: string;
   purpose: ImagePurpose;
   value: string;
-  onChange: (url: string) => void;
+  onChange: (url: string, publicId?: string) => void;
   help?: string;
 }) {
   const inputId = useId();
@@ -40,12 +40,13 @@ export function AdminImageUpload({
       });
       const data = (await response.json().catch(() => ({}))) as {
         url?: string;
+        publicId?: string;
         error?: string;
       };
       if (!response.ok || !data.url) {
         throw new Error(data.error ?? "Could not upload the image.");
       }
-      onChange(data.url);
+      onChange(data.url, data.publicId);
     } catch (uploadError) {
       setError(
         uploadError instanceof Error

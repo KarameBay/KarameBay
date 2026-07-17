@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     );
   const { storeId, customerLat, customerLng } = parsed.data;
   const store = await db.store.findFirst({
-    where: { id: storeId, status: "APPROVED" },
+    where: { id: storeId, status: "APPROVED", storeType: { is: { isActive: true } } },
     select: { latitude: true, longitude: true },
   });
   if (!store)

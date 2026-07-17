@@ -20,7 +20,8 @@
 }
 .browse-logo img {
   border-radius: 9px;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
 }
 .browse-logo b {
   color: var(--orange);
@@ -270,6 +271,11 @@
   border: 5px solid #fff;
   border-radius: 16px;
   box-shadow: 0 8px 25px #12281c26;
+}
+.store-artwork.compact > img {
+  object-fit: contain;
+  padding: 4px;
+  background: #fff;
 }
 .store-artwork.compact > svg {
   width: 27px;
@@ -542,8 +548,9 @@
 .catalog-product-image > img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
+  background: #fff;
 }
 .catalog-product-image > img.placeholder {
   object-fit: contain;
@@ -952,7 +959,8 @@
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
 }
 
 .menu-engine-heading-copy {

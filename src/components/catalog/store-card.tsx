@@ -6,6 +6,7 @@ type StoreCardData = {
   slug: string;
   name: string;
   type: string;
+  storeType: { name: string; customerSectionName: string; iconUrl: string | null } | null;
   isOpen: boolean;
   opensAt: string;
   closesAt: string;
@@ -21,7 +22,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
     <Link href={`/stores/${store.slug}`} className="browse-store-card">
       <StoreArtwork
         name={store.name}
-        type={store.type}
+        type={store.storeType?.name ?? store.type}
         imageUrl={store.coverUrl ?? store.logoUrl}
       />
       <div className="browse-store-content">
@@ -35,7 +36,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
         <h2>{store.name}</h2>
         <p>
           <StoreIcon />
-          {store.type === "RESTAURANT" ? "Restaurant & Coffee" : "Fresh Market"}
+          {store.storeType?.name ?? "Store"}
         </p>
         <div className="browse-store-meta">
           <span>

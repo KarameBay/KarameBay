@@ -3,8 +3,10 @@ import {
   Bell,
   MapPin,
   Package,
+  LifeBuoy,
   Settings,
   ShoppingBag,
+  Star,
   UserRound,
 } from "lucide-react";
 import { CustomerAccountActions } from "@/components/customer/customer-account-actions";
@@ -17,6 +19,8 @@ type PortalTab =
   | "addresses"
   | "orders"
   | "parcels"
+  | "reviews"
+  | "help"
   | "notifications";
 
 const navItems: {
@@ -46,6 +50,20 @@ const navItems: {
     note: "Send and track packages",
     icon: Package,
     tab: "parcels",
+  },
+  {
+    href: "/customer/reviews",
+    label: "My reviews",
+    note: "Ratings and feedback",
+    icon: Star,
+    tab: "reviews",
+  },
+  {
+    href: "/customer/help",
+    label: "Help & Support",
+    note: "Contact and policies",
+    icon: LifeBuoy,
+    tab: "help",
   },
   {
     href: "/customer/profile",

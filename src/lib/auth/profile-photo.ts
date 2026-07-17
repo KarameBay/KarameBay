@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -28,9 +27,7 @@ export async function saveProfilePhoto(file: File | null) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const extension = imageExtension(bytes);
   if (!extension) throw new Error("Profile photo must be a valid JPG, PNG, or WebP image.");
-  const directory = path.join(process.cwd(), "public", "uploads", "profiles");
-  await mkdir(directory, { recursive: true });
   const filename = `${randomUUID()}.${extension}`;
-  await writeFile(path.join(directory, filename), bytes, { flag: "wx" });
-  return `/uploads/profiles/${filename}`;
+  const uploaded = await uploadImageToCloudinary(bytes, filename, "profiles");
+  return { url: uploaded.url, publicId: uploaded.publicId };
 }

@@ -76,6 +76,12 @@
 }
 
 .explore-jump-grid > a > span svg { width: 23px; }
+.explore-jump-grid > a > span img,
+.directory-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 .explore-jump-grid strong { font: 800 16px var(--font-display); }
 .explore-jump-grid small { margin-top: 5px; color: var(--muted); font-size: 10px; grid-column: 1; }
 .explore-jump-grid > a > svg { width: 17px; color: var(--green); grid-column: 2; grid-row: 2 / 4; align-self: center; }

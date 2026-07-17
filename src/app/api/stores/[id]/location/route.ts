@@ -6,7 +6,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const store = await db.store.findFirst({
-    where: { id, status: "APPROVED" },
+    where: { id, status: "APPROVED", storeType: { is: { isActive: true } } },
     select: { id: true, name: true, latitude: true, longitude: true },
   });
   return store

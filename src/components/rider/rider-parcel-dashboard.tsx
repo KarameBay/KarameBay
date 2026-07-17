@@ -585,7 +585,7 @@ export function RiderParcelDashboard({
     <main className="parcel-rider-page">
       <header className="parcel-rider-page-head">
         <div><span className="catalog-kicker">KARAME BAY RIDER</span><h1>Parcel deliveries</h1><p>Welcome, {riderName}. Only parcels assigned by an administrator appear here.</p></div>
-        <div><Link href="/rider">Food &amp; market deliveries</Link><span><CircleDollarSign /><small>PARCEL EARNINGS</small><b>{formatRwf(earnings)}</b></span></div>
+        <div><Link href="/rider">Store deliveries</Link><span><CircleDollarSign /><small>PARCEL EARNINGS</small><b>{formatRwf(earnings)}</b></span></div>
       </header>
       <nav className="parcel-rider-tabs">
         <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>Active <em>{active.length}</em></button>

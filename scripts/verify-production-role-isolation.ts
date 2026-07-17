@@ -7,6 +7,7 @@ const db = new PrismaClient();
 const baseUrl = process.env.TEST_BASE_URL ?? "http://127.0.0.1:3000";
 const marker = `temporary-role-check-${Date.now()}`;
 const password = randomBytes(24).toString("base64url");
+let requestSequence = 80;
 const accounts = [
   { role: "CUSTOMER", portal: "customer", cookie: "karame_customer_session" },
   { role: "ADMIN", portal: "admin", cookie: "karame_admin_session" },
@@ -16,7 +17,10 @@ const accounts = [
 async function login(email: string, portal: string) {
   const response = await fetch(`${baseUrl}/api/auth/login`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "x-forwarded-for": `198.51.100.${requestSequence++}`,
+    },
     body: JSON.stringify({
       email,
       password,

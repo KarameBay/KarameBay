@@ -93,14 +93,14 @@ async function main() {
 
   const csv = [
     "Commodity name,Category,Market,Unit,Price,Price date",
-    "Tomato,Vegetables,Kimironko,kg,1000,2026-07-14",
+    "Tomato,Vegetables,Karame Bay Market,kg,1000,2026-07-14",
   ].join("\n");
   const csvRows = await parsePriceImportFile(new File([csv], "prices.csv", { type: "text/csv" }));
   assert.equal(csvRows.length, 1);
   assert.equal(csvRows[0].price, 1000, "CSV fallback parses prices");
   await assert.rejects(
-    parsePriceImportFile(new File([csv.replace("Kimironko", "Nyabugogo")], "wrong-market.csv", { type: "text/csv" })),
-    /Kimironko Market/,
+    parsePriceImportFile(new File([csv.replace("Karame Bay Market", "Nyabugogo")], "wrong-market.csv", { type: "text/csv" })),
+    /Karame Bay Market/,
   );
 
   const admin = await db.user.findFirstOrThrow({ where: { role: "ADMIN" }, select: { id: true } });

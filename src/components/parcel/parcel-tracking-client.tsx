@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatRwf } from "@/lib/catalog";
-import { SUPPORT_WHATSAPP_URL } from "@/lib/contact";
 import { formatKigaliDateTime } from "@/lib/date-format";
 import { ParcelRouteMapLoader } from "./parcel-route-map-loader";
 import {
@@ -195,7 +194,7 @@ function normaliseParcel(value: unknown): TrackedParcel {
   };
 }
 
-export function ParcelTrackingClient({ reference }: { reference: string }) {
+export function ParcelTrackingClient({ reference, whatsappUrl }: { reference: string; whatsappUrl: string }) {
   const [parcel, setParcel] = useState<TrackedParcel | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -393,7 +392,7 @@ export function ParcelTrackingClient({ reference }: { reference: string }) {
           </section>
           <a
             className="parcel-support-link"
-            href={SUPPORT_WHATSAPP_URL}
+            href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
           >

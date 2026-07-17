@@ -6,11 +6,13 @@ import {
   Package,
   Search,
   ShoppingBasket,
+  Store,
 } from "lucide-react";
 import { StoreCard } from "@/components/catalog/store-card";
-import type { getStores } from "@/lib/catalog";
+import type { getActiveStoreTypes, getStores } from "@/lib/catalog";
 
 type StoreList = Awaited<ReturnType<typeof getStores>>;
+type StoreTypeList = Awaited<ReturnType<typeof getActiveStoreTypes>>;
 
 type DirectoryKind = "restaurants" | "markets";
 
@@ -20,15 +22,17 @@ function ExploreSection({
   description,
   href,
   stores,
+  id,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   href: string;
   stores: StoreList;
+  id: string;
 }) {
   return (
-    <section className="explore-section" id={title.toLowerCase()}>
+    <section className="explore-section" id={id}>
       <div className="explore-section-heading">
         <div>
           <span className="catalog-kicker">{eyebrow}</span>
@@ -59,14 +63,13 @@ function ExploreSection({
   );
 }
 
-export function ExploreOverview({ stores }: { stores: StoreList }) {
-  const restaurants = stores
-    .filter((store) => store.catalogEngine === "RESTAURANT")
-    .slice(0, 4);
-  const markets = stores
-    .filter((store) => store.catalogEngine === "MARKETPLACE")
-    .slice(0, 4);
-
+export function ExploreOverview({
+  stores,
+  storeTypes,
+}: {
+  stores: StoreList;
+  storeTypes: StoreTypeList;
+}) {
   return (
     <main className="explore-page">
       <section className="explore-hero">
@@ -74,23 +77,28 @@ export function ExploreOverview({ stores }: { stores: StoreList }) {
           <span className="catalog-kicker">EXPLORE KARAME BAY</span>
           <h1>Discover Kigali, delivered.</h1>
           <p>
-            Browse restaurant menus, shop trusted markets, or book a secure
-            parcel delivery from one place.
+            Browse local businesses by category or book a secure parcel
+            delivery from one place.
           </p>
         </div>
         <nav className="explore-jump-grid" aria-label="Explore services">
-          <Link href="#restaurants">
-            <span><ChefHat aria-hidden="true" /></span>
-            <strong>Restaurants</strong>
-            <small>Meals, coffee and more</small>
-            <ArrowRight aria-hidden="true" />
-          </Link>
-          <Link href="#markets">
-            <span><ShoppingBasket aria-hidden="true" /></span>
-            <strong>Markets</strong>
-            <small>Groceries and essentials</small>
-            <ArrowRight aria-hidden="true" />
-          </Link>
+          {storeTypes.map((storeType) => (
+            <Link href={`#${storeType.slug}`} key={storeType.id}>
+              <span>
+                {storeType.iconUrl || storeType.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={storeType.iconUrl ?? storeType.imageUrl ?? ""} alt="" />
+                ) : storeType.commerceEngine === "RESTAURANT" ? (
+                  <ChefHat aria-hidden="true" />
+                ) : (
+                  <Store aria-hidden="true" />
+                )}
+              </span>
+              <strong>{storeType.customerSectionName}</strong>
+              <small>{storeType.description}</small>
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          ))}
           <Link href="#send-a-parcel">
             <span><Package aria-hidden="true" /></span>
             <strong>Send a Parcel</strong>
@@ -100,21 +108,17 @@ export function ExploreOverview({ stores }: { stores: StoreList }) {
         </nav>
       </section>
 
-      <ExploreSection
-        eyebrow="FOOD & DRINK"
-        title="Restaurants"
-        description="Explore menus from restaurants and coffee shops across Kigali."
-        href="/restaurants"
-        stores={restaurants}
-      />
-
-      <ExploreSection
-        eyebrow="GROCERIES & ESSENTIALS"
-        title="Markets"
-        description="Shop fresh produce, groceries, household items, and everyday essentials."
-        href="/markets"
-        stores={markets}
-      />
+      {storeTypes.map((storeType) => (
+        <ExploreSection
+          key={storeType.id}
+          id={storeType.slug}
+          eyebrow={storeType.isFeatured ? "FEATURED" : "EXPLORE"}
+          title={storeType.customerSectionName}
+          description={storeType.description}
+          href={`/explore/${storeType.slug}`}
+          stores={stores.filter((store) => store.storeTypeId === storeType.id).slice(0, 4)}
+        />
+      ))}
 
       <section className="explore-parcel" id="send-a-parcel">
         <div className="explore-parcel-icon"><Package aria-hidden="true" /></div>
@@ -199,6 +203,71 @@ export function StoreDirectory({
             <h3>No matching {kind}</h3>
             <p>Try another store, product, or category name.</p>
             <Link href={`/${kind}`}>Clear search</Link>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
+export function StoreTypeDirectory({
+  storeType,
+  stores,
+  query,
+}: {
+  storeType: StoreTypeList[number];
+  stores: StoreList;
+  query: string;
+}) {
+  return (
+    <main className="explore-page directory-page">
+      <section className="directory-hero">
+        <div>
+          <span className="directory-icon">
+            {storeType.iconUrl || storeType.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={storeType.iconUrl ?? storeType.imageUrl ?? ""} alt="" />
+            ) : storeType.commerceEngine === "RESTAURANT" ? (
+              <ChefHat aria-hidden="true" />
+            ) : (
+              <Store aria-hidden="true" />
+            )}
+          </span>
+          <span className="catalog-kicker">EXPLORE KIGALI</span>
+          <h1>{storeType.customerSectionName}</h1>
+          <p>{storeType.description}</p>
+        </div>
+        <form action={`/explore/${storeType.slug}`} className="directory-search" role="search">
+          <Search aria-hidden="true" />
+          <input
+            defaultValue={query}
+            maxLength={100}
+            name="q"
+            placeholder={`Search ${storeType.customerSectionName.toLowerCase()} or products`}
+          />
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <section className="directory-results">
+        <div className="directory-results-heading">
+          <div>
+            <span className="catalog-kicker">{query ? "SEARCH RESULTS" : "ALL STORES"}</span>
+            <h2>{query ? `Results for “${query}”` : storeType.customerSectionName}</h2>
+          </div>
+          <p>{stores.length} {stores.length === 1 ? "store" : "stores"}</p>
+        </div>
+
+        {stores.length > 0 ? (
+          <div className="explore-store-grid">
+            {stores.map((store) => <StoreCard key={store.id} store={store} />)}
+          </div>
+        ) : (
+          <div className="directory-empty">
+            <Search aria-hidden="true" />
+            <h3>No matching stores</h3>
+            <p>Try another store, product, category, or keyword.</p>
+            <Link href={`/explore/${storeType.slug}`}>Clear search</Link>
           </div>
         )}
       </section>

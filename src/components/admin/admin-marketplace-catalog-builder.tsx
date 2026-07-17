@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { AdminImageUpload } from "@/components/admin/admin-image-upload";
 import { formatRwf } from "@/lib/catalog";
 import { DEFAULT_MARKET_IMAGE, productImage } from "@/lib/product-images";
+import type { OptionalProductField, StoreTypeCapabilities } from "@/lib/store-types";
 
 type Category = { id: string; name: string; description: string | null };
 type Department = {
@@ -17,12 +18,15 @@ type Department = {
   description: string | null;
   categories: Category[];
 };
+type CategoryWithDepartment = Category & { department: Department };
 type Market = {
   id: string;
   name: string;
   slug: string;
   departments: Department[];
   productCount: number;
+  storeTypeName: string;
+  capabilities: StoreTypeCapabilities;
 };
 type Product = {
   id: string;
@@ -34,6 +38,9 @@ type Product = {
   brand: string | null;
   sku: string | null;
   imageUrl: string | null;
+  imagePublicId?: string | null;
+  containerChargePerUnitRwf: number;
+  containerChargeFlatRwf: number;
   isAvailable: boolean;
   featured: boolean;
   department: { id: string; name: string };
@@ -58,6 +65,9 @@ const blankProduct = (market?: Market) => ({
   brand: "",
   sku: "",
   imageUrl: DEFAULT_MARKET_IMAGE,
+  imagePublicId: "",
+  containerChargePerUnitRwf: "0",
+  containerChargeFlatRwf: "0",
   unitLabel: "Each",
   unitType: "EACH",
   priceRwf: "",
@@ -73,7 +83,7 @@ async function catalogRequest(payload: Record<string, unknown>) {
     body: JSON.stringify(payload),
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error ?? "Could not update the market catalog.");
+  if (!response.ok) throw new Error(data.error ?? "Could not update the retail catalog.");
   return data;
 }
 
@@ -91,8 +101,8 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [product, setProduct] = useState(blankProduct(market));
-  const [departmentName, setDepartmentName] = useState("");
-  const [categoryName, setCategoryName] = useState("");
+  const [departmentForm, setDepartmentForm] = useState({ id: "", name: "", description: "" });
+  const [categoryForm, setCategoryForm] = useState({ id: "", name: "", description: "" });
   const [categoryDepartmentId, setCategoryDepartmentId] = useState(market?.departments[0]?.id ?? "");
 
   const loadProducts = useCallback(async () => {
@@ -123,13 +133,20 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
     if (!market) return;
     setProduct(blankProduct(market));
     setCategoryDepartmentId(market.departments[0]?.id ?? "");
+    setDepartmentForm({ id: "", name: "", description: "" });
+    setCategoryForm({ id: "", name: "", description: "" });
     setPage(1);
   }, [market]);
 
   const categories = useMemo(
-    () => market?.departments.find((item) => item.id === product.departmentId)?.categories ?? [],
+    () =>
+      market?.capabilities.departmentsEnabled
+        ? market.departments.find((item) => item.id === product.departmentId)?.categories ?? []
+        : market?.departments.flatMap((item) => item.categories) ?? [],
     [market, product.departmentId],
   );
+  const hasOptionalField = (field: OptionalProductField) =>
+    market.capabilities.optionalProductFields.includes(field);
 
   function chooseProduct(item: Product) {
     const unit = item.units.find((value) => value.isDefault) ?? item.units[0];
@@ -143,6 +160,9 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
       brand: item.brand ?? "",
       sku: item.sku ?? "",
       imageUrl: item.imageUrl ?? DEFAULT_MARKET_IMAGE,
+      imagePublicId: item.imagePublicId ?? "",
+      containerChargePerUnitRwf: String(item.containerChargePerUnitRwf ?? 0),
+      containerChargeFlatRwf: String(item.containerChargeFlatRwf ?? 0),
       unitLabel: unit?.label ?? "Each",
       unitType: unit?.unitType ?? "EACH",
       priceRwf: String(unit?.priceRwf ?? 0),
@@ -165,9 +185,11 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
         action: "save",
         ...product,
         priceRwf: Number(product.priceRwf),
+        containerChargePerUnitRwf: Number(product.containerChargePerUnitRwf),
+        containerChargeFlatRwf: Number(product.containerChargeFlatRwf),
         stockQuantity: Number(product.stockQuantity),
       });
-      setMessage(product.id ? "Product updated." : "Product added to the market.");
+      setMessage(product.id ? "Product updated." : "Product added to the store.");
       setProduct(blankProduct(market));
       await loadProducts();
       router.refresh();
@@ -182,80 +204,169 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
     if (!window.confirm(`Delete ${item.name}?`)) return;
     try {
       await catalogRequest({ entity: "product", action: "delete", id: item.id });
+      setProducts((current) => current.filter((productRow) => productRow.id !== item.id));
+      setTotal((current) => Math.max(0, current - 1));
       if (product.id === item.id) setProduct(blankProduct(market));
       setMessage("Product deleted.");
       await loadProducts();
       router.refresh();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Could not delete the product.");
+      const message = deleteError instanceof Error ? deleteError.message : "Could not delete the product.";
+      setError(message);
+      window.alert(message);
     }
   }
 
-  async function addDepartment(event: FormEvent) {
+  async function saveDepartment(event: FormEvent) {
     event.preventDefault();
     try {
-      await catalogRequest({ entity: "department", action: "save", storeId: market.id, name: departmentName });
-      setDepartmentName("");
-      setMessage("Department added.");
+      await catalogRequest({
+        entity: "department",
+        action: "save",
+        id: departmentForm.id || undefined,
+        storeId: market.id,
+        name: departmentForm.name,
+        description: departmentForm.description,
+      });
+      setDepartmentForm({ id: "", name: "", description: "" });
+      setMessage(departmentForm.id ? "Department updated." : "Department added.");
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Could not add the department.");
+      setError(saveError instanceof Error ? saveError.message : "Could not save the department.");
     }
   }
 
-  async function addCategory(event: FormEvent) {
+  async function deleteDepartment(department: Department) {
+    if (!window.confirm(`Delete ${department.name}?`)) return;
+    try {
+      await catalogRequest({ entity: "department", action: "delete", id: department.id });
+      setDepartmentForm({ id: "", name: "", description: "" });
+      setMessage("Department deleted.");
+      router.refresh();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete the department.");
+    }
+  }
+
+  function editDepartment(department: Department) {
+    setDepartmentForm({ id: department.id, name: department.name, description: department.description ?? "" });
+    setMessage("");
+    setError("");
+  }
+
+  async function saveCategory(event: FormEvent) {
     event.preventDefault();
     try {
       await catalogRequest({
         entity: "category",
         action: "save",
-        departmentId: categoryDepartmentId,
-        name: categoryName,
+        id: categoryForm.id || undefined,
+        storeId: market.id,
+        departmentId: categoryDepartmentId || market.departments[0]?.id || undefined,
+        name: categoryForm.name,
+        description: categoryForm.description,
       });
-      setCategoryName("");
-      setMessage("Category added.");
+      setCategoryForm({ id: "", name: "", description: "" });
+      setMessage(categoryForm.id ? "Category updated." : "Category added.");
       router.refresh();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Could not add the category.");
+      setError(saveError instanceof Error ? saveError.message : "Could not save the category.");
     }
   }
 
+  async function deleteCategory(category: Category) {
+    if (!window.confirm(`Delete ${category.name}?`)) return;
+    try {
+      await catalogRequest({ entity: "category", action: "delete", id: category.id });
+      setCategoryForm({ id: "", name: "", description: "" });
+      setMessage("Category deleted.");
+      router.refresh();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete the category.");
+    }
+  }
+
+  function editCategory(category: CategoryWithDepartment) {
+    setCategoryDepartmentId(category.department.id);
+    setCategoryForm({ id: category.id, name: category.name, description: category.description ?? "" });
+    setMessage("");
+    setError("");
+  }
+
+  const allCategories = market.departments.flatMap((department) =>
+    department.categories.map((category) => ({ ...category, department })),
+  );
+
   if (!markets.length) {
-    return <section className="admin-management-card"><h2>No market stores yet</h2><p>Create a store with the Marketplace catalog engine first.</p></section>;
+    return <section className="admin-management-card"><h2>No retail stores yet</h2><p>Create a store type using the Retail Catalog Engine, then create a store under it.</p></section>;
   }
 
   return (
     <div className="market-engine-shell">
       <section className="admin-management-card market-engine-toolbar">
         <label>
-          Market
+          Retail store
           <select value={market.id} onChange={(event) => setMarketId(event.target.value)}>
             {markets.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
           </select>
         </label>
-        <div><small>Departments</small><b>{market.departments.length}</b></div>
+        <div><small>Store type</small><b>{market.storeTypeName}</b></div>
         <div><small>Categories</small><b>{market.departments.reduce((sum, item) => sum + item.categories.length, 0)}</b></div>
         <div><small>Products</small><b>{market.productCount}</b></div>
       </section>
 
       <section className="market-engine-taxonomy">
-        <form className="admin-management-card market-quick-form" onSubmit={addDepartment}>
-          <div><span className="catalog-kicker">CATALOG STRUCTURE</span><h2>Add department</h2></div>
-          <div className="market-inline-fields">
-            <input value={departmentName} onChange={(event) => setDepartmentName(event.target.value)} placeholder="Groceries" required minLength={2} />
-            <button type="submit"><Plus /> Add</button>
+        {market.capabilities.departmentsEnabled ? (
+          <form className="admin-management-card market-quick-form" onSubmit={saveDepartment}>
+            <div><span className="catalog-kicker">CATALOG STRUCTURE</span><h2>{departmentForm.id ? "Edit department" : "Add department"}</h2></div>
+            <div className="market-inline-fields">
+              <input value={departmentForm.name} onChange={(event) => setDepartmentForm((current) => ({ ...current, name: event.target.value }))} placeholder="Groceries" required minLength={2} />
+              <button type="submit"><Plus /> {departmentForm.id ? "Save" : "Add"}</button>
+            </div>
+            <input value={departmentForm.description} onChange={(event) => setDepartmentForm((current) => ({ ...current, description: event.target.value }))} placeholder="Description, optional" />
+            {departmentForm.id ? <button type="button" className="secondary market-cancel-edit" onClick={() => setDepartmentForm({ id: "", name: "", description: "" })}>Cancel editing</button> : null}
+            <div className="market-taxonomy-title"><b>Current departments</b><span>{market.departments.length}</span></div>
+            <div className="market-taxonomy-list">
+              {market.departments.map((item) => (
+                <article key={item.id}>
+                  <span><b>{item.name}</b><small>{item.categories.length} categories</small></span>
+                  <button type="button" className="secondary" onClick={() => editDepartment(item)}><Pencil /> Edit</button>
+                  <button type="button" className="secondary danger" onClick={() => deleteDepartment(item)}><Trash2 /> Delete</button>
+                </article>
+              ))}
+              {!market.departments.length && <p>No departments yet.</p>}
+            </div>
+          </form>
+        ) : (
+          <div className="admin-management-card market-quick-form">
+            <div><span className="catalog-kicker">CATALOG STRUCTURE</span><h2>Simple catalog</h2></div>
+            <p>Departments are optional for this store type. Admin only manages categories.</p>
           </div>
-          <p>{market.departments.map((item) => item.name).join(" · ") || "No departments yet"}</p>
-        </form>
-        <form className="admin-management-card market-quick-form" onSubmit={addCategory}>
-          <div><span className="catalog-kicker">CATALOG STRUCTURE</span><h2>Add category</h2></div>
-          <select value={categoryDepartmentId} onChange={(event) => setCategoryDepartmentId(event.target.value)} required>
-            <option value="">Choose department</option>
-            {market.departments.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
-          </select>
+        )}
+        <form className="admin-management-card market-quick-form" onSubmit={saveCategory}>
+          <div><span className="catalog-kicker">CATALOG STRUCTURE</span><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2></div>
+          {market.capabilities.departmentsEnabled ? (
+            <select value={categoryDepartmentId} onChange={(event) => setCategoryDepartmentId(event.target.value)} required>
+              <option value="">Choose department</option>
+              {market.departments.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
+            </select>
+          ) : null}
           <div className="market-inline-fields">
-            <input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Beverages" required minLength={2} />
-            <button type="submit"><Plus /> Add</button>
+            <input value={categoryForm.name} onChange={(event) => setCategoryForm((current) => ({ ...current, name: event.target.value }))} placeholder="Beverages" required minLength={2} />
+            <button type="submit"><Plus /> {categoryForm.id ? "Save" : "Add"}</button>
+          </div>
+          <input value={categoryForm.description} onChange={(event) => setCategoryForm((current) => ({ ...current, description: event.target.value }))} placeholder="Description, optional" />
+          {categoryForm.id ? <button type="button" className="secondary market-cancel-edit" onClick={() => setCategoryForm({ id: "", name: "", description: "" })}>Cancel editing</button> : null}
+          <div className="market-taxonomy-title"><b>Current categories</b><span>{allCategories.length}</span></div>
+          <div className="market-taxonomy-list">
+            {allCategories.map((category) => (
+              <article key={category.id}>
+                <span><b>{category.name}</b><small>{market.capabilities.departmentsEnabled ? category.department.name : "Category"}</small></span>
+                <button type="button" className="secondary" onClick={() => editCategory(category)}><Pencil /> Edit</button>
+                <button type="button" className="secondary danger" onClick={() => deleteCategory(category)}><Trash2 /> Delete</button>
+              </article>
+            ))}
+            {!market.departments.some((department) => department.categories.length) && <p>No categories yet.</p>}
           </div>
         </form>
       </section>
@@ -266,26 +377,29 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
         <form id="market-product-editor" className="admin-management-card market-product-editor" onSubmit={saveProduct}>
           <div className="panel-head">
             <span><PackagePlus /></span>
-            <div><span className="catalog-kicker">MARKET PRODUCT</span><h2>{product.id ? "Edit product" : "Add product"}</h2><p>Price and stock belong to this market only.</p></div>
+            <div><span className="catalog-kicker">RETAIL PRODUCT</span><h2>{product.id ? "Edit product" : "Add product"}</h2><p>Product settings follow the {market.storeTypeName} store type.</p></div>
           </div>
           <div className="market-form-grid">
             <label>Product name<input value={product.name} onChange={(event) => setProduct({ ...product, name: event.target.value })} required /></label>
-            <label>Brand<input value={product.brand} onChange={(event) => setProduct({ ...product, brand: event.target.value })} placeholder="Optional" /></label>
-            <label>Department<select value={product.departmentId} onChange={(event) => {
+            {market.capabilities.brandsEnabled ? <label>Brand<input value={product.brand} onChange={(event) => setProduct({ ...product, brand: event.target.value })} placeholder="Optional" /></label> : null}
+            {market.capabilities.departmentsEnabled ? <label>Department<select value={product.departmentId} onChange={(event) => {
               const departmentId = event.target.value;
               const firstCategory = market.departments.find((item) => item.id === departmentId)?.categories[0]?.id ?? "";
               setProduct({ ...product, departmentId, categoryId: firstCategory });
-            }} required><option value="">Choose department</option>{market.departments.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
+            }} required><option value="">Choose department</option>{market.departments.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label> : null}
             <label>Category<select value={product.categoryId} onChange={(event) => setProduct({ ...product, categoryId: event.target.value })} required><option value="">Choose category</option>{categories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label>Price (RWF)<input type="number" min="0" value={product.priceRwf} onChange={(event) => setProduct({ ...product, priceRwf: event.target.value })} required /></label>
-            <label>Stock quantity<input type="number" min="0" step="0.01" value={product.stockQuantity} onChange={(event) => setProduct({ ...product, stockQuantity: event.target.value })} required /></label>
-            <label>Unit label<input value={product.unitLabel} onChange={(event) => setProduct({ ...product, unitLabel: event.target.value })} placeholder="500 ml, 1 kg, Each" required /></label>
-            <label>SKU<input value={product.sku} onChange={(event) => setProduct({ ...product, sku: event.target.value })} placeholder="Optional" /></label>
-            <label className="market-span-2">Description<textarea rows={3} value={product.description} onChange={(event) => setProduct({ ...product, description: event.target.value })} /></label>
+            <label>Container per quantity<input type="number" min="0" value={product.containerChargePerUnitRwf} onChange={(event) => setProduct({ ...product, containerChargePerUnitRwf: event.target.value })} /></label>
+            <label>Container once<input type="number" min="0" value={product.containerChargeFlatRwf} onChange={(event) => setProduct({ ...product, containerChargeFlatRwf: event.target.value })} /></label>
+            {market.capabilities.stockTrackingRequired ? <label>Stock quantity<input type="number" min="0" step="0.01" value={product.stockQuantity} onChange={(event) => setProduct({ ...product, stockQuantity: event.target.value })} required /></label> : null}
+            {market.capabilities.productUnitsEnabled ? <label>Unit label<input value={product.unitLabel} onChange={(event) => setProduct({ ...product, unitLabel: event.target.value })} placeholder="500 ml, 1 kg, Each" required /></label> : null}
+            {hasOptionalField("sku") ? <label>SKU<input value={product.sku} onChange={(event) => setProduct({ ...product, sku: event.target.value })} placeholder="Optional" /></label> : null}
+            {hasOptionalField("description") ? <label className="market-span-2">Description<textarea rows={3} value={product.description} onChange={(event) => setProduct({ ...product, description: event.target.value })} /></label> : null}
             <label>Availability<select value={product.isAvailable ? "yes" : "no"} onChange={(event) => setProduct({ ...product, isAvailable: event.target.value === "yes" })}><option value="yes">Available</option><option value="no">Unavailable</option></select></label>
-            <label>Featured<select value={product.featured ? "yes" : "no"} onChange={(event) => setProduct({ ...product, featured: event.target.value === "yes" })}><option value="no">No</option><option value="yes">Yes</option></select></label>
-            <AdminImageUpload label="Product image" purpose="product" value={product.imageUrl} onChange={(imageUrl) => setProduct({ ...product, imageUrl })} />
+            {hasOptionalField("featured") ? <label>Featured<select value={product.featured ? "yes" : "no"} onChange={(event) => setProduct({ ...product, featured: event.target.value === "yes" })}><option value="no">No</option><option value="yes">Yes</option></select></label> : null}
+            {hasOptionalField("image") ? <AdminImageUpload label="Product image" purpose="product" value={product.imageUrl} onChange={(imageUrl, imagePublicId) => setProduct({ ...product, imageUrl, imagePublicId: imagePublicId ?? product.imagePublicId })} /> : null}
           </div>
+          {market.capabilities.ageConfirmationRequired ? <p className="warning">Customers must confirm the required age before ordering products from this store type.</p> : null}
           <div className="market-editor-actions">
             <button type="submit" disabled={saving}>{saving ? "Saving…" : product.id ? "Save changes" : "Add product"}</button>
             {product.id && <button type="button" className="secondary" onClick={() => setProduct(blankProduct(market))}>New product</button>}
@@ -303,7 +417,7 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
               const unit = item.units.find((value) => value.isDefault) ?? item.units[0];
               return <article key={item.id}>
                 <Image src={productImage(item.imageUrl, { catalogEngine: "MARKETPLACE", productName: item.name })} alt="" width={64} height={64} />
-                <div><b>{item.name}</b><small>{item.category.name} · {unit?.label ?? "Each"}</small><span>{formatRwf(unit?.priceRwf ?? 0)} · Stock {item.inventory?.stockQuantity ?? 0}</span></div>
+                <div><b>{item.name}</b><small>{item.category.name}{market.capabilities.productUnitsEnabled ? ` · ${unit?.label ?? "Each"}` : ""}</small><span>{formatRwf(unit?.priceRwf ?? 0)}{market.capabilities.stockTrackingRequired ? ` · Stock ${item.inventory?.stockQuantity ?? 0}` : ""}</span></div>
                 <button type="button" className="secondary" onClick={() => chooseProduct(item)} aria-label={`Edit ${item.name}`}><Pencil /></button>
                 <button type="button" className="secondary danger" onClick={() => deleteProduct(item)} aria-label={`Delete ${item.name}`}><Trash2 /></button>
               </article>;

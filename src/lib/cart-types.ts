@@ -39,12 +39,15 @@ export type CartProduct = {
   name: string;
   basePriceRwf?: number;
   priceRwf: number;
+  containerChargePerUnitRwf?: number;
+  containerChargeFlatRwf?: number;
   imageUrl: string | null;
   detailHref?: string;
   variant?: CartVariantSelection | null;
   selections?: CartChoiceSelection[];
   addOns?: CartAddOnSelection[];
   specialInstructions?: string;
+  ageConfirmationRequired?: boolean;
 };
 
 export type CartItem = CartProduct & {

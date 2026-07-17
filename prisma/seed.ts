@@ -55,52 +55,44 @@ async function main() {
     "Admin",
     "ADMIN",
   );
-  const rider = await user(
-    "rider@karamebay.rw",
-    "+250788000002",
-    "Eric",
-    "Rider",
-    "RIDER",
-  );
-  await db.riderProfile.upsert({
-    where: { userId: rider.id },
-    update: {
-      riderStatus: "AVAILABLE",
-      vehicleType: "MOTORCYCLE",
-      licensePlate: "RAC 2026",
-      photoUrl: null,
-      onlineSinceAt: new Date(),
-      lastSeenAt: new Date(),
-      rating: 4.8,
-      averageDeliveryMinutes: 24,
-      averagePickupMinutes: 8,
-      completedDeliveriesCount: 0,
-      cancelledDeliveriesCount: 0,
-      totalEarningsRwf: 0,
-    },
+  // Production launches must start with zero customers and zero riders.
+  // Customer registration creates customer accounts; Admin creates rider accounts.
+  // This development-only seed preserves the Admin and catalog baseline only.
+
+  const restaurantStoreType = await db.storeType.upsert({
+    where: { slug: "restaurants" },
+    update: {},
     create: {
-      userId: rider.id,
-      riderStatus: "AVAILABLE",
-      vehicleType: "MOTORCYCLE",
-      licensePlate: "RAC 2026",
-      photoUrl: null,
-      onlineSinceAt: new Date(),
-      lastSeenAt: new Date(),
-      rating: 4.8,
-      averageDeliveryMinutes: 24,
-      averagePickupMinutes: 8,
-      completedDeliveriesCount: 0,
-      cancelledDeliveriesCount: 0,
-      totalEarningsRwf: 0,
+      name: "Restaurant",
+      customerSectionName: "Restaurants",
+      slug: "restaurants",
+      description: "Prepared meals, coffee, and restaurant menus.",
+      displayOrder: 10,
+      isActive: true,
+      isFeatured: true,
+      commerceEngine: "RESTAURANT",
+      optionalProductFieldsJson: JSON.stringify(["description", "image", "featured", "specialInstructions"]),
     },
   });
-  const customer = await user(
-    "customer@karamebay.rw",
-    "+250788000003",
-    "Aline",
-    "Customer",
-    "CUSTOMER",
-  );
+  const marketStoreType = await db.storeType.upsert({
+    where: { slug: "markets" },
+    update: {},
+    create: {
+      name: "Market",
+      customerSectionName: "Markets",
+      slug: "markets",
+      description: "Groceries, produce, household products, and everyday essentials.",
+      displayOrder: 20,
+      isActive: true,
+      isFeatured: true,
+      commerceEngine: "RETAIL",
+      optionalProductFieldsJson: JSON.stringify(["description", "image", "sku", "featured"]),
+      stockTrackingRequired: true,
+      productUnitsEnabled: true,
+      brandsEnabled: true,
+      departmentsEnabled: true,
+    },
+  });
 
   const stores = [
     {
@@ -108,6 +100,7 @@ async function main() {
       slug: "java-house-kigali-heights",
       name: "Java House Kigali Heights",
       type: "RESTAURANT",
+      storeTypeId: restaurantStoreType.id,
       catalogEngine: "RESTAURANT",
       description: "Coffee, breakfast and casual dining at Kigali Heights.",
       address: "Kigali Heights, KG 7 Avenue, Kigali",
@@ -124,12 +117,13 @@ async function main() {
     {
       ownerId: admin.id,
       slug: "kimironko-market",
-      name: "Kimironko Market",
+      name: "Karame Bay Market",
       type: "MARKET",
+      storeTypeId: marketStoreType.id,
       catalogEngine: "MARKETPLACE",
       description:
         "Fresh produce and daily essentials from Kigali's trusted market.",
-      address: "Kimironko Market, Gasabo, Kigali",
+      address: "Kimironko, Gasabo, Kigali",
       rating: 4.7,
       featured: true,
       minimumOrderRwf: 2000,
@@ -137,24 +131,6 @@ async function main() {
       phone: "+250788300001",
       latitude: -1.9487,
       longitude: 30.1265,
-      opensAt: "06:00",
-      closesAt: "20:00",
-    },
-    {
-      ownerId: admin.id,
-      slug: "zinia-kicukiro-market",
-      name: "Zinia Kicukiro Market",
-      type: "MARKET",
-      catalogEngine: "MARKETPLACE",
-      description: "Fresh groceries and household essentials in Kicukiro.",
-      address: "Zinia Market, Kicukiro, Kigali",
-      rating: 4.6,
-      featured: true,
-      minimumOrderRwf: 2000,
-      preparationMinutes: 25,
-      phone: "+250788300002",
-      latitude: -1.9858,
-      longitude: 30.1044,
       opensAt: "06:00",
       closesAt: "20:00",
     },
@@ -323,7 +299,6 @@ async function main() {
   > = {
     "java-house-kigali-heights": javaProducts,
     "kimironko-market": marketProducts,
-    "zinia-kicukiro-market": marketProducts,
   };
   const javaStoreId = storeIds["java-house-kigali-heights"];
   await db.product.deleteMany({ where: { storeId: javaStoreId } });
@@ -652,7 +627,7 @@ async function main() {
     });
   }
 
-  for (const marketSlug of ["kimironko-market", "zinia-kicukiro-market"]) {
+  for (const marketSlug of ["kimironko-market"]) {
     const marketId = storeIds[marketSlug];
     await db.marketplaceProfile.upsert({
       where: { storeId: marketId },
@@ -905,7 +880,7 @@ async function main() {
     });
   }
   console.log(
-    `Seed complete: ${stores.length} stores, ${categories.length} categories, ${Object.values(productSets).reduce((sum, items) => sum + items.length, 0)} products, test users: ${[admin, rider, customer].length}`,
+    `Seed complete: ${stores.length} stores, ${categories.length} categories, ${Object.values(productSets).reduce((sum, items) => sum + items.length, 0)} products, admin user: ${admin.email}`,
   );
 }
 

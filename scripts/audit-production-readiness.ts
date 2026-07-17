@@ -7,8 +7,7 @@ const db = new PrismaClient();
 const testMarker = /\b(test|testing|demo|sample|mock|fake|placeholder|temporary|dummy|development|prototype|seed)\b/i;
 const launchStoreNames = [
   "Java House Kigali Heights",
-  "Kimironko Market",
-  "Zinia Kicukiro Market",
+  "Karame Bay Market",
 ];
 
 function localAssetExists(url: string | null) {
@@ -34,6 +33,15 @@ async function main() {
       slug: true,
       type: true,
       catalogEngine: true,
+      storeTypeId: true,
+      storeType: {
+        select: {
+          name: true,
+          slug: true,
+          commerceEngine: true,
+          isActive: true,
+        },
+      },
       status: true,
       isOpen: true,
       latitude: true,
@@ -142,48 +150,52 @@ async function main() {
   const currentStoreNames = new Set(stores.map((store) => store.name));
 
   const queries = {
-    foreignKeyCheck: "PRAGMA foreign_key_check",
-    integrityCheck: "PRAGMA integrity_check",
     restaurantCategoryStoreMismatch:
-      "SELECT COUNT(*) count FROM RestaurantProduct p JOIN RestaurantCategory c ON c.id=p.categoryId WHERE p.storeId<>c.storeId",
+      'SELECT COUNT(*) count FROM "RestaurantProduct" p JOIN "RestaurantCategory" c ON c.id=p."categoryId" WHERE p."storeId"<>c."storeId"',
     restaurantInvalidPrice:
-      "SELECT COUNT(*) count FROM RestaurantProduct WHERE basePriceRwf<0",
+      'SELECT COUNT(*) count FROM "RestaurantProduct" WHERE "basePriceRwf"<0',
     restaurantMissingImage:
-      "SELECT COUNT(*) count FROM RestaurantProduct WHERE imageUrl IS NULL OR TRIM(imageUrl)=''",
+      'SELECT COUNT(*) count FROM "RestaurantProduct" WHERE "imageUrl" IS NULL OR TRIM("imageUrl")=\'\'',
     restaurantDuplicateDefaultVariant:
-      "SELECT COUNT(*) count FROM (SELECT productId FROM RestaurantVariant WHERE isDefault=1 GROUP BY productId HAVING COUNT(*)>1)",
+      'SELECT COUNT(*) count FROM (SELECT "productId" FROM "RestaurantVariant" WHERE "isDefault"=TRUE GROUP BY "productId" HAVING COUNT(*)>1) defaults',
     choiceGroupInvalidLimits:
-      "SELECT COUNT(*) count FROM RestaurantChoiceGroup WHERE minChoices<0 OR maxChoices<1 OR minChoices>maxChoices OR (required=1 AND minChoices<1)",
+      'SELECT COUNT(*) count FROM "RestaurantChoiceGroup" WHERE "minChoices"<0 OR "maxChoices"<1 OR "minChoices">"maxChoices" OR ("required"=TRUE AND "minChoices"<1)',
     choiceGroupsInsufficientOptions:
-      "SELECT COUNT(*) count FROM RestaurantChoiceGroup g WHERE (SELECT COUNT(*) FROM RestaurantChoiceOption o WHERE o.groupId=g.id AND o.isAvailable=1)<g.minChoices",
+      'SELECT COUNT(*) count FROM "RestaurantChoiceGroup" g WHERE (SELECT COUNT(*) FROM "RestaurantChoiceOption" o WHERE o."groupId"=g.id AND o."isAvailable"=TRUE)<g."minChoices"',
     addOnInvalidLimits:
-      "SELECT COUNT(*) count FROM RestaurantAddOn WHERE minSelections<0 OR maxSelections<1 OR minSelections>maxSelections OR (required=1 AND minSelections<1)",
+      'SELECT COUNT(*) count FROM "RestaurantAddOn" WHERE "minSelections"<0 OR "maxSelections"<1 OR "minSelections">"maxSelections" OR ("required"=TRUE AND "minSelections"<1)',
     addOnLinkStoreMismatch:
-      "SELECT COUNT(*) count FROM RestaurantProductAddOn l JOIN RestaurantProduct p ON p.id=l.productId JOIN RestaurantAddOn a ON a.id=l.addOnId WHERE p.storeId<>a.storeId",
+      'SELECT COUNT(*) count FROM "RestaurantProductAddOn" l JOIN "RestaurantProduct" p ON p.id=l."productId" JOIN "RestaurantAddOn" a ON a.id=l."addOnId" WHERE p."storeId"<>a."storeId"',
     marketplaceDepartmentStoreMismatch:
-      "SELECT COUNT(*) count FROM MarketplaceProduct p JOIN MarketplaceDepartment d ON d.id=p.departmentId WHERE p.storeId<>d.storeId",
+      'SELECT COUNT(*) count FROM "MarketplaceProduct" p JOIN "MarketplaceDepartment" d ON d.id=p."departmentId" WHERE p."storeId"<>d."storeId"',
     marketplaceCategoryDepartmentMismatch:
-      "SELECT COUNT(*) count FROM MarketplaceProduct p JOIN MarketplaceCategory c ON c.id=p.categoryId WHERE p.departmentId<>c.departmentId",
+      'SELECT COUNT(*) count FROM "MarketplaceProduct" p JOIN "MarketplaceCategory" c ON c.id=p."categoryId" WHERE p."departmentId"<>c."departmentId"',
     marketplaceMissingUnits:
-      "SELECT COUNT(*) count FROM MarketplaceProduct p WHERE NOT EXISTS (SELECT 1 FROM MarketplaceProductUnit u WHERE u.productId=p.id)",
+      'SELECT COUNT(*) count FROM "MarketplaceProduct" p WHERE NOT EXISTS (SELECT 1 FROM "MarketplaceProductUnit" u WHERE u."productId"=p.id)',
     marketplaceDuplicateDefaultUnits:
-      "SELECT COUNT(*) count FROM (SELECT productId FROM MarketplaceProductUnit WHERE isDefault=1 GROUP BY productId HAVING COUNT(*)>1)",
+      'SELECT COUNT(*) count FROM (SELECT "productId" FROM "MarketplaceProductUnit" WHERE "isDefault"=TRUE GROUP BY "productId" HAVING COUNT(*)>1) defaults',
     marketplaceInvalidPrices:
-      "SELECT COUNT(*) count FROM MarketplaceProductUnit WHERE priceRwf<0",
+      'SELECT COUNT(*) count FROM "MarketplaceProductUnit" WHERE "priceRwf"<0',
     marketplaceMissingImage:
-      "SELECT COUNT(*) count FROM MarketplaceProduct WHERE imageUrl IS NULL OR TRIM(imageUrl)=''",
+      'SELECT COUNT(*) count FROM "MarketplaceProduct" WHERE "imageUrl" IS NULL OR TRIM("imageUrl")=\'\'',
     legacyProductInvalidPrice:
-      "SELECT COUNT(*) count FROM Product WHERE priceRwf<0",
+      'SELECT COUNT(*) count FROM "Product" WHERE "priceRwf"<0',
     orderTotalMismatch:
-      'SELECT COUNT(*) count FROM "Order" WHERE grandTotalRwf<>itemsSubtotalRwf+deliveryFeeRwf',
+      'SELECT COUNT(*) count FROM "Order" WHERE "grandTotalRwf"<>"itemsSubtotalRwf"+"deliveryFeeRwf"',
     orderItemTotalMismatch:
-      "SELECT COUNT(*) count FROM OrderItem WHERE lineTotalRwf<>unitPriceRwf*quantity OR quantity<1",
+      'SELECT COUNT(*) count FROM "OrderItem" WHERE "lineTotalRwf"<>"unitPriceRwf"*quantity OR quantity<1',
     paymentAmountMismatch:
-      'SELECT COUNT(*) count FROM Payment p JOIN "Order" o ON o.id=p.orderId WHERE p.amountRwf<>o.grandTotalRwf',
+      'SELECT COUNT(*) count FROM "Payment" p JOIN "Order" o ON o.id=p."orderId" WHERE p."amountRwf"<>o."grandTotalRwf"',
     unsupportedRoles:
-      "SELECT COUNT(*) count FROM User WHERE role NOT IN ('CUSTOMER','ADMIN','RIDER')",
+      'SELECT COUNT(*) count FROM "User" WHERE role NOT IN (\'CUSTOMER\',\'ADMIN\',\'RIDER\')',
     nonManualRiderAssignment:
-      "SELECT COUNT(*) count FROM PlatformSetting WHERE riderAssignmentMode<>'MANUAL'",
+      'SELECT COUNT(*) count FROM "PlatformSetting" WHERE "riderAssignmentMode"<>\'MANUAL\'',
+    storeMissingStoreType:
+      'SELECT COUNT(*) count FROM "Store" WHERE "storeTypeId" IS NULL',
+    storeTypeInvalidEngine:
+      'SELECT COUNT(*) count FROM "StoreType" WHERE "commerceEngine" NOT IN (\'RESTAURANT\',\'RETAIL\')',
+    storeEngineMismatch:
+      'SELECT COUNT(*) count FROM "Store" s JOIN "StoreType" t ON t.id=s."storeTypeId" WHERE (t."commerceEngine"=\'RESTAURANT\' AND s."catalogEngine"<>\'RESTAURANT\') OR (t."commerceEngine"=\'RETAIL\' AND s."catalogEngine"<>\'MARKETPLACE\')',
   } as const;
 
   const anomalies: Record<string, unknown> = {};
@@ -194,6 +206,7 @@ async function main() {
   const countModels = [
     "user",
     "store",
+    "storeType",
     "restaurantCategory",
     "restaurantProduct",
     "restaurantVariant",

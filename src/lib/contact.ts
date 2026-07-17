@@ -1,4 +1,24 @@
-export const SUPPORT_PHONE_DISPLAY = "078 995 0707";
-export const SUPPORT_PHONE_E164 = "+250789950707";
-export const SUPPORT_WHATSAPP_URL =
-  "https://wa.me/250789950707?text=Hello%20Karame%20Bay%2C%20I%20need%20support.";
+export function phoneDisplay(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (/^2507\d{8}$/.test(digits)) {
+    return `0${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+  }
+  return value;
+}
+
+export function phoneHref(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits ? `tel:+${digits}` : "#";
+}
+
+export function whatsappHref(value: string, businessName: string) {
+  const digits = value.replace(/\D/g, "");
+  const message = encodeURIComponent(
+    `Hello ${businessName}, I need support.`,
+  );
+  return digits ? `https://wa.me/${digits}?text=${message}` : "#";
+}
+
+export function mailHref(value: string) {
+  return `mailto:${value.trim()}`;
+}

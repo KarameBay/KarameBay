@@ -193,8 +193,8 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
     };
   }, [product.addOns, product.choiceGroups, selectedAddOnIds, selectedAddOnOptionIds, selectedChoices, selectedVariant, specialInstructions]);
 
-  const unitPriceRwf = computeRestaurantUnitPrice(product, configuration);
-  const totalRwf = unitPriceRwf * quantity;
+  const unitPriceRwf = computeRestaurantUnitPrice(product, configuration) + product.containerChargePerUnitRwf;
+  const totalRwf = unitPriceRwf * quantity + product.containerChargeFlatRwf;
   const errors = validateRestaurantConfiguration(product, configuration);
   const lineKey = buildRestaurantConfigurationKey(product.id, configuration);
 
@@ -279,9 +279,12 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
       storeId: product.store.id,
       storeName: product.store.name,
       catalogEngine: "RESTAURANT",
+      ageConfirmationRequired: product.store.ageConfirmationRequired ?? false,
       name: product.name,
       basePriceRwf: product.basePriceRwf,
       priceRwf: unitPriceRwf,
+      containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+      containerChargeFlatRwf: product.containerChargeFlatRwf,
       imageUrl: productImage(product.imageUrl, {
         catalogEngine: "RESTAURANT",
         categoryName: product.category.name,
@@ -367,6 +370,17 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
               <small>Base price</small>
               <b>{formatRwf(product.basePriceRwf)}</b>
             </article>
+            {(product.containerChargePerUnitRwf > 0 || product.containerChargeFlatRwf > 0) && (
+              <article>
+                <small>Container charge</small>
+                <b>
+                  {[
+                    product.containerChargePerUnitRwf > 0 ? `${formatRwf(product.containerChargePerUnitRwf)} each` : "",
+                    product.containerChargeFlatRwf > 0 ? `${formatRwf(product.containerChargeFlatRwf)} once` : "",
+                  ].filter(Boolean).join(" + ")}
+                </b>
+              </article>
+            )}
             <article>
               <small>Category</small>
               <b>{product.category.name}</b>

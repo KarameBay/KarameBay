@@ -22,7 +22,7 @@ export default async function StoresPage({
               KIGALI&apos;S LOCAL MARKETPLACE
             </span>
             <h1>What can we bring you?</h1>
-            <p>Browse trusted restaurants and markets near you.</p>
+            <p>Browse trusted local stores and businesses near you.</p>
           </div>
           <form action="/stores" className="browse-search">
             <Search />

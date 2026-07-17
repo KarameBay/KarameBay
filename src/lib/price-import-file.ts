@@ -77,8 +77,9 @@ export async function parsePriceImportFile(file: File): Promise<StagedPriceRow[]
   if (missing.length) throw new Error(`Missing required columns: ${missing.join(", ")}.`);
 
   const rows = table.slice(1).filter((row) => row.some((value) => String(value ?? "").trim()));
-  const foreignMarket = rows.find((row) => normalizeCommodityName(String(cell(row, headers, "market") ?? "")) !== "kimironko");
-  if (foreignMarket) throw new Error("Every row must belong to Kimironko Market. No rows were imported.");
+  const acceptedMarketNames = new Set(["karame bay market", "karame bay", "kimironko", "kimironko market"]);
+  const foreignMarket = rows.find((row) => !acceptedMarketNames.has(normalizeCommodityName(String(cell(row, headers, "market") ?? ""))));
+  if (foreignMarket) throw new Error("Every row must belong to Karame Bay Market. No rows were imported.");
 
   return rows.map((row, index) => {
     const commodityName = String(cell(row, headers, "commodity name", "commodity") ?? "").trim();
@@ -89,7 +90,7 @@ export async function parsePriceImportFile(file: File): Promise<StagedPriceRow[]
     return {
       externalSourceId: String(cell(row, headers, "external source id", "external id") ?? "").trim() || null,
       externalCommodityId: String(cell(row, headers, "external commodity id") ?? "").trim() || null,
-      marketName: "Kimironko",
+      marketName: "Karame Bay Market",
       province: String(cell(row, headers, "province") ?? "").trim() || null,
       district: String(cell(row, headers, "district") ?? "").trim() || null,
       commodityName,

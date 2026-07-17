@@ -4,6 +4,7 @@ const db = new PrismaClient();
 const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
 const testPassword = process.env.TEST_ACCOUNT_PASSWORD;
 if (!testPassword) throw new Error("TEST_ACCOUNT_PASSWORD is required.");
+let loginSequence = 20;
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -22,10 +23,12 @@ async function request(path: string, options: RequestInit = {}, cookie = "") {
   return { response, data };
 }
 
-async function login(email: string, audience: "customer" | "staff") {
+async function login(email: string, portal: "customer" | "admin" | "rider") {
+  const audience = portal === "customer" ? "customer" : "staff";
   const { response, data } = await request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password: testPassword, audience }),
+    headers: { "x-forwarded-for": `198.51.100.${loginSequence++}` },
+    body: JSON.stringify({ email, password: testPassword, audience, portal }),
   });
   check(response.ok, `Login failed for ${email}: ${data.error}`);
   const setCookie = response.headers.get("set-cookie") ?? "";
@@ -48,8 +51,8 @@ async function patch(path: string, cookie: string, body: object) {
 
 async function main() {
   const customerCookie = await login("customer@karamebay.rw", "customer");
-  const adminCookie = await login("admin@karamebay.rw", "staff");
-  const riderCookie = await login("rider@karamebay.rw", "staff");
+  const adminCookie = await login("admin@karamebay.rw", "admin");
+  const riderCookie = await login("rider@karamebay.rw", "rider");
 
   const store = await db.store.findFirstOrThrow({
     where: {

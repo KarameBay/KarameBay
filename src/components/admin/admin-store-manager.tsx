@@ -13,6 +13,8 @@ type AdminStore = {
   name: string;
   type: string;
   catalogEngine: string;
+  storeTypeId: string | null;
+  storeType: { id: string; name: string; customerSectionName: string; commerceEngine: string } | null;
   description: string;
   phone: string | null;
   address: string;
@@ -23,7 +25,9 @@ type AdminStore = {
   status: string;
   isOpen: boolean;
   logoUrl: string | null;
+  logoPublicId?: string | null;
   coverUrl: string | null;
+  coverPublicId?: string | null;
   estimatedDeliveryMinutes: number;
   preparationMinutes: number;
   minimumOrderRwf: number;
@@ -31,11 +35,18 @@ type AdminStore = {
   _count: { products: number; orders: number };
 };
 
+type AdminStoreTypeOption = {
+  id: string;
+  name: string;
+  customerSectionName: string;
+  commerceEngine: string;
+  isActive: boolean;
+};
+
 type StoreFormState = {
   id?: string;
   name: string;
-  type: "RESTAURANT" | "MARKET";
-  catalogEngine: "RESTAURANT" | "MARKETPLACE";
+  storeTypeId: string;
   description: string;
   phone: string;
   address: string;
@@ -50,13 +61,14 @@ type StoreFormState = {
   minimumOrderRwf: string;
   rating: string;
   logoUrl: string;
+  logoPublicId: string;
   coverUrl: string;
+  coverPublicId: string;
 };
 
-const emptyForm = (): StoreFormState => ({
+const emptyForm = (storeTypes: AdminStoreTypeOption[]): StoreFormState => ({
   name: "",
-  type: "RESTAURANT",
-  catalogEngine: "RESTAURANT",
+  storeTypeId: storeTypes.find((type) => type.isActive)?.id ?? "",
   description: "",
   phone: "",
   address: "",
@@ -71,16 +83,23 @@ const emptyForm = (): StoreFormState => ({
   minimumOrderRwf: "0",
   rating: "0",
   logoUrl: "",
+  logoPublicId: "",
   coverUrl: "",
+  coverPublicId: "",
 });
 
-function asForm(store: AdminStore): StoreFormState {
+function asForm(store: AdminStore, storeTypes: AdminStoreTypeOption[]): StoreFormState {
+  const fallbackStoreType =
+    store.storeTypeId ||
+    storeTypes.find((type) => type.commerceEngine === store.catalogEngine && type.isActive)?.id ||
+    storeTypes.find((type) => type.isActive)?.id ||
+    "";
+
   return {
     id: store.id,
     name: store.name,
-    type: store.type as "RESTAURANT" | "MARKET",
-    catalogEngine: store.catalogEngine as "RESTAURANT" | "MARKETPLACE",
-    description: store.description,
+    storeTypeId: fallbackStoreType,
+    description: store.description || `${store.name} store`,
     phone: store.phone ?? "",
     address: store.address,
     latitude: String(store.latitude),
@@ -94,32 +113,39 @@ function asForm(store: AdminStore): StoreFormState {
     minimumOrderRwf: String(store.minimumOrderRwf),
     rating: String(store.rating),
     logoUrl: store.logoUrl ?? "",
+    logoPublicId: store.logoPublicId ?? "",
     coverUrl: store.coverUrl ?? "",
+    coverPublicId: store.coverPublicId ?? "",
   };
 }
 
 export function AdminStoreManager({
   stores,
+  storeTypes,
 }: {
   stores: AdminStore[];
+  storeTypes: AdminStoreTypeOption[];
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string>("new");
-  const [form, setForm] = useState<StoreFormState>(emptyForm());
+  const [form, setForm] = useState<StoreFormState>(() => emptyForm(storeTypes));
+  const [hiddenStoreIds, setHiddenStoreIds] = useState<string[]>([]);
+  const [deletingStoreId, setDeletingStoreId] = useState("");
   const [saving, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const visibleStores = stores.filter((store) => store.status !== "ARCHIVED" && !hiddenStoreIds.includes(store.id));
 
   function pickStore(store: AdminStore) {
     setSelectedId(store.id);
-    setForm(asForm(store));
+    setForm(asForm(store, storeTypes));
     setMessage("");
     setError("");
   }
 
   function resetForm() {
     setSelectedId("new");
-    setForm(emptyForm());
+    setForm(emptyForm(storeTypes));
     setMessage("");
     setError("");
   }
@@ -145,7 +171,7 @@ export function AdminStoreManager({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setError(data.error ?? "Could not save the store.");
+        setError(data.error ?? data.details ?? "Could not save the store.");
         return;
       }
       setMessage(
@@ -160,28 +186,40 @@ export function AdminStoreManager({
 
   async function removeStore(storeId: string, storeName: string) {
     const confirmed = window.confirm(
-      `Delete ${storeName}? This removes the store from Karame Bay Admin.`,
+      `Remove ${storeName} from Karame Bay?\n\nIf it has orders, it will be archived and hidden from customers so order history stays safe.`,
     );
     if (!confirmed) return;
 
     setError("");
     setMessage("");
-    const response = await fetch("/api/admin/stores", {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id: storeId }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setError(data.error ?? "Could not delete the store.");
-      return;
-    }
+    setDeletingStoreId(storeId);
+    try {
+      const response = await fetch("/api/admin/stores", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: storeId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const deleteError = data.error ?? "Could not delete the store.";
+        setError(deleteError);
+        window.alert(deleteError);
+        return;
+      }
 
-    if (selectedId === storeId) {
-      resetForm();
+      setHiddenStoreIds((current) => [...new Set([...current, storeId])]);
+      if (selectedId === storeId) {
+        resetForm();
+      }
+      setMessage(data.archived ? "Store archived and hidden from the active store list." : "Store deleted.");
+      router.refresh();
+    } catch {
+      const deleteError = "Could not connect to Karame Bay. Please try again.";
+      setError(deleteError);
+      window.alert(deleteError);
+    } finally {
+      setDeletingStoreId("");
     }
-    setMessage("Store deleted.");
-    router.refresh();
   }
 
   return (
@@ -201,10 +239,10 @@ export function AdminStoreManager({
             <Plus />
           </span>
           <div>
-            <span className="catalog-kicker">STORE / MARKET MANAGEMENT</span>
+            <span className="catalog-kicker">STORE MANAGEMENT</span>
             <h2>{selectedId === "new" ? "Add a new store" : "Edit store"}</h2>
             <p>
-              Register Java House, Kimironko Market, or any future store here.
+              Register Karame Bay restaurants, markets, or any future store here.
               Set the GPS pin, address, hours, and delivery timing in one place.
             </p>
           </div>
@@ -232,38 +270,39 @@ export function AdminStoreManager({
           <label style={fieldStyle}>
             Store type
             <select
-              value={form.type}
+              value={form.storeTypeId}
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
-                  type: event.target.value as "RESTAURANT" | "MARKET",
-                  catalogEngine:
-                    event.target.value === "RESTAURANT"
-                      ? "RESTAURANT"
-                      : "MARKETPLACE",
+                  storeTypeId: event.target.value,
                 }))
               }
+              required
             >
-              <option value="RESTAURANT">Restaurant</option>
-              <option value="MARKET">Market</option>
+              <option value="">Choose a store type</option>
+              {storeTypes.map((type) => (
+                <option
+                  value={type.id}
+                  key={type.id}
+                  disabled={!type.isActive && form.storeTypeId !== type.id}
+                >
+                  {type.name}{type.isActive ? "" : " (inactive)"}
+                </option>
+              ))}
             </select>
           </label>
           <label style={fieldStyle}>
-            Catalog engine
-            <select
-              value={form.catalogEngine}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  catalogEngine: event.target.value as
-                    | "RESTAURANT"
-                    | "MARKETPLACE",
-                }))
+            Commerce engine
+            <input
+              value={
+                storeTypes.find((type) => type.id === form.storeTypeId)?.commerceEngine === "RESTAURANT"
+                  ? "Restaurant Menu Engine"
+                  : form.storeTypeId
+                    ? "Retail Catalog Engine"
+                    : "Choose a store type first"
               }
-            >
-              <option value="RESTAURANT">Restaurant menu engine</option>
-              <option value="MARKETPLACE">Marketplace catalog</option>
-            </select>
+              readOnly
+            />
           </label>
           <label style={fieldStyle}>
             Open status
@@ -434,8 +473,8 @@ export function AdminStoreManager({
             label="Store logo"
             purpose="store-logo"
             value={form.logoUrl}
-            onChange={(logoUrl) =>
-              setForm((current) => ({ ...current, logoUrl }))
+            onChange={(logoUrl, logoPublicId) =>
+              setForm((current) => ({ ...current, logoUrl, logoPublicId: logoPublicId ?? current.logoPublicId }))
             }
             help="Choose the store logo from your computer or phone."
           />
@@ -443,8 +482,8 @@ export function AdminStoreManager({
             label="Store cover image"
             purpose="store-cover"
             value={form.coverUrl}
-            onChange={(coverUrl) =>
-              setForm((current) => ({ ...current, coverUrl }))
+            onChange={(coverUrl, coverPublicId) =>
+              setForm((current) => ({ ...current, coverUrl, coverPublicId: coverPublicId ?? current.coverPublicId }))
             }
             help="Choose a wide image for the store page cover."
           />
@@ -490,12 +529,10 @@ export function AdminStoreManager({
         </div>
 
         <div style={{ display: "grid", gap: "12px", marginTop: "16px" }}>
-          {stores.map((store) => (
+          {visibleStores.map((store) => (
             <div
               key={store.id}
-              onClick={() => pickStore(store)}
-              role="button"
-              tabIndex={0}
+              role="group"
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -515,7 +552,7 @@ export function AdminStoreManager({
                 <div>
                   <b style={{ display: "block", fontSize: "14px" }}>{store.name}</b>
                   <small style={{ color: "var(--muted)" }}>
-                    {store.type} · {store.catalogEngine}
+                    {store.storeType?.name ?? store.type} · {store.catalogEngine === "RESTAURANT" ? "Restaurant Menu Engine" : "Retail Catalog Engine"}
                   </small>
                 </div>
                 <span className={`status-pill ${store.isOpen ? "open" : "closed"}`}>
@@ -561,7 +598,11 @@ export function AdminStoreManager({
                   type="button"
                   className="secondary"
                   style={{ width: "auto", padding: "0 14px" }}
-                  onClick={() => pickStore(store)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    pickStore(store);
+                  }}
                 >
                   Edit
                 </button>
@@ -569,16 +610,25 @@ export function AdminStoreManager({
                   type="button"
                   className="secondary"
                   style={{ width: "auto", padding: "0 14px", background: "#8f3d2d" }}
-                  onClick={() => removeStore(store.id, store.name)}
+                  disabled={deletingStoreId === store.id}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void removeStore(store.id, store.name);
+                  }}
                 >
-                  <Trash2 /> Delete
+                  <Trash2 /> {deletingStoreId === store.id ? "Removing..." : "Delete"}
                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        {!stores.length && (
+        {!visibleStores.length && (
           <div className="empty" style={{ padding: "18px 0" }}>
             No stores yet. Create the first store above.
           </div>

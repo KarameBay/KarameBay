@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { ExploreOverview } from "@/components/catalog/explore-content";
 import { PublicFooter } from "@/components/catalog/public-footer";
-import { getStores } from "@/lib/catalog";
+import { getActiveStoreTypes, getStores } from "@/lib/catalog";
 import "../explore.css";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +13,15 @@ export const metadata: Metadata = {
 };
 
 export default async function ExplorePage() {
-  const stores = await getStores();
+  const [stores, storeTypes] = await Promise.all([
+    getStores(),
+    getActiveStoreTypes(),
+  ]);
 
   return (
     <div className="app-shell">
       <BrowseHeader />
-      <ExploreOverview stores={stores} />
+      <ExploreOverview stores={stores} storeTypes={storeTypes} />
       <PublicFooter />
     </div>
   );

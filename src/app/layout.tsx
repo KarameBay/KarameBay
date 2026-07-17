@@ -17,6 +17,7 @@ import "./home.css";
 import "./info-pages.css";
 import "./notifications.css";
 import "./admin-settings.css";
+import "./support-reviews.css";
 import "./parcel.css";
 import "./responsive-header.css";
 import { AppProviders } from "@/components/app-providers";

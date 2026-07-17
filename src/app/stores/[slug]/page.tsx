@@ -7,12 +7,14 @@ import {
   Clock3,
   Package,
   Search,
+  Star,
   Store as StoreIcon,
 } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { ProductCard } from "@/components/catalog/product-card";
 import { StoreArtwork } from "@/components/catalog/store-artwork";
 import { getStoreBySlug, getStoreCatalog } from "@/lib/catalog";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 type Props = {
@@ -25,11 +27,12 @@ export default async function StorePage({ params, searchParams }: Props) {
   const query = await searchParams;
   const store = await getStoreBySlug(slug);
   if (!store) notFound();
-  const catalog = await getStoreCatalog(store.id, {
-    category: query.category,
-    query: query.q,
-    page: Number(query.page) || 1,
-  });
+  const [catalog, ratingSummary, totalReviews, latestReviews] = await Promise.all([
+    getStoreCatalog(store.id, { category: query.category, query: query.q, page: Number(query.page) || 1 }),
+    db.review.aggregate({ where: { storeId: store.id, moderationStatus: "VISIBLE" }, _avg: { storeRating: true } }),
+    db.review.count({ where: { storeId: store.id, moderationStatus: "VISIBLE" } }),
+    db.review.findMany({ where: { storeId: store.id, moderationStatus: "VISIBLE" }, select: { id: true, storeRating: true, writtenReview: true, createdAt: true, customer: { select: { firstName: true, lastName: true } }, adminReply: true }, orderBy: { createdAt: "desc" }, take: 5 }),
+  ]);
   const href = (page: number) =>
     `/stores/${slug}?${new URLSearchParams({ ...query, page: String(page) }).toString()}`;
   return (
@@ -40,7 +43,7 @@ export default async function StorePage({ params, searchParams }: Props) {
           <div className="catalog-cover">
             <StoreArtwork
               name={store.name}
-              type={store.type}
+              type={store.storeType?.name ?? store.type}
               imageUrl={store.coverUrl ?? store.logoUrl}
               priority
             />
@@ -52,7 +55,7 @@ export default async function StorePage({ params, searchParams }: Props) {
             <div className="catalog-store-title">
               <StoreArtwork
                 name={store.name}
-                type={store.type}
+                type={store.storeType?.name ?? store.type}
                 imageUrl={store.logoUrl ?? store.coverUrl}
                 compact
                 priority
@@ -69,9 +72,7 @@ export default async function StorePage({ params, searchParams }: Props) {
                 <div>
                   <span>
                     <StoreIcon />
-                    {store.type === "RESTAURANT"
-                      ? "Restaurant & Coffee"
-                      : "Fresh Market"}
+                    {store.storeType?.name ?? "Store"}
                   </span>
                   <span>
                     <Clock3 />
@@ -86,6 +87,7 @@ export default async function StorePage({ params, searchParams }: Props) {
                     <Package />
                     {store._count.products} products
                   </span>
+                  <span><Star /> {(ratingSummary._avg.storeRating ?? 0).toFixed(1)} · {totalReviews} {totalReviews === 1 ? "review" : "reviews"}</span>
                 </div>
               </div>
             </div>
@@ -149,6 +151,7 @@ export default async function StorePage({ params, searchParams }: Props) {
                       ? `/stores/${slug}/products/${product.id}`
                       : undefined
                   }
+                  ageConfirmationRequired={store.storeType?.ageConfirmationRequired ?? false}
                 />
               ))}
             </div>
@@ -178,6 +181,10 @@ export default async function StorePage({ params, searchParams }: Props) {
               </Link>
             </nav>
           )}
+          <section className="store-reviews-section">
+            <div className="catalog-heading"><div><span className="catalog-kicker">CUSTOMER REVIEWS</span><h2>Latest verified reviews</h2></div><p>{(ratingSummary._avg.storeRating ?? 0).toFixed(1)} / 5 · {totalReviews} total</p></div>
+            {latestReviews.length ? <div className="store-review-grid">{latestReviews.map((review) => <article key={review.id}><span className="review-stars" aria-label={`${review.storeRating} out of 5 stars`}>{[1,2,3,4,5].map((value) => <Star key={value} className={value <= review.storeRating ? "filled" : ""} />)}</span><h3>{review.customer.firstName} {review.customer.lastName.slice(0, 1)}.</h3>{review.writtenReview && <p>{review.writtenReview}</p>}<small>Verified order · {review.createdAt.toLocaleDateString("en-RW", { dateStyle: "medium" })}</small>{review.adminReply && <blockquote><b>Response from Karame Bay</b>{review.adminReply}</blockquote>}</article>)}</div> : <div className="catalog-empty"><Star /><h3>No reviews yet</h3><p>The first delivered-order review will appear here.</p></div>}
+          </section>
         </section>
       </main>
     </>

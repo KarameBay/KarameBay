@@ -16,7 +16,8 @@ export function StoreArtwork({
   imageUrl,
   priority = false,
 }: StoreArtworkProps) {
-  const market = type === "MARKET";
+  const normalizedType = type.toLowerCase();
+  const market = normalizedType.includes("market") || normalizedType.includes("grocery") || normalizedType.includes("retail");
   const Icon = name.startsWith("Java")
     ? Coffee
     : market

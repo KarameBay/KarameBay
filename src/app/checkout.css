@@ -2,3 +2,4 @@
 @media(max-width:850px){.review-layout{grid-template-columns:1fr}.review-summary{position:static}.admin-orders{padding:25px 15px}}
 @media(max-width:600px){.review-page{padding:22px 12px 75px}.review-title h1{font-size:29px}.momo-code b{font-size:16px}.order-success{margin:25px 12px;padding:30px 18px}.order-success-grid{grid-template-columns:1fr}.admin-order-stats{grid-template-columns:1fr 1fr}.admin-order-stats>div:last-child{grid-column:1/-1}}
 .momo-code{color:inherit;text-decoration:none;transition:border-color .18s ease,background .18s ease,transform .18s ease}.momo-code:hover{border-color:var(--orange);background:#fffaf0;transform:translateY(-1px)}.momo-code:focus-visible{outline:3px solid #c4821f30;outline-offset:2px}
+.review-item>div img{object-fit:contain;background:#fff}

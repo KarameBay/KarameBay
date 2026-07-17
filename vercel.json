@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/esoko-price-import",
+      "path": "/api/cron/tuma250-price-import",
       "schedule": "0 18 * * 1"
     }
   ]

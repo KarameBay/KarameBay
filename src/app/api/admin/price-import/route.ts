@@ -14,9 +14,10 @@ import {
   type PriceApprovalInput,
 } from "@/lib/esoko-importer";
 import { getCurrentUser } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { parsePriceImportFile } from "@/lib/price-import-file";
 import { rateLimit } from "@/lib/rate-limit";
-import { fetchAndStageTuma250Catalog, TUMA250_ALLOWED_STORE_SLUGS } from "@/lib/tuma250-importer";
+import { fetchAndStageTuma250Catalog } from "@/lib/tuma250-importer";
 
 export const maxDuration = 300;
 
@@ -33,6 +34,23 @@ const approvalSchema = z.object({
   roundTo: z.coerce.number().int().optional(),
   createAlias: z.boolean().optional(),
 });
+
+async function revalidateImportedStoreByRecordIds(recordIds: string[]) {
+  const stores = await db.priceImportRecord.findMany({
+    where: { id: { in: recordIds } },
+    select: { store: { select: { slug: true } } },
+    distinct: ["storeId"],
+  });
+  for (const row of stores) revalidatePath(`/stores/${row.store.slug}`);
+}
+
+async function revalidateImportedStoreByBatchId(batchId: string) {
+  const batch = await db.priceImportBatch.findUnique({
+    where: { id: batchId },
+    select: { store: { select: { slug: true } } },
+  });
+  if (batch) revalidatePath(`/stores/${batch.store.slug}`);
+}
 
 export async function POST(request: NextRequest) {
   const admin = await getCurrentUser("ADMIN");
@@ -75,11 +93,18 @@ export async function POST(request: NextRequest) {
     }
     if (action === "FETCH_TUMA250") {
       const targetStoreSlug = String(body.targetStoreSlug || "");
-      if (!TUMA250_ALLOWED_STORE_SLUGS.includes(targetStoreSlug as (typeof TUMA250_ALLOWED_STORE_SLUGS)[number]))
-        return NextResponse.json({ error: "Choose Kimironko Market or Zinia Kicukiro Market." }, { status: 400 });
+      const targetStore = await db.store.findFirst({
+        where: { slug: targetStoreSlug, catalogEngine: "MARKETPLACE", status: { not: "ARCHIVED" } },
+        select: { id: true, slug: true },
+      });
+      if (!targetStore)
+        return NextResponse.json({ error: "Choose a retail catalog store. Restaurant stores cannot use price import." }, { status: 400 });
+      const parsedCategories = z.array(z.coerce.number().int().positive()).max(12).optional().safeParse(body.tumaCategoryIds);
+      if (!parsedCategories.success)
+        return NextResponse.json({ error: "Choose valid Tuma250 categories." }, { status: 400 });
       if (!rateLimit(`tuma250-fetch:${admin.id}`, 2, 10 * 60_000))
         return NextResponse.json({ error: "Please wait before fetching the Tuma250 catalog again." }, { status: 429 });
-      const batch = await fetchAndStageTuma250Catalog(admin.id, targetStoreSlug);
+      const batch = await fetchAndStageTuma250Catalog(admin.id, targetStoreSlug, parsedCategories.data);
       revalidatePath("/admin/products/import");
       return NextResponse.json({ ok: true, batchId: batch.id, targetStoreSlug });
     }
@@ -89,8 +114,7 @@ export async function POST(request: NextRequest) {
       const approved = await approvePriceRecords(admin.id, parsed.data as PriceApprovalInput[]);
       revalidatePath("/admin/products/import");
       revalidatePath("/admin/products");
-      revalidatePath("/stores/kimironko-market");
-      revalidatePath("/stores/zinia-kicukiro-market");
+      await revalidateImportedStoreByRecordIds(parsed.data.map((item) => item.recordId));
       return NextResponse.json({ ok: true, approved });
     }
     if (action === "APPROVE_BATCH") {
@@ -99,8 +123,7 @@ export async function POST(request: NextRequest) {
       const approved = await approvePendingPriceBatch(admin.id, parsed.data.batchId);
       revalidatePath("/admin/products/import");
       revalidatePath("/admin/products");
-      revalidatePath("/stores/kimironko-market");
-      revalidatePath("/stores/zinia-kicukiro-market");
+      await revalidateImportedStoreByBatchId(parsed.data.batchId);
       return NextResponse.json({ ok: true, approved });
     }
     if (action === "REJECT") {

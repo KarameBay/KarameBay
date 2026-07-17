@@ -1,14 +1,13 @@
 import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const purposes = new Set(["store-logo", "store-cover", "product"]);
+const purposes = new Set(["store-logo", "store-cover", "store-type", "product"]);
 
 function detectImageExtension(bytes: Uint8Array) {
   if (
@@ -68,18 +67,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only valid JPG, PNG, and WebP images are allowed." }, { status: 400 });
   }
 
-  const uploadRoot = path.join(process.cwd(), "public", "uploads");
-  const destination = path.resolve(uploadRoot, purpose);
-  if (!destination.startsWith(path.resolve(uploadRoot) + path.sep)) {
-    return NextResponse.json({ error: "Invalid upload destination." }, { status: 400 });
+  const filename = `${randomUUID()}.${extension}`;
+  let uploaded;
+  try {
+    uploaded = await uploadImageToCloudinary(bytes, filename, purpose);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Cloudinary upload failed.",
+      },
+      { status: 503 },
+    );
   }
 
-  await mkdir(destination, { recursive: true });
-  const filename = `${randomUUID()}.${extension}`;
-  await writeFile(path.join(destination, filename), bytes, { flag: "wx" });
-
   return NextResponse.json(
-    { url: `/uploads/${purpose}/${filename}` },
+    { url: uploaded.url, publicId: uploaded.publicId },
     { status: 201 },
   );
 }

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }),
   ]);
   if (!admin || !store)
-    return NextResponse.json({ error: "Importer administrator or Kimironko Market is missing." }, { status: 503 });
+    return NextResponse.json({ error: "Importer administrator or Karame Bay Market is missing." }, { status: 503 });
 
   const snapshotDate = latestKigaliMonday();
   const existing = await db.priceImportBatch.findFirst({

@@ -8,6 +8,8 @@ import { formatKigaliDate, formatKigaliDateTime } from "@/lib/date-format";
 
 type ProductOption = { id: string; name: string; priceRwf: number | null; unit: string | null };
 type CategoryOption = { id: string; name: string; departmentName: string };
+type TumaCategoryOption = { id: number; name: string; label: string; count: number };
+type StoreOption = { slug: string; name: string };
 type ImportRecord = {
   id: string;
   source: string;
@@ -59,6 +61,12 @@ type Review = {
   roundTo: string;
   createAlias: boolean;
 };
+type ProgressState = {
+  label: string;
+  detail: string;
+  total: number;
+  status: "working" | "complete" | "error";
+} | null;
 
 async function sendJson(payload: unknown) {
   const response = await fetch("/api/admin/price-import", {
@@ -76,22 +84,26 @@ const subscribeToHydration = () => () => {};
 export function AdminPriceImporter({
   targetStoreSlug,
   targetStoreName,
+  storeOptions,
   batches,
   selectedBatch,
   records,
   products,
   categories,
+  tumaCategories,
   page,
   pages,
   batchPendingCount,
 }: {
   targetStoreSlug: string;
   targetStoreName: string;
+  storeOptions: StoreOption[];
   batches: Batch[];
   selectedBatch: Batch | null;
   records: ImportRecord[];
   products: ProductOption[];
   categories: CategoryOption[];
+  tumaCategories: TumaCategoryOption[];
   page: number;
   pages: number;
   batchPendingCount: number;
@@ -103,7 +115,9 @@ export function AdminPriceImporter({
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState<ProgressState>(null);
   const [selectAllBatch, setSelectAllBatch] = useState(false);
+  const [selectedTumaCategoryIds, setSelectedTumaCategoryIds] = useState<number[]>([]);
   const [review, setReview] = useState<Record<string, Review>>(() =>
     Object.fromEntries(
       records.map((record) => [
@@ -147,14 +161,45 @@ export function AdminPriceImporter({
     });
   }
 
+  function toggleTumaCategory(categoryId: number) {
+    setSelectedTumaCategoryIds((current) =>
+      current.includes(categoryId)
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId],
+    );
+  }
+
   async function fetchLatest() {
     setBusy("fetch"); setError(""); setMessage("");
+    setProgress({
+      label: "Fetching Tuma250 prices",
+      detail: "Reading product names and prices for review.",
+      total: selectedTumaCategoryIds.length || 3,
+      status: "working",
+    });
     try {
-      const data = await sendJson({ action: "FETCH_TUMA250", targetStoreSlug });
-      setMessage(`Tuma250 product names and exact displayed prices were staged for ${targetStoreName}. No external images or descriptions were copied.`);
+      const data = await sendJson({
+        action: "FETCH_TUMA250",
+        targetStoreSlug,
+        tumaCategoryIds: selectedTumaCategoryIds.length ? selectedTumaCategoryIds : undefined,
+      });
+      const categoryText = selectedTumaCategoryIds.length
+        ? `${selectedTumaCategoryIds.length} selected Tuma250 ${selectedTumaCategoryIds.length === 1 ? "category" : "categories"}`
+        : "the default Tuma250 categories";
+      setMessage(`Tuma250 product names and exact displayed prices were staged from ${categoryText}. No external images or descriptions were copied.`);
+      setProgress({
+        label: "Fetch complete",
+        detail: "Products were staged for Admin review.",
+        total: Number(data.recordsCreated) || selectedTumaCategoryIds.length || 1,
+        status: "complete",
+      });
       router.push(`/admin/products/import?store=${targetStoreSlug}&batch=${data.batchId}`);
       router.refresh();
-    } catch (actionError) { setError(actionError instanceof Error ? actionError.message : "Fetch failed."); }
+    } catch (actionError) {
+      const detail = actionError instanceof Error ? actionError.message : "Fetch failed.";
+      setError(detail);
+      setProgress({ label: "Fetch failed", detail, total: 1, status: "error" });
+    }
     finally { setBusy(""); }
   }
 
@@ -163,12 +208,28 @@ export function AdminPriceImporter({
       if (!selectedBatch || batchPendingCount === 0) { setError("There are no pending products in this batch."); return; }
       if (!window.confirm(`Approve exactly ${batchPendingCount} pending ${batchPendingCount === 1 ? "product" : "products"} across all pages?`)) return;
       setBusy("approve"); setError("");
+      setProgress({
+        label: "Approving products",
+        detail: `Publishing ${batchPendingCount} selected product${batchPendingCount === 1 ? "" : "s"} across all pages.`,
+        total: batchPendingCount,
+        status: "working",
+      });
       try {
         const data = await sendJson({ action: "APPROVE_BATCH", batchId: selectedBatch.id });
         setMessage(`${data.approved} product(s) approved across all pages. Make any individual changes in the Market Engine.`);
+        setProgress({
+          label: "Approval complete",
+          detail: `${data.approved} product${data.approved === 1 ? "" : "s"} approved successfully.`,
+          total: Number(data.approved) || batchPendingCount,
+          status: "complete",
+        });
         setSelectAllBatch(false);
         router.refresh();
-      } catch (actionError) { setError(actionError instanceof Error ? actionError.message : "Batch approval failed."); }
+      } catch (actionError) {
+        const detail = actionError instanceof Error ? actionError.message : "Batch approval failed.";
+        setError(detail);
+        setProgress({ label: "Approval failed", detail, total: batchPendingCount, status: "error" });
+      }
       finally { setBusy(""); }
       return;
     }
@@ -180,6 +241,12 @@ export function AdminPriceImporter({
     const approvalLabel = chosen.length === 1 ? "1 product" : `${chosen.length} products`;
     if (!window.confirm(`Approve exactly ${approvalLabel} from this page?`)) return;
     setBusy("approve"); setError("");
+    setProgress({
+      label: "Approving products",
+      detail: `Publishing ${approvalLabel} from this page.`,
+      total: chosen.length,
+      status: "working",
+    });
     try {
       const items = chosen.map((record) => {
         const state = review[record.id];
@@ -199,8 +266,18 @@ export function AdminPriceImporter({
       });
       const data = await sendJson({ action: "APPROVE", items });
       setMessage(`${data.approved} price record(s) approved.`);
+      setProgress({
+        label: "Approval complete",
+        detail: `${data.approved} price record${data.approved === 1 ? "" : "s"} approved successfully.`,
+        total: Number(data.approved) || chosen.length,
+        status: "complete",
+      });
       router.refresh();
-    } catch (actionError) { setError(actionError instanceof Error ? actionError.message : "Approval failed."); }
+    } catch (actionError) {
+      const detail = actionError instanceof Error ? actionError.message : "Approval failed.";
+      setError(detail);
+      setProgress({ label: "Approval failed", detail, total: chosen.length, status: "error" });
+    }
     finally { setBusy(""); }
   }
 
@@ -209,12 +286,28 @@ export function AdminPriceImporter({
       if (!selectedBatch || batchPendingCount === 0) { setError("There are no pending products in this batch."); return; }
       if (!window.confirm(`Reject exactly ${batchPendingCount} pending ${batchPendingCount === 1 ? "product" : "products"} across all pages?`)) return;
       setBusy("reject"); setError("");
+      setProgress({
+        label: "Rejecting products",
+        detail: `Rejecting ${batchPendingCount} pending product${batchPendingCount === 1 ? "" : "s"} across all pages.`,
+        total: batchPendingCount,
+        status: "working",
+      });
       try {
         const data = await sendJson({ action: "REJECT_BATCH", batchId: selectedBatch.id });
         setMessage(`${data.rejected} product(s) rejected across all pages.`);
+        setProgress({
+          label: "Rejection complete",
+          detail: `${data.rejected} product${data.rejected === 1 ? "" : "s"} rejected.`,
+          total: Number(data.rejected) || batchPendingCount,
+          status: "complete",
+        });
         setSelectAllBatch(false);
         router.refresh();
-      } catch (actionError) { setError(actionError instanceof Error ? actionError.message : "Batch rejection failed."); }
+      } catch (actionError) {
+        const detail = actionError instanceof Error ? actionError.message : "Batch rejection failed.";
+        setError(detail);
+        setProgress({ label: "Rejection failed", detail, total: batchPendingCount, status: "error" });
+      }
       finally { setBusy(""); }
       return;
     }
@@ -222,11 +315,27 @@ export function AdminPriceImporter({
     if (!recordIds.length) { setError("Select at least one pending record."); return; }
     if (!window.confirm(`Reject exactly ${recordIds.length} selected ${recordIds.length === 1 ? "product" : "products"} from this page?`)) return;
     setBusy("reject"); setError("");
+    setProgress({
+      label: "Rejecting products",
+      detail: `Rejecting ${recordIds.length} selected product${recordIds.length === 1 ? "" : "s"}.`,
+      total: recordIds.length,
+      status: "working",
+    });
     try {
       const data = await sendJson({ action: "REJECT", recordIds });
       setMessage(`${data.rejected} price record(s) rejected.`);
+      setProgress({
+        label: "Rejection complete",
+        detail: `${data.rejected} price record${data.rejected === 1 ? "" : "s"} rejected.`,
+        total: Number(data.rejected) || recordIds.length,
+        status: "complete",
+      });
       router.refresh();
-    } catch (actionError) { setError(actionError instanceof Error ? actionError.message : "Rejection failed."); }
+    } catch (actionError) {
+      const detail = actionError instanceof Error ? actionError.message : "Rejection failed.";
+      setError(detail);
+      setProgress({ label: "Rejection failed", detail, total: recordIds.length, status: "error" });
+    }
     finally { setBusy(""); }
   }
 
@@ -250,13 +359,34 @@ export function AdminPriceImporter({
   const allPendingSelected = selectAllBatch || (pendingRecords.length > 0 && pendingRecords.every((record) => review[record.id]?.selected));
   const selectedPendingCount = selectAllBatch ? batchPendingCount : pendingRecords.filter((record) => review[record.id]?.selected).length;
   const safeMatchCount = pendingRecords.filter((record) => record.matchStatus === "MATCHED").length;
+  const selectedCategoryLabel = selectedTumaCategoryIds.length
+    ? `${selectedTumaCategoryIds.length} selected`
+    : "Default categories";
 
   return (
     <div className="price-import-shell">
       <section className="admin-management-card price-import-controls">
-        <div><span className="catalog-kicker">PUBLIC STOREFRONT PRICES</span><h2>{targetStoreName}</h2><p>Fetch Groceries, Fruits &amp; Vegetables, and Meat, Fish &amp; Poultry. Prices remain exact RWF values with no markup.</p></div>
-        <label>Import into<select value={targetStoreSlug} onChange={(event) => router.push(`/admin/products/import?store=${event.target.value}`)} disabled={Boolean(busy)}><option value="kimironko-market">Kimironko Market</option><option value="zinia-kicukiro-market">Zinia Kicukiro Market</option></select></label>
-        <button type="button" onClick={fetchLatest} disabled={Boolean(busy)}>{busy === "fetch" ? <LoaderCircle className="spin" /> : <RefreshCw />} Fetch Tuma250 catalog</button>
+        <div><span className="catalog-kicker">PUBLIC STOREFRONT PRICES</span><h2>{targetStoreName}</h2><p>Choose any retail catalog store, then select the Tuma250 categories to import. Restaurant stores are excluded.</p></div>
+        <label>Import into<select value={targetStoreSlug} onChange={(event) => router.push(`/admin/products/import?store=${event.target.value}`)} aria-label="Import destination">
+          {storeOptions.map((store) => <option key={store.slug} value={store.slug}>{store.name}</option>)}
+        </select><small>Only Retail Catalog Engine stores appear here.</small></label>
+        <label className="tuma-category-picker">Tuma categories<details>
+          <summary>{selectedCategoryLabel}</summary>
+          <div>
+            <button type="button" onClick={() => setSelectedTumaCategoryIds([])}>Use default categories</button>
+            {tumaCategories.map((category) => (
+              <label key={category.id}>
+                <input
+                  type="checkbox"
+                  checked={selectedTumaCategoryIds.includes(category.id)}
+                  onChange={() => toggleTumaCategory(category.id)}
+                />
+                <span>{category.label}{category.count ? ` (${category.count})` : ""}</span>
+              </label>
+            ))}
+          </div>
+        </details><small>Leave empty to import the default market set.</small></label>
+        <button type="button" onClick={fetchLatest} disabled={Boolean(busy)}>{busy === "fetch" ? <LoaderCircle className="spin" /> : <RefreshCw />} Fetch selected categories</button>
       </section>
 
       {(error || message) && <div className={error ? "form-error price-import-notice" : "form-success price-import-notice"}>{error || message}</div>}
@@ -265,6 +395,25 @@ export function AdminPriceImporter({
         <label>Import batch<select value={selectedBatch?.id ?? ""} onChange={(event) => router.push(`/admin/products/import?store=${targetStoreSlug}&batch=${event.target.value}`)}><option value="">No imports yet</option>{batches.map((batch) => <option key={batch.id} value={batch.id}>{batch.snapshotDate ? `Snapshot ${formatKigaliDate(batch.snapshotDate)}` : formatKigaliDateTime(batch.startedAt)} · {batch.source} · {batch.status.replaceAll("_", " ")}</option>)}</select></label>
         {selectedBatch && <div><span className={`price-batch-status ${selectedBatch.status.toLowerCase()}`}>{selectedBatch.status.replaceAll("_", " ")}</span><small>{selectedBatch.errorDetails || `${selectedBatch.snapshotDate ? `Source date ${formatKigaliDate(selectedBatch.snapshotDate)} · ` : ""}Completed ${selectedBatch.completedAt ? formatKigaliDateTime(selectedBatch.completedAt) : "in progress"}`}</small></div>}
       </section>
+
+      {progress && (
+        <section className={`price-import-progress ${progress.status}`}>
+          <div>
+            <b>{progress.label}</b>
+            <span>{progress.detail}</span>
+          </div>
+          <small>
+            {progress.status === "working"
+              ? `${progress.total} queued`
+              : progress.status === "complete"
+                ? "Completed"
+                : "Needs attention"}
+          </small>
+          <div className="price-import-progress-track">
+            <i />
+          </div>
+        </section>
+      )}
 
       {selectedBatch && <section className="price-import-stats">{stats.map(([label, value]) => <article key={String(label)}><small>{label}</small><b>{value}</b></article>)}</section>}
 

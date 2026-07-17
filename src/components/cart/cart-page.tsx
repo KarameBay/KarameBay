@@ -83,6 +83,14 @@ export function CartPage() {
                 <div className="cart-item-name">
                   <h2>{item.name}</h2>
                   <p>{formatRwf(item.priceRwf)} each</p>
+                  {(item.containerChargePerUnitRwf || item.containerChargeFlatRwf) ? (
+                    <small>
+                      Container charge: {[
+                        item.containerChargePerUnitRwf ? `${formatRwf(item.containerChargePerUnitRwf)} each` : "",
+                        item.containerChargeFlatRwf ? `${formatRwf(item.containerChargeFlatRwf)} once` : "",
+                      ].filter(Boolean).join(" + ")}
+                    </small>
+                  ) : null}
                   {item.variant && <small>{item.variant.name}</small>}
                   {item.selections?.length ? (
                     <div className="cart-item-selections">
@@ -136,7 +144,7 @@ export function CartPage() {
                 </div>
                 <div className="cart-line-total">
                   <small>SUBTOTAL</small>
-                  <strong>{formatRwf(item.priceRwf * item.quantity)}</strong>
+                  <strong>{formatRwf(item.priceRwf * item.quantity + (item.containerChargeFlatRwf ?? 0))}</strong>
                 </div>
               </article>
             ))}

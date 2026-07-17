@@ -7,8 +7,13 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { normalizeCommodityName } from "@/lib/esoko-importer";
 import { DEFAULT_MARKET_IMAGE } from "@/lib/product-images";
+import { parseOptionalProductFields } from "@/lib/store-types";
 
 const PAGE_SIZE = 24;
+const containsInsensitive = (term: string) => ({
+  contains: term,
+  mode: Prisma.QueryMode.insensitive,
+});
 
 function slugify(value: string) {
   return (
@@ -56,20 +61,20 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
   const store = await db.store.findFirst({
     where: { id: storeId, catalogEngine: "MARKETPLACE" },
-    select: { id: true },
+    select: { id: true, storeType: true },
   });
   if (!store)
-    return NextResponse.json({ error: "Market not found" }, { status: 404 });
+    return NextResponse.json({ error: "Retail store not found" }, { status: 404 });
 
   const where: Prisma.MarketplaceProductWhereInput = {
     storeId,
     ...(search
       ? {
           OR: [
-            { name: { contains: search } },
-            { sku: { contains: search } },
-            { brand: { contains: search } },
-            { category: { name: { contains: search } } },
+            { name: containsInsensitive(search) },
+            { sku: containsInsensitive(search) },
+            { brand: containsInsensitive(search) },
+            { category: { name: containsInsensitive(search) } },
           ],
         }
       : {}),
@@ -145,9 +150,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Market and department name are required" }, { status: 400 });
       const store = await db.store.findFirst({
         where: { id: input.data.storeId, catalogEngine: "MARKETPLACE" },
-        select: { id: true },
+        select: { id: true, storeType: { select: { departmentsEnabled: true } } },
       });
-      if (!store) return NextResponse.json({ error: "Market not found" }, { status: 404 });
+      if (!store) return NextResponse.json({ error: "Retail store not found" }, { status: 404 });
+      if (store.storeType && !store.storeType.departmentsEnabled)
+        return NextResponse.json({ error: "Departments are disabled for this store type." }, { status: 409 });
       const duplicate = await db.marketplaceDepartment.findFirst({
         where: {
           storeId: store.id,
@@ -176,6 +183,7 @@ export async function POST(request: NextRequest) {
         entity: z.literal("category"),
         action: z.enum(["save", "delete"]),
         id: z.string().optional(),
+        storeId: z.string().optional(),
         departmentId: z.string().optional(),
         name: z.string().trim().min(2).optional(),
         description: z.string().trim().optional(),
@@ -198,10 +206,21 @@ export async function POST(request: NextRequest) {
         );
       await db.marketplaceCategory.delete({ where: { id: input.data.id } });
     } else {
-      if (!input.data.departmentId || !input.data.name)
-        return NextResponse.json({ error: "Department and category name are required" }, { status: 400 });
+      if (!input.data.name)
+        return NextResponse.json({ error: "Category name is required" }, { status: 400 });
+      let departmentId = input.data.departmentId;
+      if (!departmentId && input.data.storeId) {
+        const department = await db.marketplaceDepartment.findFirst({
+          where: { storeId: input.data.storeId },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          select: { id: true },
+        });
+        departmentId = department?.id;
+      }
+      if (!departmentId)
+        return NextResponse.json({ error: "Department is required for this category." }, { status: 400 });
       const department = await db.marketplaceDepartment.findUnique({
-        where: { id: input.data.departmentId },
+        where: { id: departmentId },
         select: { id: true },
       });
       if (!department)
@@ -238,6 +257,9 @@ export async function POST(request: NextRequest) {
         brand: z.string().trim().optional(),
         sku: z.string().trim().optional(),
         imageUrl: z.string().trim().optional(),
+        imagePublicId: z.string().trim().optional(),
+        containerChargePerUnitRwf: z.coerce.number().int().min(0).default(0),
+        containerChargeFlatRwf: z.coerce.number().int().min(0).default(0),
         unitLabel: z.string().trim().min(1).default("Each"),
         unitType: z.string().trim().min(1).default("EACH"),
         priceRwf: z.coerce.number().int().min(0).default(0),
@@ -251,39 +273,56 @@ export async function POST(request: NextRequest) {
     if (input.data.action === "delete") {
       if (!input.data.id)
         return NextResponse.json({ error: "Product is required" }, { status: 400 });
-      await db.marketplaceProduct.delete({ where: { id: input.data.id } });
+      await db.$transaction(async (tx) => {
+        await tx.orderItem.updateMany({
+          where: { marketplaceProductId: input.data.id },
+          data: { marketplaceProductId: null },
+        });
+        await tx.marketplaceProduct.delete({ where: { id: input.data.id } });
+      });
     } else {
       const value = input.data;
-      if (!value.storeId || !value.departmentId || !value.categoryId || !value.name)
+      if (!value.storeId || !value.categoryId || !value.name)
         return NextResponse.json(
-          { error: "Market, department, category, and product name are required" },
+          { error: "Market, category, and product name are required" },
           { status: 400 },
         );
+      const store = await db.store.findFirst({
+        where: { id: value.storeId, catalogEngine: "MARKETPLACE" },
+        select: { id: true, storeType: true },
+      });
+      if (!store)
+        return NextResponse.json({ error: "Retail store not found" }, { status: 404 });
       const category = await db.marketplaceCategory.findFirst({
         where: {
           id: value.categoryId,
-          departmentId: value.departmentId,
+          ...(value.departmentId ? { departmentId: value.departmentId } : {}),
           department: { storeId: value.storeId },
         },
-        select: { id: true },
+        select: { id: true, departmentId: true },
       });
       if (!category)
         return NextResponse.json({ error: "Choose a category from this market" }, { status: 400 });
-      const slug = await uniqueProductSlug(value.storeId, value.name, value.id);
+      const capabilities = store.storeType;
+      const optionalFields = parseOptionalProductFields(capabilities?.optionalProductFieldsJson);
+      const slug = await uniqueProductSlug(store.id, value.name, value.id);
       await db.$transaction(async (tx) => {
         const productData = {
-          storeId: value.storeId!,
-          departmentId: value.departmentId!,
+          storeId: store.id,
+          departmentId: category.departmentId,
           categoryId: value.categoryId!,
           slug,
           name: value.name!,
           normalizedName: normalizeCommodityName(value.name!),
-          description: value.description || null,
-          brand: value.brand || null,
-          sku: value.sku || null,
-          imageUrl: value.imageUrl || DEFAULT_MARKET_IMAGE,
+          description: optionalFields.includes("description") ? value.description || null : null,
+          brand: capabilities?.brandsEnabled ? value.brand || null : null,
+          sku: optionalFields.includes("sku") ? value.sku || null : null,
+          imageUrl: optionalFields.includes("image") ? value.imageUrl || DEFAULT_MARKET_IMAGE : DEFAULT_MARKET_IMAGE,
+          imagePublicId: optionalFields.includes("image") ? value.imagePublicId || null : null,
+          containerChargePerUnitRwf: value.containerChargePerUnitRwf,
+          containerChargeFlatRwf: value.containerChargeFlatRwf,
           isAvailable: value.isAvailable,
-          featured: value.featured,
+          featured: optionalFields.includes("featured") ? value.featured : false,
         };
         const product = value.id
           ? await tx.marketplaceProduct.update({ where: { id: value.id }, data: productData })
@@ -296,8 +335,8 @@ export async function POST(request: NextRequest) {
           await tx.marketplaceProductUnit.update({
             where: { id: unit.id },
             data: {
-              unitType: value.unitType,
-              label: value.unitLabel,
+              unitType: capabilities?.productUnitsEnabled ? value.unitType : "EACH",
+              label: capabilities?.productUnitsEnabled ? value.unitLabel : "Each",
               priceRwf: value.priceRwf,
               isAvailable: value.isAvailable,
             },
@@ -306,8 +345,8 @@ export async function POST(request: NextRequest) {
           await tx.marketplaceProductUnit.create({
             data: {
               productId: product.id,
-              unitType: value.unitType,
-              label: value.unitLabel,
+              unitType: capabilities?.productUnitsEnabled ? value.unitType : "EACH",
+              label: capabilities?.productUnitsEnabled ? value.unitLabel : "Each",
               priceRwf: value.priceRwf,
               isDefault: true,
               isAvailable: value.isAvailable,
@@ -316,8 +355,8 @@ export async function POST(request: NextRequest) {
         }
         await tx.marketplaceInventory.upsert({
           where: { productId: product.id },
-          update: { stockQuantity: value.stockQuantity },
-          create: { productId: product.id, stockQuantity: value.stockQuantity },
+          update: { stockQuantity: capabilities?.stockTrackingRequired ? value.stockQuantity : 1 },
+          create: { productId: product.id, stockQuantity: capabilities?.stockTrackingRequired ? value.stockQuantity : 1 },
         });
       });
     }

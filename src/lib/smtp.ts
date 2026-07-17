@@ -1,5 +1,6 @@
 import net from "net";
 import tls from "tls";
+import { getBusinessProfile } from "@/lib/business-profile";
 
 type MailConfig = {
   host: string;
@@ -116,6 +117,8 @@ async function upgradeToTls(
 }
 
 export async function sendSmtpMail(message: MailMessage) {
+  const business = await getBusinessProfile();
+  message = { ...message, fromName: message.fromName ?? business.businessName };
   const config = getConfig();
   if (!config) {
     return {

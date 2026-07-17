@@ -1,0 +1,12 @@
+import Link from "next/link";
+import { AdminReviewsClient } from "@/components/admin/admin-reviews-client";
+import { OperationsPortalBadge } from "@/components/operations-portal-badge";
+import { requireRole } from "@/lib/auth/session";
+import { db } from "@/lib/db";
+export const dynamic = "force-dynamic";
+const PAGE_SIZE = 30;
+export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireRole("ADMIN"); const requested = Number((await searchParams).page ?? 1); const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
+  const [reviews, total] = await Promise.all([db.review.findMany({ include: { order: { select: { orderNumber: true } }, customer: { select: { firstName: true, lastName: true } }, store: { select: { name: true } }, rider: { select: { firstName: true, lastName: true } } }, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }), db.review.count()]);
+  return <><main className="admin-orders-page"><header className="admin-dashboard-header"><div><span className="catalog-kicker">REVIEW MODERATION</span><h1>Ratings & Reviews</h1><p>Moderate verified customer feedback and reply professionally.</p></div><div className="admin-header-actions"><Link href="/admin">Dashboard</Link><Link href="/admin/settings">Settings</Link></div></header><AdminReviewsClient initialReviews={reviews.map((review) => ({ id: review.id, orderNumber: review.order.orderNumber, customerName: `${review.customer.firstName} ${review.customer.lastName}`, storeName: review.store.name, riderName: review.rider ? `${review.rider.firstName} ${review.rider.lastName}` : null, storeRating: review.storeRating, riderOverallRating: review.riderOverallRating, writtenReview: review.writtenReview, riderComment: review.riderComment, moderationStatus: review.moderationStatus, moderationReason: review.moderationReason, adminReply: review.adminReply, createdAt: review.createdAt.toISOString() }))} /><nav className="catalog-pages"><Link href={`/admin/reviews?page=${Math.max(1, page - 1)}`} aria-disabled={page <= 1}>Previous</Link><span>Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}</span><Link href={`/admin/reviews?page=${Math.min(Math.max(1, Math.ceil(total / PAGE_SIZE)), page + 1)}`} aria-disabled={page >= Math.ceil(total / PAGE_SIZE)}>Next</Link></nav></main><OperationsPortalBadge role="Admin" destination="/admin/login" /></>;
+}

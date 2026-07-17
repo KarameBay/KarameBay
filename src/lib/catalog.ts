@@ -11,6 +11,11 @@ const storeCount = {
   select: { restaurantProducts: true, marketplaceProducts: true },
 } as const;
 
+const containsInsensitive = (term: string) => ({
+  contains: term,
+  mode: Prisma.QueryMode.insensitive,
+});
+
 function withProductCount<
   T extends {
     isOpen: boolean;
@@ -29,23 +34,31 @@ function withProductCount<
   };
 }
 
-export const getStores = cache(async (query = "") => {
+export const getStores = cache(async (query = "", storeTypeSlug = "") => {
   const term = query.trim();
   const stores = await db.store.findMany({
     where: {
       status: "APPROVED",
+      storeType: {
+        is: {
+          isActive: true,
+          ...(storeTypeSlug ? { slug: storeTypeSlug } : {}),
+        },
+      },
       ...(term
         ? {
             OR: [
-              { name: { contains: term } },
-              { description: { contains: term } },
-              { type: { contains: term } },
+              { name: containsInsensitive(term) },
+              { description: containsInsensitive(term) },
+              { type: containsInsensitive(term) },
+              { storeType: { is: { name: containsInsensitive(term) } } },
+              { storeType: { is: { customerSectionName: containsInsensitive(term) } } },
               {
                 restaurantProducts: {
                   some: {
                     OR: [
-                      { name: { contains: term } },
-                      { category: { name: { contains: term } } },
+                      { name: containsInsensitive(term) },
+                      { category: { name: containsInsensitive(term) } },
                     ],
                   },
                 },
@@ -54,10 +67,10 @@ export const getStores = cache(async (query = "") => {
                 marketplaceProducts: {
                   some: {
                     OR: [
-                      { name: { contains: term } },
-                      { brand: { contains: term } },
-                      { category: { name: { contains: term } } },
-                      { department: { name: { contains: term } } },
+                      { name: containsInsensitive(term) },
+                      { brand: containsInsensitive(term) },
+                      { category: { name: containsInsensitive(term) } },
+                      { department: { name: containsInsensitive(term) } },
                     ],
                   },
                 },
@@ -66,19 +79,42 @@ export const getStores = cache(async (query = "") => {
           }
         : {}),
     },
-    orderBy: [{ featured: "desc" }, { name: "asc" }],
-    include: { _count: storeCount },
+    orderBy: [
+      { storeType: { displayOrder: "asc" } },
+      { featured: "desc" },
+      { name: "asc" },
+    ],
+    include: { storeType: true, _count: storeCount },
   });
   return stores.map(withProductCount);
 });
 
 export const getStoreBySlug = cache(async (slug: string) => {
   const store = await db.store.findFirst({
-    where: { slug, status: "APPROVED" },
-    include: { _count: storeCount },
+    where: { slug, status: "APPROVED", storeType: { is: { isActive: true } } },
+    include: { storeType: true, _count: storeCount },
   });
   return store ? withProductCount(store) : null;
 });
+
+export const getActiveStoreTypes = cache(async () =>
+  db.storeType.findMany({
+    where: {
+      isActive: true,
+      stores: { some: { status: "APPROVED" } },
+    },
+    orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+    include: {
+      _count: { select: { stores: { where: { status: "APPROVED" } } } },
+    },
+  }),
+);
+
+export const getStoreTypeBySlug = cache(async (slug: string) =>
+  db.storeType.findFirst({
+    where: { slug, isActive: true, stores: { some: { status: "APPROVED" } } },
+  }),
+);
 
 export async function getStoreCatalog(
   storeId: string,
@@ -86,11 +122,18 @@ export async function getStoreCatalog(
 ) {
   const store = await db.store.findUniqueOrThrow({
     where: { id: storeId },
-    select: { catalogEngine: true },
+    select: {
+      catalogEngine: true,
+      storeType: { select: { stockTrackingRequired: true } },
+    },
   });
   return store.catalogEngine === "RESTAURANT"
     ? getRestaurantCatalog(storeId, options)
-    : getMarketplaceCatalog(storeId, options);
+    : getMarketplaceCatalog(
+        storeId,
+        options,
+        store.storeType?.stockTrackingRequired ?? true,
+      );
 }
 
 export const getRestaurantProductDetails = cache(async function getRestaurantProductDetails(
@@ -100,10 +143,10 @@ export const getRestaurantProductDetails = cache(async function getRestaurantPro
   const product = await db.restaurantProduct.findFirst({
     where: {
       id: productId,
-      store: { slug: storeSlug, status: "APPROVED" },
+      store: { slug: storeSlug, status: "APPROVED", storeType: { is: { isActive: true } } },
     },
     include: {
-      store: true,
+      store: { include: { storeType: true } },
       category: true,
       variants: {
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -138,6 +181,8 @@ export const getRestaurantProductDetails = cache(async function getRestaurantPro
     name: product.name,
     description: product.description,
     basePriceRwf: product.basePriceRwf,
+    containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+    containerChargeFlatRwf: product.containerChargeFlatRwf,
     imageUrl: product.imageUrl,
     isAvailable: product.isAvailable && !product.seasonal,
     category: { name: product.category.name },
@@ -147,6 +192,7 @@ export const getRestaurantProductDetails = cache(async function getRestaurantPro
       slug: product.store.slug,
       type: product.store.type,
       catalogEngine: product.store.catalogEngine,
+      ageConfirmationRequired: product.store.storeType?.ageConfirmationRequired ?? false,
     },
     variants: product.variants.map((variant) => ({
       id: variant.id,
@@ -222,9 +268,9 @@ async function getRestaurantCatalog(
     ...(options.query
       ? {
           OR: [
-            { name: { contains: options.query } },
-            { description: { contains: options.query } },
-            { category: { name: { contains: options.query } } },
+            { name: containsInsensitive(options.query) },
+            { description: containsInsensitive(options.query) },
+            { category: { name: containsInsensitive(options.query) } },
           ],
         }
       : {}),
@@ -256,7 +302,9 @@ async function getRestaurantCatalog(
       storeId: product.storeId,
       catalogEngine: "RESTAURANT" as const,
       name: product.name,
-      priceRwf: product.basePriceRwf,
+      priceRwf: product.basePriceRwf + product.containerChargePerUnitRwf,
+      containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+      containerChargeFlatRwf: product.containerChargeFlatRwf,
       unitLabel:
         product._count.variants +
           product._count.choiceGroups +
@@ -278,6 +326,7 @@ async function getRestaurantCatalog(
 async function getMarketplaceCatalog(
   storeId: string,
   options: { category?: string; query?: string; page?: number },
+  stockTrackingRequired: boolean,
 ) {
   const page = Math.max(1, options.page ?? 1);
   const where: Prisma.MarketplaceProductWhereInput = {
@@ -286,11 +335,11 @@ async function getMarketplaceCatalog(
     ...(options.query
       ? {
           OR: [
-            { name: { contains: options.query } },
-            { description: { contains: options.query } },
-            { brand: { contains: options.query } },
-            { category: { name: { contains: options.query } } },
-            { department: { name: { contains: options.query } } },
+            { name: containsInsensitive(options.query) },
+            { description: containsInsensitive(options.query) },
+            { brand: containsInsensitive(options.query) },
+            { category: { name: containsInsensitive(options.query) } },
+            { department: { name: containsInsensitive(options.query) } },
           ],
         }
       : {}),
@@ -333,13 +382,15 @@ async function getMarketplaceCatalog(
           storeId: product.storeId,
           catalogEngine: "MARKETPLACE" as const,
           name: product.name,
-          priceRwf: unit.priceRwf,
+          priceRwf: unit.priceRwf + product.containerChargePerUnitRwf,
+          containerChargePerUnitRwf: product.containerChargePerUnitRwf,
+          containerChargeFlatRwf: product.containerChargeFlatRwf,
           unitLabel: unit.label,
           imageUrl: product.imageUrl,
           isAvailable:
             product.isAvailable &&
             unit.isAvailable &&
-            (product.inventory?.stockQuantity ?? 0) > 0,
+            (!stockTrackingRequired || (product.inventory?.stockQuantity ?? 0) > 0),
           category: { name: product.category.name },
         },
       ];

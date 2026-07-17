@@ -1,6 +1,7 @@
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 import { sendSmtpMail } from "@/lib/smtp";
+import { getBusinessProfile } from "@/lib/business-profile";
 
 export const EMAIL_CODE_TTL_MS = 10 * 60_000;
 export const EMAIL_CODE_RESEND_COOLDOWN_MS = 60_000;
@@ -28,6 +29,7 @@ export async function issueEmailVerificationCode(input: {
   email: string;
   firstName: string;
 }) {
+  const business = await getBusinessProfile();
   const code = generateCode();
   const now = new Date();
   await db.emailVerificationChallenge.upsert({
@@ -50,17 +52,17 @@ export async function issueEmailVerificationCode(input: {
 
   return sendSmtpMail({
     to: input.email,
-    subject: "Verify Your Karame Bay Email",
+    subject: `Verify Your ${business.businessName} Email`,
     text: [
       `Hello ${input.firstName},`,
       "",
-      "Welcome to Karame Bay.",
+      `Welcome to ${business.businessName}.`,
       `Your email verification code is: ${code}`,
       "",
       "This code expires in 10 minutes.",
-      "Do not share this code with anyone. Karame Bay staff will never ask for it.",
+      `Do not share this code with anyone. ${business.businessName} staff will never ask for it.`,
       "",
-      "Karame Bay",
+      business.businessName,
       "Kigali, delivered.",
     ].join("\n"),
   });

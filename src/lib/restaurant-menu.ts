@@ -53,6 +53,8 @@ export type RestaurantMenuProduct = {
   name: string;
   description: string | null;
   basePriceRwf: number;
+  containerChargePerUnitRwf: number;
+  containerChargeFlatRwf: number;
   imageUrl: string | null;
   isAvailable: boolean;
   category: { name: string };
@@ -65,6 +67,7 @@ export type RestaurantMenuProduct = {
     slug: string;
     type: string;
     catalogEngine: string;
+    ageConfirmationRequired?: boolean;
   };
 };
 

@@ -19,9 +19,7 @@ export default async function RestaurantsPage({
 }) {
   const { q = "" } = await searchParams;
   const query = q.trim().slice(0, 100);
-  const stores = (await getStores(query)).filter(
-    (store) => store.catalogEngine === "RESTAURANT",
-  );
+  const stores = await getStores(query, "restaurants");
 
   return (
     <div className="app-shell">
