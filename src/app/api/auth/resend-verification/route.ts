@@ -19,7 +19,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Please wait ${retryAfter} seconds before resending.`, retryAfter }, { status: 429, headers: { "Retry-After": String(retryAfter) } });
   }
   const sent = await issueEmailVerificationCode({ userId: user.id, email: user.email, firstName: user.firstName });
-  if (!sent.ok)
+  if (!sent.ok) {
+    console.warn("Email verification resend failed", {
+      userId: user.id,
+      error: sent.error,
+    });
     return NextResponse.json({ error: "The email could not be sent. Please try again shortly." }, { status: 503 });
+  }
   return NextResponse.json({ sent: true, cooldownSeconds: 60 });
 }

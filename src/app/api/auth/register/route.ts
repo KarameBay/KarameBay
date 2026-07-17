@@ -96,6 +96,12 @@ export async function POST(request: NextRequest) {
     email: user.email,
     firstName: user.firstName,
   });
+  if (!delivery.ok) {
+    console.warn("Email verification delivery failed during registration", {
+      userId: user.id,
+      error: delivery.error,
+    });
+  }
   const landingPath = `/customer/verify-email?delivery=${delivery.ok ? "sent" : "failed"}`;
   if (isBrowserForm && !wantsJson)
     return NextResponse.redirect(new URL(landingPath, request.nextUrl.origin), 303);
