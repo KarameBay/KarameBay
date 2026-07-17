@@ -27,7 +27,7 @@ import {
   RouteQuote,
   validCoordinates,
 } from "@/lib/delivery";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((module) => module.DeliveryMap),

@@ -19,7 +19,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime } from "@/lib/date-format";
 
 type Rider = {

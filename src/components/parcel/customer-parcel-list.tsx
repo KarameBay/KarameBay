@@ -10,7 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime } from "@/lib/date-format";
 import {
   customerCanCancelParcel,

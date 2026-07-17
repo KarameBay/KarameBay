@@ -23,7 +23,7 @@ import {
   SavedDeliveryQuote,
   validSavedDeliveryQuote,
 } from "@/lib/delivery";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
 
 export function CheckoutReview() {

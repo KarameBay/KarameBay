@@ -7,7 +7,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, PackagePlus, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AdminImageUpload } from "@/components/admin/admin-image-upload";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { DEFAULT_MARKET_IMAGE, productImage } from "@/lib/product-images";
 import type { OptionalProductField, StoreTypeCapabilities } from "@/lib/store-types";
 

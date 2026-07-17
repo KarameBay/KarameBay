@@ -12,7 +12,7 @@ import {
   Save,
   ShoppingBag,
 } from "lucide-react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime, formatKigaliTime } from "@/lib/date-format";
 import {
   OrderStatus,

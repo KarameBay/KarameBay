@@ -28,7 +28,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { ParcelRouteMapLoader } from "./parcel-route-map-loader";
 import type { ParcelMapPoint } from "./parcel-route-map";
 

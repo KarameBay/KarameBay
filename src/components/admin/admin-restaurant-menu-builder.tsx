@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 /* Selecting a menu entity intentionally synchronizes its dependent editor forms. */
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useState } from "react";
 import { LoaderCircle, Plus, Save, Trash2, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { AdminImageUpload } from "@/components/admin/admin-image-upload";
 
 type MenuStore = {

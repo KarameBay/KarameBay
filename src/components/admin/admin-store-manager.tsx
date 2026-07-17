@@ -3,7 +3,7 @@
 import type { CSSProperties, FormEvent } from "react";
 import { useState, useTransition } from "react";
 import { LoaderCircle, MapPin, Plus, Save, Store, Trash2 } from "lucide-react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { useRouter } from "next/navigation";
 import { AdminImageUpload } from "@/components/admin/admin-image-upload";
 

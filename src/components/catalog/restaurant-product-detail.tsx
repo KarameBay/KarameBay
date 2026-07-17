@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-provider";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import {
   buildRestaurantConfigurationKey,
   choiceInstruction,

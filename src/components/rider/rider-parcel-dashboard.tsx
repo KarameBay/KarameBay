@@ -20,7 +20,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { LiveRouteMapLoader } from "@/components/tracking/live-route-map-loader";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime } from "@/lib/date-format";
 
 type ParcelProblem = {

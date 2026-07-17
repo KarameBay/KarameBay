@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   Store,
 } from "lucide-react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { orderStatusLabel, paymentStatusLabel } from "@/lib/order-status";
 import { LiveRouteMapLoader } from "@/components/tracking/live-route-map-loader";
 import { formatKigaliDateTime, formatKigaliTime } from "@/lib/date-format";

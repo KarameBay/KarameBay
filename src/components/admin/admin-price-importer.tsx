@@ -3,7 +3,7 @@
 import { useRef, useState, useSyncExternalStore } from "react";
 import { CheckCircle2, LoaderCircle, RefreshCw, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDate, formatKigaliDateTime } from "@/lib/date-format";
 
 type ProductOption = { id: string; name: string; priceRwf: number | null; unit: string | null };

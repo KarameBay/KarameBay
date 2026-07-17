@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,7 +19,7 @@ import {
   Store,
   User,
 } from "lucide-react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime } from "@/lib/date-format";
 import { orderStatusLabel, paymentStatusLabel } from "@/lib/order-status";
 import {

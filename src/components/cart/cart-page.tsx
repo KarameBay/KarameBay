@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
@@ -12,7 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCart } from "./cart-provider";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
 
 function itemKey(item: { lineKey?: string; id: string }) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrowseHeader } from "@/components/catalog/browse-header";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { orderStatusLabel, paymentStatusLabel } from "@/lib/order-status";

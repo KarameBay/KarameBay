@@ -14,7 +14,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { formatRwf } from "@/lib/catalog";
+import { formatRwf } from "@/lib/money";
 import { formatKigaliDateTime } from "@/lib/date-format";
 import { ParcelRouteMapLoader } from "./parcel-route-map-loader";
 import {
