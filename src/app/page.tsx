@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   Apple,
   ArrowRight,
@@ -19,10 +20,13 @@ import { PublicFooter } from "@/components/catalog/public-footer";
 import { getStores } from "@/lib/catalog";
 import { getBusinessProfile } from "@/lib/business-profile";
 import { phoneDisplay, phoneHref, whatsappHref } from "@/lib/contact";
+import { isStaffPortalRequest } from "@/lib/portal-host";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  if (await isStaffPortalRequest()) redirect("/admin/login");
+
   const [stores, business] = await Promise.all([getStores(), getBusinessProfile()]);
   return (
     <div className="app-shell">
