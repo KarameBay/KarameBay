@@ -5,6 +5,9 @@ import { sendSmtpMail } from "@/lib/smtp";
 import { OrderStatus } from "@/lib/order-status";
 import { getBusinessProfile, SYSTEM_BUSINESS_DEFAULTS } from "@/lib/business-profile";
 
+const ADMIN_ORDER_ALERT_EMAIL =
+  process.env.ADMIN_ORDER_ALERT_EMAIL ?? "karamebay3@gmail.com";
+
 type Role = "CUSTOMER" | "ADMIN" | "RIDER";
 type Channel = "INTERNAL" | "EMAIL";
 
@@ -197,6 +200,51 @@ export async function notifyOrderPlaced(
     input.order.orderNumber,
     "New order placed",
     "A new customer order has been placed",
+  );
+}
+
+export async function sendAdminNewOrderEmail(input: {
+  order: {
+    id: string;
+    orderNumber: string;
+    grandTotalRwf: number;
+  };
+  store: {
+    name: string;
+  };
+}) {
+  const business = await getBusinessProfile();
+  const subject = `New ${business.businessName} order needs payment verification`;
+  const body = [
+    "Hello Admin,",
+    "",
+    `A new customer order has been placed on ${business.businessName}.`,
+    "",
+    `Order number: ${input.order.orderNumber}`,
+    `Store: ${input.store.name}`,
+    `Total: ${input.order.grandTotalRwf.toLocaleString()} RWF`,
+    "Payment status: Pending Verification",
+    "",
+    "Please open the Admin Orders page and verify the MoMo payment before processing the order.",
+    "",
+    `Admin portal: ${process.env.NEXT_PUBLIC_STAFF_ORIGIN ?? "https://portal.karamebay.com"}/admin/orders`,
+    "",
+    `${business.businessName} notification system`,
+  ].join("\n");
+
+  return writeNotificationEmail(
+    {
+      orderId: input.order.id,
+      recipientEmail: ADMIN_ORDER_ALERT_EMAIL,
+      subject,
+      body,
+    },
+    () =>
+      sendSmtpMail({
+        to: ADMIN_ORDER_ALERT_EMAIL,
+        subject,
+        text: body,
+      }),
   );
 }
 

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDrivingRoute } from "@/lib/routing";
 import { rateLimit } from "@/lib/rate-limit";
-import { notifyOrderPlaced } from "@/lib/order-notifications";
+import { notifyOrderPlaced, sendAdminNewOrderEmail } from "@/lib/order-notifications";
 import { isStoreOpenInKigali } from "@/lib/store-hours";
 import {
   computeRestaurantUnitPrice,
@@ -505,5 +505,30 @@ export async function POST(request: NextRequest) {
       payment: { status: "PENDING_VERIFICATION" },
     };
   });
+
+  try {
+    const adminEmail = await sendAdminNewOrderEmail({
+      order: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        grandTotalRwf: order.grandTotalRwf,
+      },
+      store: {
+        name: products[0].store.name,
+      },
+    });
+    if (!adminEmail.ok) {
+      console.warn("Admin new order email failed", {
+        orderId: order.id,
+        error: adminEmail.error,
+      });
+    }
+  } catch (error) {
+    console.warn("Admin new order email failed", {
+      orderId: order.id,
+      error: error instanceof Error ? error.message : "Unknown email error",
+    });
+  }
+
   return NextResponse.json({ order }, { status: 201 });
 }
