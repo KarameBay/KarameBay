@@ -5,6 +5,7 @@ import { createSession } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/auth/validation";
 import { roleLandingPath, type Role } from "@/lib/auth/constants";
 import { rateLimit } from "@/lib/rate-limit";
+import { partnerPortalEnabled } from "@/lib/portal-surface";
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") ?? "";
@@ -20,7 +21,12 @@ export async function POST(request: NextRequest) {
     "audience" in input &&
     input.audience === "staff"
       ? "staff"
-      : "customer";
+      : input &&
+          typeof input === "object" &&
+          "audience" in input &&
+          input.audience === "partner"
+        ? "partner"
+        : "customer";
   const portal =
     input &&
     typeof input === "object" &&
@@ -29,13 +35,17 @@ export async function POST(request: NextRequest) {
       ? input.portal
       : audience === "staff"
         ? "admin"
-        : "customer";
+        : audience === "partner"
+          ? "partner"
+          : "customer";
   const loginPage =
     portal === "rider"
       ? "/rider/login"
       : portal === "admin"
         ? "/admin/login"
-        : "/customer/login";
+        : portal === "partner"
+          ? "/partner/login"
+          : "/customer/login";
 
   const failure = (error: string, status: number) => {
     if (isBrowserForm) {
@@ -52,6 +62,11 @@ export async function POST(request: NextRequest) {
 
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return failure("Invalid email or password.", 401);
+  if (
+    (parsed.data.audience === "partner" || portal === "partner") &&
+    !partnerPortalEnabled()
+  )
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const user = await db.user.findUnique({
     where: { email: parsed.data.email },
@@ -62,11 +77,24 @@ export async function POST(request: NextRequest) {
     return failure("This account is not active.", 403);
 
   const isCustomer = user.role === "CUSTOMER";
-  if (user.role !== "CUSTOMER" && user.role !== "ADMIN" && user.role !== "RIDER")
+  if (
+    user.role !== "CUSTOMER" &&
+    user.role !== "ADMIN" &&
+    user.role !== "RIDER" &&
+    user.role !== "PARTNER"
+  )
     return failure("This account type is no longer supported.", 403);
   if (parsed.data.audience === "customer" && !isCustomer)
     return failure("This account cannot sign in here.", 403);
-  if (parsed.data.audience === "staff" && isCustomer)
+  if (
+    parsed.data.audience === "staff" &&
+    user.role !== "ADMIN" &&
+    user.role !== "RIDER"
+  )
+    return failure("This account cannot sign in here.", 403);
+  if (parsed.data.audience === "partner" && user.role !== "PARTNER")
+    return failure("This account cannot sign in here.", 403);
+  if (portal === "partner" && user.role !== "PARTNER")
     return failure("This account cannot sign in here.", 403);
   if (portal === "admin" && user.role !== "ADMIN")
     return failure("This account cannot sign in here.", 403);
@@ -75,8 +103,11 @@ export async function POST(request: NextRequest) {
 
   await createSession(user);
   const landingPath =
-    user.role === "CUSTOMER" && !user.emailVerifiedAt
-      ? "/customer/verify-email"
+    (user.role === "CUSTOMER" || user.role === "PARTNER") &&
+    !user.emailVerifiedAt
+      ? user.role === "PARTNER"
+        ? "/partner/verify-email"
+        : "/customer/verify-email"
       : roleLandingPath(user.role as Role);
   if (isBrowserForm) {
     return NextResponse.redirect(new URL(landingPath, request.url), 303);

@@ -70,7 +70,7 @@ export async function issuePasswordResetCode(input: {
     text: [
       `Hello ${input.firstName},`,
       "",
-      `We received a request to reset your ${business.businessName} customer password.`,
+      `We received a request to reset your ${business.businessName} password.`,
       `Your password reset code is: ${code}`,
       "",
       "This code expires in 10 minutes.",

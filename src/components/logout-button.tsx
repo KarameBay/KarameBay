@@ -5,7 +5,7 @@ export function LogoutButton({
   role,
 }: {
   destination?: string;
-  role?: "CUSTOMER" | "ADMIN" | "RIDER";
+  role?: "CUSTOMER" | "ADMIN" | "RIDER" | "PARTNER";
 }) {
   const router = useRouter();
   const sessionRole =
@@ -14,7 +14,9 @@ export function LogoutButton({
       ? "RIDER"
       : destination.startsWith("/admin")
         ? "ADMIN"
-        : "CUSTOMER");
+        : destination.startsWith("/partner")
+          ? "PARTNER"
+          : "CUSTOMER");
   return (
     <button
       className="logout-button"

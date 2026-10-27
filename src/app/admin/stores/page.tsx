@@ -89,6 +89,7 @@ export default async function AdminStoresPage() {
           </div>
           <div className="admin-header-actions">
             <Link href="/admin">Dashboard</Link>
+            <Link href="/admin/partners">Partner approvals</Link>
             <Link href="/admin/menus">Restaurant menus</Link>
             <Link href="/admin/products">Retail catalog</Link>
             <Link href="/admin/riders">Riders</Link>

@@ -13,6 +13,7 @@ import "./step6-overrides.css";
 import "./address-book.css";
 import "./rider.css";
 import "./portal.css";
+import "./partner.css";
 import "./home.css";
 import "./info-pages.css";
 import "./notifications.css";

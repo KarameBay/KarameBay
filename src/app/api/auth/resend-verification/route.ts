@@ -5,8 +5,9 @@ import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser("CUSTOMER");
-  if (!user || user.role !== "CUSTOMER")
+  const role = request.nextUrl.searchParams.get("role") === "PARTNER" ? "PARTNER" : "CUSTOMER";
+  const user = await getCurrentUser(role);
+  if (!user)
     return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
   if (user.emailVerifiedAt) return NextResponse.json({ verified: true });
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";

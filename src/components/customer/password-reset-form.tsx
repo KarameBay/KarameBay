@@ -77,9 +77,11 @@ function ResetProgress({ current }: { current: 1 | 2 | 3 }) {
 export function PasswordResetForm({
   mode,
   initialEmail = "",
+  role = "CUSTOMER",
 }: {
   mode: ResetMode;
   initialEmail?: string;
+  role?: "CUSTOMER" | "PARTNER";
 }) {
   const requesting = mode === "request";
   const [email, setEmail] = useState(initialEmail);
@@ -106,7 +108,7 @@ export function PasswordResetForm({
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 20_000);
     try {
-      const response = await fetch(path, {
+      const response = await fetch(`${path}?role=${role}`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -140,7 +142,7 @@ export function PasswordResetForm({
           return;
         }
         router.push(
-          `/customer/reset-password?email=${encodeURIComponent(normalizedEmail)}`,
+          `/${role === "PARTNER" ? "partner" : "customer"}/reset-password?email=${encodeURIComponent(normalizedEmail)}`,
         );
         return;
       }
@@ -226,10 +228,10 @@ export function PasswordResetForm({
           </span>
           <span className="kicker">PASSWORD UPDATED</span>
           <h2>Your password is ready</h2>
-          <p>You can now sign in to your customer account with your new password.</p>
+          <p>You can now sign in to your {role === "PARTNER" ? "partner" : "customer"} account with your new password.</p>
           <Link
             className="auth-submit auth-submit-link"
-            href={customerUrl("/customer/login")}
+            href={role === "PARTNER" ? "/partner/login" : customerUrl("/customer/login")}
           >
             Continue to sign in <ArrowRight />
           </Link>
@@ -248,7 +250,7 @@ export function PasswordResetForm({
   return (
     <PasswordResetLayout>
       <div className="auth-card password-reset-card">
-        <Link className="reset-back-link" href={customerUrl("/customer/login")}>
+        <Link className="reset-back-link" href={role === "PARTNER" ? "/partner/login" : customerUrl("/customer/login")}>
           <ArrowLeft /> Back to sign in
         </Link>
         <ResetProgress current={currentStep} />
@@ -399,7 +401,7 @@ export function PasswordResetForm({
                 ? `Resend code in ${resendCooldown}s`
                 : "Resend code"}
             </button>
-            <Link href={customerUrl("/customer/forgot-password")}>Use another email</Link>
+            <Link href={role === "PARTNER" ? "/partner/forgot-password" : customerUrl("/customer/forgot-password")}>Use another email</Link>
           </div>
         )}
       </div>

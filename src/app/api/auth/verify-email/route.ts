@@ -7,11 +7,13 @@ import { rateLimit } from "@/lib/rate-limit";
 const schema = z.object({ code: z.string().trim().regex(/^\d{6}$/) });
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser("CUSTOMER");
-  if (!user || user.role !== "CUSTOMER")
+  const role = request.nextUrl.searchParams.get("role") === "PARTNER" ? "PARTNER" : "CUSTOMER";
+  const user = await getCurrentUser(role);
+  const redirectTo = role === "PARTNER" ? "/partner" : "/customer/account";
+  if (!user)
     return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
   if (user.emailVerifiedAt)
-    return NextResponse.json({ verified: true, redirectTo: "/customer/account" });
+    return NextResponse.json({ verified: true, redirectTo });
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   if (!rateLimit(`verify-email:ip:${ip}`, 20, 10 * 60_000) || !rateLimit(`verify-email:user:${user.id}`, 8, 10 * 60_000))
     return NextResponse.json({ error: "Too many verification attempts. Request a new code later." }, { status: 429 });
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Enter the 6-digit code." }, { status: 400 });
   const result = await verifyEmailCode(user.id, parsed.data.code);
   if (result.ok)
-    return NextResponse.json({ verified: true, redirectTo: "/customer/account" });
+    return NextResponse.json({ verified: true, redirectTo });
   const messages = {
     missing: "No active code was found. Request a new code.",
     expired: "This code has expired. Request a new code.",

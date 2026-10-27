@@ -25,7 +25,7 @@ import { isStaffPortalRequest } from "@/lib/portal-host";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  if (await isStaffPortalRequest()) redirect("/admin/login");
+  if (await isStaffPortalRequest()) redirect("/staff");
 
   const [stores, business] = await Promise.all([getStores(), getBusinessProfile()]);
   return (

@@ -8,7 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 const GENERIC_MESSAGE =
-  "If a customer account matches that email, a password reset code has been sent.";
+  "If an account matches that email, a password reset code has been sent.";
 
 function rateKey(email: string) {
   const secret = process.env.AUTH_SECRET ?? "karame-password-reset-rate-key";
@@ -16,6 +16,7 @@ function rateKey(email: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const role = request.nextUrl.searchParams.get("role") === "PARTNER" ? "PARTNER" : "CUSTOMER";
   const input = await request.json().catch(() => null);
   const parsed = forgotPasswordSchema.safeParse(input);
   if (!parsed.success)
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
   const customer = await db.user.findFirst({
     where: {
       email: parsed.data.email,
-      role: "CUSTOMER",
+      role,
       status: "ACTIVE",
     },
     select: { id: true, email: true, firstName: true },

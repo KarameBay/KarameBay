@@ -8,8 +8,8 @@ import { ArrowRight, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { customerUrl } from "@/lib/portal-urls";
 import { roleLandingPath, type Role } from "@/lib/auth/constants";
 
-type Audience = "customer" | "staff";
-type Portal = "customer" | "admin" | "rider";
+type Audience = "customer" | "staff" | "partner";
+type Portal = "customer" | "admin" | "rider" | "partner";
 
 export function AuthForm({
   mode,
@@ -28,7 +28,9 @@ export function AuthForm({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const staff = audience === "staff";
-  const activePortal: Portal = portal ?? (staff ? "admin" : "customer");
+  const partner = audience === "partner";
+  const activePortal: Portal =
+    portal ?? (partner ? "partner" : staff ? "admin" : "customer");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,7 +70,13 @@ export function AuthForm({
       const role = body.user?.role as Role | undefined;
       const redirectTo =
         body.user?.redirectTo ??
-        (role ? roleLandingPath(role) : activePortal === "customer" ? "/customer/account" : activePortal === "rider" ? "/rider" : "/admin");
+        (role
+          ? roleLandingPath(role)
+          : activePortal === "customer"
+            ? "/customer/account"
+            : activePortal === "rider"
+              ? "/rider"
+              : "/admin");
       navigating = true;
       startTransition(() => router.replace(redirectTo));
     } catch (requestError) {
@@ -99,55 +107,100 @@ export function AuthForm({
         </Link>
         <div>
           <span className="kicker">
-            {staff ? "KARAME STAFF PORTAL" : "KIGALI, DELIVERED"}
+            {partner
+              ? "KARAME PARTNER PORTAL"
+              : staff
+                ? "KARAME STAFF PORTAL"
+                : "KIGALI, DELIVERED"}
           </span>
           <h1>
-            {staff ? "One team," : "Everything you need,"}
+            {partner
+              ? "Your business,"
+              : staff
+                ? "One team,"
+                : "Everything you need,"}
             <br />
-            {staff ? "one delivery mission." : "right at your door."}
+            {partner
+              ? "more customers."
+              : staff
+                ? "one delivery mission."
+                : "right at your door."}
           </h1>
           <p>
-            {staff
-              ? "Secure access for administrators and riders."
-              : "Local restaurants, trusted markets, and reliable Karame delivery—all in one place."}
+            {partner
+              ? "Open your shop, list your products, and reach customers across Kigali."
+              : staff
+                ? "Secure access for administrators and riders."
+                : "Local restaurants, trusted markets, and reliable Karame delivery—all in one place."}
           </p>
         </div>
         <small>© 2026 Karame Bay · Made in Rwanda</small>
       </div>
       <main className="auth-main">
         <div className="auth-card">
+          {mode === "login" &&
+            (activePortal === "admin" || activePortal === "partner") && (
+              <nav
+                className="staff-signin-tabs"
+                aria-label="Sign-in account type"
+              >
+                <Link
+                  href="/admin/login"
+                  aria-current={activePortal === "admin" ? "page" : undefined}
+                >
+                  Admin
+                </Link>
+                <Link
+                  href="/partner/login"
+                  aria-current={activePortal === "partner" ? "page" : undefined}
+                >
+                  Partner
+                </Link>
+              </nav>
+            )}
           <span className="kicker">
-            {staff
-              ? activePortal === "rider"
-                ? "RIDER PORTAL"
-                : "ADMIN PORTAL"
-              : mode === "login"
-                ? "CUSTOMER PORTAL"
-                : "JOIN KARAME BAY"}
+            {partner
+              ? "PARTNER PORTAL"
+              : staff
+                ? activePortal === "rider"
+                  ? "RIDER PORTAL"
+                  : "ADMIN PORTAL"
+                : mode === "login"
+                  ? "CUSTOMER PORTAL"
+                  : "JOIN KARAME BAY"}
           </span>
           <h2>
-            {mode === "login"
-              ? staff
-                ? activePortal === "rider"
-                  ? "Open your rider workspace"
-                  : "Open your admin workspace"
-                : "Sign in to your account"
-              : "Create your account"}
+            {partner
+              ? mode === "login"
+                ? "Sign in to your partner account"
+                : "Become a Karame Bay partner"
+              : mode === "login"
+                ? staff
+                  ? activePortal === "rider"
+                    ? "Open your rider workspace"
+                    : "Open your admin workspace"
+                  : "Sign in to your account"
+                : "Create your account"}
           </h2>
           <p>
-            {mode === "login"
-              ? staff
-                ? activePortal === "rider"
-                  ? "For rider accounts only."
-                  : "For admin accounts only."
-                : "Enter your customer details to continue."
-              : "Start ordering from Kigali's local favourites."}
+            {partner
+              ? "Manage your store and products. New stores are reviewed by Karame Bay before going live."
+              : mode === "login"
+                ? staff
+                  ? activePortal === "rider"
+                    ? "For rider accounts only."
+                    : "For admin accounts only."
+                  : "Enter your customer details to continue."
+                : "Start ordering from Kigali's local favourites."}
           </p>
           <form
             onSubmit={submit}
             method="post"
             action={mode === "login" ? "/api/auth/login" : "/api/auth/register"}
           >
+            {mode === "register" && partner && (
+              <input type="hidden" name="accountType" value="partner" />
+            )}
             {mode === "login" && (
               <input type="hidden" name="audience" value={audience} />
             )}
@@ -157,7 +210,12 @@ export function AuthForm({
             {mode === "register" && (
               <label>
                 Full name
-                <input name="fullName" required minLength={3} autoComplete="name" />
+                <input
+                  name="fullName"
+                  required
+                  minLength={3}
+                  autoComplete="name"
+                />
               </label>
             )}
             <label>
@@ -205,7 +263,15 @@ export function AuthForm({
             </label>
             {mode === "login" && !staff && (
               <div className="auth-forgot-link">
-                <Link href={customerUrl("/customer/forgot-password")}>Forgot password?</Link>
+                <Link
+                  href={
+                    partner
+                      ? "/partner/forgot-password"
+                      : customerUrl("/customer/forgot-password")
+                  }
+                >
+                  Forgot password?
+                </Link>
               </div>
             )}
             {mode === "register" && (
@@ -240,20 +306,35 @@ export function AuthForm({
                 <LoaderCircle className="spin" />
               ) : (
                 <>
-                  {mode === "login"
-                    ? staff
-                      ? activePortal === "rider"
-                        ? "Enter Rider Portal"
-                        : "Enter Admin Portal"
-                      : "Customer sign in"
-                    : "Create customer account"}
+                  {partner
+                    ? mode === "login"
+                      ? "Partner sign in"
+                      : "Create partner account"
+                    : mode === "login"
+                      ? staff
+                        ? activePortal === "rider"
+                          ? "Enter Rider Portal"
+                          : "Enter Admin Portal"
+                        : "Customer sign in"
+                      : "Create customer account"}
                   <ArrowRight />
                 </>
               )}
             </button>
           </form>
           <div className="auth-switch">
-            {staff ? (
+            {partner ? (
+              <>
+                {mode === "login" ? "New partner? " : "Already a partner? "}
+                <Link
+                  href={
+                    mode === "login" ? "/partner/register" : "/partner/login"
+                  }
+                >
+                  {mode === "login" ? "Create an account" : "Sign in"}
+                </Link>
+              </>
+            ) : staff ? (
               <>
                 Shopping with Karame Bay?{" "}
                 <Link href={customerUrl("/customer/login")}>
@@ -279,4 +360,3 @@ export function AuthForm({
     </div>
   );
 }
-

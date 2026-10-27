@@ -11,7 +11,7 @@ export const passwordSchema = z
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(1).max(128),
-  audience: z.enum(["customer", "staff"]).default("customer"),
+  audience: z.enum(["customer", "staff", "partner"]).default("customer"),
 });
 export const registerSchema = z.object({
   fullName: z.string().trim().min(3).max(160),

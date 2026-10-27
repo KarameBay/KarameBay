@@ -10,6 +10,7 @@ function hostnameFromOrigin(origin: string | undefined) {
 }
 
 export async function isStaffPortalRequest() {
+  if (process.env.PORTAL_SURFACE === "staff") return true;
   const headerStore = await headers();
   const host = (headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "")
     .split(",")[0]

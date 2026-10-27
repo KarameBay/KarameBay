@@ -52,7 +52,7 @@ export async function createSession(user: { id: string; role: string }) {
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });
-  // Retire the old shared cookie without touching either of the other portal
+  // Retire the old shared cookie without touching the other portal
   // cookies. This is what makes simultaneous role sessions possible.
   jar.set(LEGACY_SESSION_COOKIE, "", cookieOptions(0));
 }
@@ -125,6 +125,7 @@ async function readCurrentUser(role: Role) {
   if (
     !session ||
     session.expiresAt <= new Date() ||
+    session.user.role !== role ||
     session.user.status !== "ACTIVE"
   )
     return null;
@@ -133,7 +134,7 @@ async function readCurrentUser(role: Role) {
 
 export const getCurrentUser = cache(async (role?: Role) => {
   if (role) return readCurrentUser(role);
-  for (const candidate of ["CUSTOMER", "ADMIN", "RIDER"] as const) {
+  for (const candidate of ["CUSTOMER", "ADMIN", "RIDER", "PARTNER"] as const) {
     const user = await readCurrentUser(candidate);
     if (user) return user;
   }
@@ -147,6 +148,7 @@ export async function requireRole(...allowed: Role[]) {
     if (user) break;
   }
   if (!user) {
+    if (allowed.includes("PARTNER")) redirect("/partner/login");
     if (allowed.includes("CUSTOMER")) {
       redirect("/customer/login");
     }
@@ -155,7 +157,14 @@ export async function requireRole(...allowed: Role[]) {
     }
     redirect("/admin/login");
   }
-  if (user.role === "CUSTOMER" && !user.emailVerifiedAt)
-    redirect("/customer/verify-email");
+  if (
+    (user.role === "CUSTOMER" || user.role === "PARTNER") &&
+    !user.emailVerifiedAt
+  )
+    redirect(
+      user.role === "PARTNER"
+        ? "/partner/verify-email"
+        : "/customer/verify-email",
+    );
   return user;
 }

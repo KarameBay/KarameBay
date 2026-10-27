@@ -8,6 +8,7 @@ import { registerSchema } from "@/lib/auth/validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { issueEmailVerificationCode } from "@/lib/auth/email-verification";
 import { saveProfilePhoto } from "@/lib/auth/profile-photo";
+import { partnerPortalEnabled } from "@/lib/portal-surface";
 
 export const runtime = "nodejs";
 
@@ -16,14 +17,19 @@ export async function POST(request: NextRequest) {
   const isBrowserForm =
     contentType.includes("application/x-www-form-urlencoded") ||
     contentType.includes("multipart/form-data");
-  const wantsJson = request.headers.get("accept")?.includes("application/json") ?? false;
+  const wantsJson =
+    request.headers.get("accept")?.includes("application/json") ?? false;
   const formData = isBrowserForm ? await request.formData() : null;
   const input = formData
     ? Object.fromEntries(formData)
     : await request.json().catch(() => null);
+  const partner = input?.accountType === "partner";
+  if (partner && !partnerPortalEnabled())
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const portalPath = partner ? "/partner" : "/customer";
   const failure = (error: string, status: number) => {
     if (isBrowserForm && !wantsJson) {
-      const url = new URL("/customer/register", request.nextUrl.origin);
+      const url = new URL(`${portalPath}/register`, request.nextUrl.origin);
       url.searchParams.set("error", error);
       return NextResponse.redirect(url, 303);
     }
@@ -34,7 +40,8 @@ export async function POST(request: NextRequest) {
     return failure("Too many attempts. Try again shortly.", 429);
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? "Please check the submitted details.";
+    const message =
+      parsed.error.issues[0]?.message ?? "Please check the submitted details.";
     return failure(message, 400);
   }
   const { fullName, email, phone, password } = parsed.data;
@@ -61,7 +68,10 @@ export async function POST(request: NextRequest) {
     profilePhotoUrl = profilePhoto?.url ?? null;
     profilePhotoPublicId = profilePhoto?.publicId ?? null;
   } catch (error) {
-    return failure(error instanceof Error ? error.message : "Invalid profile photo.", 400);
+    return failure(
+      error instanceof Error ? error.message : "Invalid profile photo.",
+      400,
+    );
   }
   let user;
   try {
@@ -75,7 +85,7 @@ export async function POST(request: NextRequest) {
         profilePhotoPublicId,
         emailVerifiedAt: null,
         passwordHash: await hash(password, PASSWORD_HASH_ROUNDS),
-        role: "CUSTOMER",
+        role: partner ? "PARTNER" : "CUSTOMER",
         status: "ACTIVE",
       },
     });
@@ -103,9 +113,12 @@ export async function POST(request: NextRequest) {
       details: "details" in delivery ? delivery.details : undefined,
     });
   }
-  const landingPath = `/customer/verify-email?delivery=${delivery.ok ? "sent" : "failed"}`;
+  const landingPath = `${portalPath}/verify-email?delivery=${delivery.ok ? "sent" : "failed"}`;
   if (isBrowserForm && !wantsJson)
-    return NextResponse.redirect(new URL(landingPath, request.nextUrl.origin), 303);
+    return NextResponse.redirect(
+      new URL(landingPath, request.nextUrl.origin),
+      303,
+    );
   return NextResponse.json(
     {
       user: {

@@ -320,6 +320,7 @@ export default async function Page({
           </div>
           <div className="admin-header-actions">
             <Link href="/admin/stores">Stores</Link>
+            <Link href="/admin/partners">Partners</Link>
             <Link href="/admin/parcels">Parcel deliveries</Link>
             <Link href="/admin/menus">Restaurant menus</Link>
             <Link href="/admin/products">Retail catalog</Link>

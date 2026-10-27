@@ -11,12 +11,14 @@ export function AdminImageUpload({
   value,
   onChange,
   help,
+  endpoint = "/api/admin/uploads/images",
 }: {
   label: string;
   purpose: ImagePurpose;
   value: string;
   onChange: (url: string, publicId?: string) => void;
   help?: string;
+  endpoint?: string;
 }) {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +36,7 @@ export function AdminImageUpload({
       const body = new FormData();
       body.append("file", file);
       body.append("purpose", purpose);
-      const response = await fetch("/api/admin/uploads/images", {
+      const response = await fetch(endpoint, {
         method: "POST",
         body,
       });

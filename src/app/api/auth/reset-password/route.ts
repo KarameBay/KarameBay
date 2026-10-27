@@ -13,6 +13,7 @@ function rateKey(email: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const role = request.nextUrl.searchParams.get("role") === "PARTNER" ? "PARTNER" : "CUSTOMER";
   const input = await request.json().catch(() => null);
   const parsed = resetPasswordSchema.safeParse(input);
   if (!parsed.success) {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   const customer = await db.user.findFirst({
     where: {
       email: parsed.data.email,
-      role: "CUSTOMER",
+      role,
       status: "ACTIVE",
     },
     select: { id: true },
@@ -60,6 +61,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     message: "Your password has been reset. Sign in with your new password.",
-    redirectTo: "/customer/login",
+    redirectTo: role === "PARTNER" ? "/partner/login" : "/customer/login",
   });
 }

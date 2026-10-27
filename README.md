@@ -1,6 +1,6 @@
 # Karame Bay
 
-Karame Bay is a multi-service delivery marketplace for Rwanda. The current codebase is a single Next.js application that contains the customer website, Admin portal, Rider portal, API routes, and Prisma database layer.
+Karame Bay is a multi-service delivery marketplace for Rwanda. The current codebase is a single Next.js application that contains the customer website, Admin portal, Rider portal, Partner portal, API routes, and Prisma database layer.
 
 The platform currently supports:
 
@@ -16,6 +16,7 @@ The platform currently supports:
 - Customer: browses stores, orders restaurant/retail products, books parcels, tracks orders, reviews completed orders, and manages account details.
 - Admin: manages store types, stores, restaurant menus, retail catalogs, products, prices, images, customers, riders, orders, parcel deliveries, payment verification, reports, notifications, and settings.
 - Rider: receives Admin-assigned deliveries, views routes, updates delivery statuses, and completes assigned store or parcel deliveries.
+- Partner: registers and verifies an account, submits stores for Admin approval, and manages only their own retail products or restaurant menu items.
 
 ## Existing stores and data preservation
 
@@ -206,6 +207,17 @@ npm run audit:production
 
 Most verification scripts expect the app to be running and may use `TEST_BASE_URL` and `TEST_ACCOUNT_PASSWORD`.
 
+## Partner portal
+
+- The staff portal opens at `/staff` with Admin and Partner sign-in choices. Partners sign up at `/partner/register`, verify their email, and sign in at `/partner/login`, all on the staff portal domain.
+- `/partner` lets each partner create stores and manage their own retail products or restaurant menu items, including photos, prices, availability and retail stock.
+- New stores and changes to store details are submitted as `PENDING`. Admin reviews them at `/admin/partners`; only approved stores appear to customers.
+- Admin retains access to all partner stores and listings in `/admin/stores`, `/admin/products` and `/admin/menus`.
+- Partners use a separate `karame_partner_session` cookie. Every partner catalog operation checks the authenticated owner, including product and category references.
+- Email verification and account recovery use the existing email provider configuration. Product photo uploads use Cloudinary.
+- This feature uses the existing string role and store-owner fields; it requires no database migration. Deploy it to the Staff Portal service with `PORTAL_SURFACE=staff`. The customer service does not expose partner screens, links, registration or partner APIs; production deployments without this setting return 404 for partner routes.
+- `npm run test:partner-portal` requires a running local test server, a separate database schema named `partner_check_*`, `TEST_BASE_URL` pointing to localhost, and matching `DATABASE_URL` / `AUTH_SECRET` values in the script and server. The script refuses to run against the normal production schema.
+
 ## Important deployment notes
 
 - Railway production must use the Railway-provided PostgreSQL `DATABASE_URL`.
@@ -224,5 +236,5 @@ Most verification scripts expect the app to be running and may use `TEST_BASE_UR
 - `AUTH_SECRET must contain at least 32 characters`: set a long random `AUTH_SECRET`.
 - Gmail emails not sending: configure `GMAIL_SMTP_USER` and `GMAIL_SMTP_APP_PASSWORD`; verify Gmail 2-Step Verification and App Password setup.
 - Uploaded images disappear after deployment: local filesystem upload storage is being used; configure durable storage.
-- Role collision in one browser: the app uses separate cookies for customer, admin, and rider sessions: `karame_customer_session`, `karame_admin_session`, and `karame_rider_session`.
+- Role collision in one browser: the app uses separate cookies for customer, admin, rider, and partner sessions: `karame_customer_session`, `karame_admin_session`, `karame_rider_session`, and `karame_partner_session`.
 - Route or geocoding failures: OpenStreetMap/Nominatim or OSRM may be temporarily unavailable or rate-limiting requests.
