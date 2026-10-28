@@ -18,17 +18,30 @@ const suggestionIcons = {
   category: Tags,
 };
 
-export function HomeSearch() {
+export function HomeSearch({
+  defaultValue = "",
+  action = "/stores",
+  placeholder = "Search stores, products or categories",
+  formClassName = "home-search",
+  storeSlug,
+}: {
+  defaultValue?: string;
+  action?: string;
+  placeholder?: string;
+  formClassName?: string;
+  /** Limit suggestions to a single partner when searching inside its catalog. */
+  storeSlug?: string;
+}) {
   const router = useRouter();
   const shellRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const term = query.trim();
-    if (term.length < 2) {
+    if (term.length < 1) {
       return;
     }
 
@@ -37,7 +50,7 @@ export function HomeSearch() {
       setLoading(true);
       try {
         const response = await fetch(
-          `/api/catalog/suggestions?q=${encodeURIComponent(term)}`,
+          `/api/catalog/suggestions?q=${encodeURIComponent(term)}${storeSlug ? `&store=${encodeURIComponent(storeSlug)}` : ""}`,
           { signal: controller.signal },
         );
         if (!response.ok) throw new Error("Suggestion request failed");
@@ -51,13 +64,13 @@ export function HomeSearch() {
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
-    }, 180);
+    }, 140);
 
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query]);
+  }, [query, storeSlug]);
 
   useEffect(() => {
     const closeSuggestions = (event: PointerEvent) => {
@@ -70,7 +83,8 @@ export function HomeSearch() {
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const term = query.trim();
-    router.push(term ? `/stores?q=${encodeURIComponent(term)}` : "/stores");
+    const separator = action.includes("?") ? "&" : "?";
+    router.push(term ? `${action}${separator}q=${encodeURIComponent(term)}` : action);
     setOpen(false);
   }
 
@@ -80,11 +94,11 @@ export function HomeSearch() {
     router.push(suggestion.href);
   }
 
-  const showPanel = open && query.trim().length >= 2;
+  const showPanel = open && query.trim().length >= 1;
 
   return (
     <div className="home-search-shell" ref={shellRef}>
-      <form className="home-search" onSubmit={submitSearch} role="search">
+      <form className={formClassName} onSubmit={submitSearch} role="search">
         <Search aria-hidden="true" />
         <input
           aria-autocomplete="list"
@@ -95,7 +109,7 @@ export function HomeSearch() {
           onChange={(event) => {
             const value = event.target.value;
             setQuery(value);
-            if (value.trim().length < 2) {
+            if (value.trim().length < 1) {
               setSuggestions([]);
               setLoading(false);
               setOpen(false);
@@ -103,8 +117,8 @@ export function HomeSearch() {
               setOpen(true);
             }
           }}
-          onFocus={() => query.trim().length >= 2 && setOpen(true)}
-          placeholder="Search stores, products or categories"
+          onFocus={() => query.trim().length >= 1 && setOpen(true)}
+          placeholder={placeholder}
           value={query}
         />
         <button type="submit">Search</button>

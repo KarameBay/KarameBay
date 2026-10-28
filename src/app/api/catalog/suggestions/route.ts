@@ -12,14 +12,22 @@ const containsInsensitive = (term: string) => ({
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const term = (searchParams.get("q") ?? "").trim().slice(0, 100);
+  const storeSlug = (searchParams.get("store") ?? "").trim().slice(0, 120);
 
-  if (term.length < 2) {
+  if (term.length < 1) {
     return NextResponse.json({ suggestions: [] });
   }
 
+  const scopedStore = storeSlug
+    ? await db.store.findFirst({
+        where: { slug: storeSlug, status: "APPROVED", storeType: { is: { isActive: true } } },
+        select: { id: true, slug: true },
+      })
+    : null;
+
   const [stores, restaurantProducts, marketplaceProducts, restaurantCategories, marketplaceCategories] =
     await Promise.all([
-      db.store.findMany({
+      scopedStore ? Promise.resolve([]) : db.store.findMany({
         where: {
           status: "APPROVED",
           OR: [
@@ -45,7 +53,11 @@ export async function GET(request: Request) {
         where: {
           isAvailable: true,
           seasonal: false,
-          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
+          store: {
+            ...(scopedStore ? { id: scopedStore.id } : {}),
+            status: "APPROVED",
+            storeType: { is: { isActive: true } },
+          },
           OR: [
             { name: containsInsensitive(term) },
             { category: { name: containsInsensitive(term) } },
@@ -63,7 +75,11 @@ export async function GET(request: Request) {
       db.marketplaceProduct.findMany({
         where: {
           isAvailable: true,
-          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
+          store: {
+            ...(scopedStore ? { id: scopedStore.id } : {}),
+            status: "APPROVED",
+            storeType: { is: { isActive: true } },
+          },
           OR: [
             { name: containsInsensitive(term) },
             { brand: containsInsensitive(term) },
@@ -84,7 +100,11 @@ export async function GET(request: Request) {
         where: {
           isActive: true,
           name: containsInsensitive(term),
-          store: { status: "APPROVED", storeType: { is: { isActive: true } } },
+          store: {
+            ...(scopedStore ? { id: scopedStore.id } : {}),
+            status: "APPROVED",
+            storeType: { is: { isActive: true } },
+          },
         },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         take: 3,
@@ -98,7 +118,13 @@ export async function GET(request: Request) {
       db.marketplaceCategory.findMany({
         where: {
           name: containsInsensitive(term),
-          department: { store: { status: "APPROVED", storeType: { is: { isActive: true } } } },
+          department: {
+            store: {
+              ...(scopedStore ? { id: scopedStore.id } : {}),
+              status: "APPROVED",
+              storeType: { is: { isActive: true } },
+            },
+          },
         },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         take: 3,

@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { ProductCard } from "@/components/catalog/product-card";
+import { HomeSearch } from "@/components/catalog/home-search";
 import { StoreArtwork } from "@/components/catalog/store-artwork";
+import { PublicFooter } from "@/components/catalog/public-footer";
 import { getStoreBySlug, getStoreCatalog } from "@/lib/catalog";
 import { db } from "@/lib/db";
 
@@ -36,7 +38,7 @@ export default async function StorePage({ params, searchParams }: Props) {
   const href = (page: number) =>
     `/stores/${slug}?${new URLSearchParams({ ...query, page: String(page) }).toString()}`;
   return (
-    <>
+    <div className="app-shell">
       <BrowseHeader />
       <main className="catalog-page">
         <section className="catalog-store-hero">
@@ -94,36 +96,33 @@ export default async function StorePage({ params, searchParams }: Props) {
           </div>
         </section>
         <section className="catalog-content">
-          <form className="catalog-search">
-            <Search />
-            <input
-              name="q"
+          <div className="catalog-discovery">
+            <HomeSearch
+              action={query.category ? `/stores/${slug}?category=${encodeURIComponent(query.category)}` : `/stores/${slug}`}
               defaultValue={query.q}
+              formClassName="catalog-search"
               placeholder={`Search in ${store.name}`}
+                storeSlug={slug}
             />
-            {query.category && (
-              <input type="hidden" name="category" value={query.category} />
-            )}
-            <button>Search</button>
-          </form>
-          <nav className="catalog-categories">
-            <Link
-              className={!query.category ? "active" : ""}
-              href={`/stores/${slug}`}
-            >
-              All <span>{store._count.products}</span>
-            </Link>
-            {catalog.categories.map((category) => (
+            <nav className="catalog-categories" aria-label="Product categories">
               <Link
-                className={query.category === category.slug ? "active" : ""}
-                href={`/stores/${slug}?category=${category.slug}`}
-                key={category.id}
+                className={!query.category ? "active" : ""}
+                href={`/stores/${slug}`}
               >
-                {category.name}
-                <span>{category._count.products}</span>
+                All <span>{store._count.products}</span>
               </Link>
-            ))}
-          </nav>
+              {catalog.categories.map((category) => (
+                <Link
+                  className={query.category === category.slug ? "active" : ""}
+                  href={`/stores/${slug}?category=${category.slug}`}
+                  key={category.id}
+                >
+                  {category.name}
+                  <span>{category._count.products}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
           <div className="catalog-heading">
             <div>
               <span className="catalog-kicker">CATALOG</span>
@@ -183,10 +182,11 @@ export default async function StorePage({ params, searchParams }: Props) {
           )}
           <section className="store-reviews-section">
             <div className="catalog-heading"><div><span className="catalog-kicker">CUSTOMER REVIEWS</span><h2>Latest verified reviews</h2></div><p>{(ratingSummary._avg.storeRating ?? 0).toFixed(1)} / 5 · {totalReviews} total</p></div>
-            {latestReviews.length ? <div className="store-review-grid">{latestReviews.map((review) => <article key={review.id}><span className="review-stars" aria-label={`${review.storeRating} out of 5 stars`}>{[1,2,3,4,5].map((value) => <Star key={value} className={value <= review.storeRating ? "filled" : ""} />)}</span><h3>{review.customer.firstName} {review.customer.lastName.slice(0, 1)}.</h3>{review.writtenReview && <p>{review.writtenReview}</p>}<small>Verified order · {review.createdAt.toLocaleDateString("en-RW", { dateStyle: "medium" })}</small>{review.adminReply && <blockquote><b>Response from Karame Bay</b>{review.adminReply}</blockquote>}</article>)}</div> : <div className="catalog-empty"><Star /><h3>No reviews yet</h3><p>The first delivered-order review will appear here.</p></div>}
+            {latestReviews.length ? <div className="store-review-grid">{latestReviews.slice(0, 3).map((review) => <article key={review.id}><span className="review-stars" aria-label={`${review.storeRating} out of 5 stars`}>{[1,2,3,4,5].map((value) => <Star key={value} className={value <= review.storeRating ? "filled" : ""} />)}</span><h3>{review.customer.firstName} {review.customer.lastName.slice(0, 1)}.</h3>{review.writtenReview && <p>{review.writtenReview}</p>}<small>Verified order · {review.createdAt.toLocaleDateString("en-RW", { dateStyle: "medium" })}</small>{review.adminReply && <blockquote><b>Response from Karame Bay</b>{review.adminReply}</blockquote>}</article>)}</div> : <div className="catalog-empty"><Star /><h3>No reviews yet</h3><p>The first delivered-order review will appear here.</p></div>}
           </section>
         </section>
       </main>
-    </>
+      <PublicFooter />
+    </div>
   );
 }
