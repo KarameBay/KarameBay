@@ -25,7 +25,7 @@ export function CartPage() {
   const storeName = cart.items[0]?.storeName;
 
   if (!cart.hydrated) {
-    return <div className="cart-loading">Loading your cartâ€¦</div>;
+    return <div className="cart-loading">Loading your cart…</div>;
   }
 
   return (

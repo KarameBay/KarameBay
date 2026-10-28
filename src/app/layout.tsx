@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
+import "./audit-overrides.css";
 import "./auth-reset.css";
 import "./catalog.css";
 import "./cart.css";
@@ -26,12 +27,12 @@ import { AppProviders } from "@/components/app-providers";
 const siteUrl = "https://www.karamebay.com";
 const businessPhone = "+250789950707";
 const logoUrl = `${siteUrl}/images/karame-transport-logo.jpeg`;
-const shareImageUrl = `${siteUrl}/images/karame-campaign-service.jpeg`;
+const shareImageUrl = `${siteUrl}/images/karame-campaign-service-hq.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Karame Bay ? Kigali Delivered",
+    default: "Karame Bay — Kigali Delivered",
     template: "%s | Karame Bay",
   },
   description:
@@ -56,21 +57,21 @@ export const metadata: Metadata = {
     locale: "en_RW",
     url: siteUrl,
     siteName: "Karame Bay",
-    title: "Karame Bay ? Kigali Delivered",
+    title: "Karame Bay — Kigali Delivered",
     description:
       "Order food, groceries, market items, and parcel delivery across Kigali with Karame Bay.",
     images: [
       {
         url: shareImageUrl,
-        width: 900,
-        height: 1136,
+        width: 1124,
+        height: 1399,
         alt: "Karame Bay transport and delivery in Kigali",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Karame Bay ? Kigali Delivered",
+    title: "Karame Bay — Kigali Delivered",
     description:
       "Order food, groceries, market items, and parcel delivery across Kigali with Karame Bay.",
     images: [shareImageUrl],

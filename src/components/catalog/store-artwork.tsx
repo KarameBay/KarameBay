@@ -17,6 +17,10 @@ export function StoreArtwork({
   priority = false,
 }: StoreArtworkProps) {
   const normalizedType = type.toLowerCase();
+  const isKarameSip = name.trim().toLowerCase() === "karame sip";
+  const customerArtwork = isKarameSip
+    ? "/images/karame-sip-cover-hq.webp"
+    : imageUrl;
   const market = normalizedType.includes("market") || normalizedType.includes("grocery") || normalizedType.includes("retail");
   const Icon = name.startsWith("Java")
     ? Coffee
@@ -31,9 +35,9 @@ export function StoreArtwork({
 
   return (
     <div className={`store-artwork ${tone} ${compact ? "compact" : ""}`}>
-      {imageUrl ? (
+      {customerArtwork ? (
         <img
-          src={imageUrl}
+          src={customerArtwork}
           alt={`${name} storefront`}
           width={640}
           height={360}

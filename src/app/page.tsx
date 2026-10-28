@@ -2,16 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  Apple,
   ArrowRight,
   Bike,
   Clock3,
   MapPin,
   Package,
-  Play,
   ShieldCheck,
+  ShoppingBasket,
   ShoppingBag,
   Store,
+  Utensils,
 } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { StoreCard } from "@/components/catalog/store-card";
@@ -28,6 +28,14 @@ export default async function HomePage() {
   if (await isStaffPortalRequest()) redirect("/staff");
 
   const [stores, business] = await Promise.all([getStores(), getBusinessProfile()]);
+  const hasRestaurants = stores.some((store) => store.catalogEngine === "RESTAURANT");
+  const hasMarkets = stores.some((store) => store.catalogEngine === "MARKETPLACE");
+  const services = [
+    hasRestaurants && { href: "/restaurants", title: "Restaurants", description: "Meals from local restaurants", icon: Utensils },
+    hasMarkets && { href: "/markets", title: "Groceries", description: "Everyday market essentials", icon: ShoppingBasket },
+    stores.length > 0 && { href: "/stores", title: "Shops", description: "Browse all available stores", icon: Store },
+    { href: "/customer/parcels/new", title: "Send a parcel", description: "Book a Kigali delivery", icon: Package },
+  ].filter(Boolean) as { href: string; title: string; description: string; icon: typeof Store }[];
   return (
     <div className="app-shell">
       <BrowseHeader />
@@ -35,22 +43,50 @@ export default async function HomePage() {
         <section className="home-hero">
           <div className="home-hero-image" />
           <div className="home-hero-content">
-            <span className="eyebrow">KIGALI, DELIVERED</span>
-            <h1>
-              Everything you need,
-              <br /> right at your <i>door.</i>
-            </h1>
-            <p>
-              Local stores, trusted businesses, and reliable Karame delivery in
-              one simple marketplace.
-            </p>
-            <HomeSearch />
-            <div className="home-actions">
-              <Link href="/explore">
-                Explore <ArrowRight />
-              </Link>
-              <Link href="/customer/orders">Track my orders</Link>
+            <div className="home-hero-copy">
+              <span className="eyebrow">KIGALI, DELIVERED</span>
+              <h1>
+                Shop local, get it <i>delivered.</i>
+              </h1>
+              <p>Search products or choose a local shop below.</p>
             </div>
+            <HomeSearch />
+          </div>
+        </section>
+
+        <section className="home-stores" aria-labelledby="home-stores-title">
+          <div className="home-section-title">
+            <div>
+              <span className="catalog-kicker">SHOP PARTNERS</span>
+              <h2 id="home-stores-title">Browse local shops</h2>
+              <p>Open a shop to see its live products and availability.</p>
+            </div>
+            <Link href="/stores">Shop directory <ArrowRight /></Link>
+          </div>
+          {stores.length > 0 ? (
+            <div className="browse-store-grid home-partner-grid">
+              {stores.map((store) => (
+                <StoreCard key={store.id} store={store} />
+              ))}
+            </div>
+          ) : (
+            <p className="home-stores-empty">New local shops will appear here once they are available.</p>
+          )}
+        </section>
+
+        <section className="home-services" aria-labelledby="home-services-title">
+          <div className="home-services-heading">
+            <div>
+              <span className="catalog-kicker">MORE WAYS TO USE KARAME BAY</span>
+              <h2 id="home-services-title">Find what you need</h2>
+            </div>
+            <Link href="/explore">Explore everything <ArrowRight /></Link>
+          </div>
+          <div className="home-service-grid">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return <Link href={service.href} key={service.href} className="home-service-card"><span><Icon /></span><div><b>{service.title}</b><small>{service.description}</small></div><ArrowRight /></Link>;
+            })}
           </div>
         </section>
 
@@ -61,48 +97,30 @@ export default async function HomePage() {
           <div>
             <Clock3 />
             <span>
-              <b>Fast local delivery</b>
-              <small>Live route estimates</small>
+              <b>Delivery you can follow</b>
+              <small>Clear updates on every order</small>
             </span>
           </div>
           <div>
             <MapPin />
             <span>
-              <b>Accurate locations</b>
-              <small>OpenStreetMap routing</small>
+              <b>Choose your location</b>
+              <small>Search or pin your delivery point</small>
             </span>
           </div>
           <div>
             <ShieldCheck />
             <span>
-              <b>Verified payments</b>
-              <small>Secure MoMo review</small>
+              <b>Simple checkout</b>
+              <small>Review your order before you pay</small>
             </span>
           </div>
           <div>
             <Bike />
             <span>
-              <b>Karame riders</b>
-              <small>Tracked to your door</small>
+              <b>Local Karame riders</b>
+              <small>Ready for your delivery</small>
             </span>
-          </div>
-        </section>
-
-        <section className="home-stores">
-          <div className="home-section-title">
-            <div>
-              <span className="catalog-kicker">AVAILABLE STORES</span>
-              <h2>What can we bring you?</h2>
-              <p>Live products and availability from the Karame Bay catalog.</p>
-            </div>
-            <Link href="/explore">
-              Explore all <ArrowRight />
-            </Link>
-          </div>
-          <div className="browse-store-grid">
-            {stores.map((store) => (
-              <StoreCard key={store.id} store={store} />
-            ))}
           </div>
         </section>
 
@@ -170,34 +188,20 @@ export default async function HomePage() {
           </div>
           <div className="home-campaigns">
             <Image
-              src="/images/karame-campaign-service.jpeg"
+              src="/images/karame-campaign-service-hq.png"
               alt="Karame transport and delivery service flyer"
-              width={784}
-              height={980}
+              width={1124}
+              height={1399}
             />
             <Image
-              src="/images/karame-campaign-safe.jpeg"
+              src="/images/karame-campaign-safe-hq.png"
               alt="Karame transport and delivery poster"
-              width={784}
-              height={1080}
+              width={1068}
+              height={1473}
             />
           </div>
         </section>
 
-        <section className="home-app-coming" aria-labelledby="mobile-apps-title">
-          <div>
-            <span className="catalog-kicker">KARAME BAY MOBILE</span>
-            <h2 id="mobile-apps-title">Your deliveries, soon in your pocket.</h2>
-            <p>
-              The Karame Bay mobile apps are being prepared for Android and
-              iPhone. Keep using the website while we get them ready.
-            </p>
-          </div>
-          <div className="home-app-badges" aria-label="Mobile apps coming soon">
-            <span aria-disabled="true"><Play /><small>Coming soon on</small><b>Google Play</b></span>
-            <span aria-disabled="true"><Apple /><small>Coming soon on the</small><b>App Store</b></span>
-          </div>
-        </section>
       </main>
       <PublicFooter />
     </div>

@@ -15,8 +15,8 @@
 }
 
 .public-info-hero {
-  min-height: 520px;
-  margin-top: 30px;
+  min-height: 340px;
+  margin-top: 20px;
   border: 1px solid #eadfce;
   border-radius: 24px;
   background: linear-gradient(130deg, #fffaf0 0%, #f4ead8 100%);
@@ -27,7 +27,7 @@
 }
 
 .public-info-hero > div:first-child {
-  padding: 55px;
+  padding: 34px;
 }
 
 .public-info-hero h1,
@@ -84,7 +84,7 @@
 
 .public-info-hero-art {
   height: 100%;
-  min-height: 520px;
+  min-height: 340px;
   position: relative;
 }
 
@@ -103,7 +103,7 @@
 }
 
 .public-info-section {
-  padding: 76px 0;
+  padding: 44px 0;
 }
 
 .public-about-intro {
@@ -148,8 +148,8 @@
 }
 
 .public-service-grid article {
-  min-height: 226px;
-  padding: 25px;
+  min-height: 180px;
+  padding: 20px;
   border: 1px solid var(--line);
   border-radius: 17px;
   background: #fff;
@@ -192,8 +192,8 @@
 }
 
 .public-trust-visual {
-  min-height: 365px;
-  padding: 38px;
+  min-height: 280px;
+  padding: 28px;
   border-radius: 22px;
   background: linear-gradient(145deg, #2d2114, #19140e);
   color: #fff;

@@ -1,5 +1,6 @@
 .home-hero {
-  min-height: 610px;
+  height: 190px;
+  min-height: 0;
   position: relative;
   overflow: hidden;
   background: #f5efe1;
@@ -11,51 +12,57 @@
     linear-gradient(
       90deg,
       rgba(247, 242, 228, 0.98) 4%,
-      rgba(247, 242, 228, 0.84) 38%,
-      rgba(247, 242, 228, 0.06) 70%
+      rgba(247, 242, 228, 0.9) 43%,
+      rgba(247, 242, 228, 0.15) 68%
     ),
     url("/images/karame-rider-hero.png");
-  background-size: auto 100%;
-  background-position: right center;
+  background-size: auto 210%;
+  background-position: 88% 32%;
   background-repeat: no-repeat;
 }
 .home-hero-content {
   position: relative;
   max-width: 1280px;
-  margin: auto;
-  padding: 100px 24px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: minmax(290px, 0.9fr) minmax(360px, 0.72fr);
+  align-items: center;
+  gap: clamp(24px, 5vw, 80px);
 }
 .home-hero h1 {
-  font: 800 58px/1.04 var(--font-display);
-  letter-spacing: -3.4px;
-  margin: 20px 0;
-  max-width: 680px;
+  font: 800 clamp(29px, 2.7vw, 39px)/1.02 var(--font-display);
+  letter-spacing: -2.5px;
+  margin: 12px 0;
+  max-width: 480px;
 }
 .home-hero h1 i {
   color: var(--green);
   font-style: normal;
 }
-.home-hero-content > p {
+.home-hero-copy > p {
   max-width: 520px;
   color: #59665e;
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.55;
 }
+.home-hero-copy > p { margin: 0; }
 .home-search-shell {
   position: relative;
-  width: min(590px, 100%);
-  margin-top: 28px;
+  width: 100%;
+  margin-top: 0;
   z-index: 5;
 }
 .home-search {
   width: min(590px, 100%);
-  height: 62px;
+  height: 48px;
   background: #fff;
   border-radius: 14px;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 6px 6px 6px 18px;
+  padding: 4px 4px 4px 15px;
   box-shadow: 0 12px 35px #24342b1f;
   margin: 0;
 }
@@ -70,7 +77,7 @@
   flex: 1;
 }
 .home-search button {
-  height: 50px;
+  height: 40px;
   border: 0;
   border-radius: 10px;
   padding: 0 22px;
@@ -180,9 +187,9 @@
   position: relative;
   z-index: 2;
   max-width: 1280px;
-  min-height: 96px;
-  margin: -38px auto 0;
-  padding: 24px 30px;
+  min-height: 74px;
+  margin: 0 auto;
+  padding: 15px 30px;
   border-radius: 15px;
   background: var(--ink);
   color: #fff;
@@ -190,6 +197,7 @@
   grid-template-columns: repeat(4, 1fr);
   box-shadow: var(--shadow);
 }
+.home-services{max-width:1232px;margin:0 auto;padding:22px 24px 18px}.home-services-heading{display:flex;align-items:end;justify-content:space-between;margin-bottom:12px}.home-services-heading h2{margin:4px 0 0;font:800 24px var(--font-display);letter-spacing:-.8px}.home-services-heading>a{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:11px;font-weight:800;text-decoration:none}.home-services-heading>a svg{width:14px}.home-service-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.home-service-card{min-width:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);display:grid;grid-template-columns:38px minmax(0,1fr) 16px;align-items:center;gap:10px;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.home-service-card:hover{border-color:#d6a65d;box-shadow:0 12px 30px #432c1014;transform:translateY(-2px)}.home-service-card>span{width:38px;height:38px;border-radius:10px;background:#fff2db;color:var(--green);display:grid;place-items:center}.home-service-card>span svg,.home-service-card>svg{width:18px}.home-service-card>svg{color:var(--green)}.home-service-card div{display:grid;gap:3px}.home-service-card b{font-size:12px}.home-service-card small{overflow:hidden;color:var(--muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
 .home-trust > div {
   display: flex;
   align-items: center;
@@ -222,7 +230,26 @@
   margin: auto;
   padding-inline: clamp(16px, 2.2vw, 28px);
 }
-.home-stores { padding-block: 42px 24px; }
+.home-stores { padding-block: 18px 20px; }
+.home-partner-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.home-partner-grid .browse-store-card { border-radius: 14px; }
+.home-partner-grid .store-artwork {
+  height: 142px;
+  aspect-ratio: auto;
+  flex: 0 0 142px;
+}
+.home-partner-grid .browse-store-content { padding: 10px 12px 11px; }
+.home-partner-grid .browse-store-top > svg { width: 16px; }
+.home-partner-grid .status-pill { padding: 5px 8px; font-size: 7px; }
+.home-partner-grid .browse-store-content h2 { margin: 8px 0 3px; font-size: 14px; }
+.home-partner-grid .browse-store-content > p { margin: 0; font-size: 9px; }
+.home-partner-grid .browse-store-meta { gap: 6px; margin-top: 8px; padding-top: 8px; }
+.home-partner-grid .browse-store-meta span { gap: 4px; font-size: 8px; }
+.home-partner-grid .browse-store-meta svg { width: 12px; }
+.home-stores-empty { margin: 0; color: var(--muted); font-size: 13px; }
+.home-stores .home-section-title { margin-bottom: 14px; }
+.home-stores .home-section-title h2 { margin: 4px 0; font-size: 29px; }
+.home-stores .home-section-title p { font-size: 13px; }
 .home-delivery-brand { padding-block: 48px; }
 .home-parcel-service {
   max-width: 1232px;
@@ -405,6 +432,10 @@
 .home-app-badges small { color: #bdb6ac; font-size: 9px; }
 .home-app-badges b { font-size: 14px; }
 @media (max-width: 850px) {
+  .home-hero { height: auto; min-height: 220px; }
+  .home-hero-content { height: auto; min-height: 220px; grid-template-columns: 1fr; gap: 12px; }
+  .home-search-shell { max-width: 560px; }
+  .home-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-trust {
     margin: 0;
     border-radius: 0;
@@ -423,14 +454,14 @@
   }
   .home-app-coming { align-items: flex-start; flex-direction: column; }
   .home-app-badges { justify-content: flex-start; }
-  .home-stores { padding-block: 52px 28px; }
+  .home-stores { padding-block: 30px 28px; }
   .home-parcel-service { margin: 0 24px 48px; grid-template-columns: 58px 1fr; padding: 22px; }
   .home-parcel-icon { width: 58px; height: 58px; }
   .home-parcel-service > a { grid-column: 1 / -1; }
 }
 @media (max-width: 680px) {
   .home-hero {
-    min-height: 580px;
+    min-height: 290px;
   }
   .home-hero-image {
     background-image:
@@ -441,29 +472,32 @@
         rgba(247, 242, 228, 0.08) 86%
       ),
       url("/images/karame-rider-hero.png");
-    background-size: auto 100%;
-    background-position: right center;
+    background-size: auto 110%;
+    background-position: right top;
   }
   .home-hero-content {
-    padding: 220px 17px 45px;
+    min-height: 290px;
+    padding: 76px 17px 18px;
+    gap: 10px;
   }
   .home-hero h1 {
-    font-size: 38px;
+    font-size: 35px;
     letter-spacing: -2px;
   }
-  .home-hero-content > p {
+  .home-hero-copy > p {
     font-size: 13px;
   }
   .home-search {
-    height: 57px;
+    height: 48px;
   }
   .home-search button {
-    height: 45px;
+    height: 40px;
     padding: 0 13px;
   }
   .home-trust {
     padding: 21px 16px;
   }
+  .home-services{padding:18px 15px}.home-services-heading h2{font-size:22px}.home-services-heading>a{font-size:10px}.home-service-grid{gap:8px}.home-service-card{padding:12px;grid-template-columns:34px minmax(0,1fr);gap:8px}.home-service-card>span{width:34px;height:34px}.home-service-card>svg{display:none}
   .home-trust > div:nth-child(n + 3) {
     display: none;
   }
@@ -473,6 +507,7 @@
     padding: 38px 15px;
   }
   .home-stores { padding-top: 42px; padding-bottom: 24px; }
+  .home-partner-grid .store-artwork { height: 118px; flex-basis: 118px; }
   .home-parcel-service { margin: 0 15px 40px; padding: 18px; grid-template-columns: 1fr; gap: 13px; }
   .home-parcel-icon { width: 54px; height: 54px; border-radius: 16px; }
   .home-parcel-service h2 { font-size: 25px; }

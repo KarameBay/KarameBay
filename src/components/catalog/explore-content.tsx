@@ -9,6 +9,7 @@ import {
   Store,
 } from "lucide-react";
 import { StoreCard } from "@/components/catalog/store-card";
+import { HomeSearch } from "@/components/catalog/home-search";
 import type { getActiveStoreTypes, getStores } from "@/lib/catalog";
 
 type StoreList = Awaited<ReturnType<typeof getStores>>;
@@ -168,16 +169,12 @@ export function StoreDirectory({
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
-        <form action={`/${kind}`} className="directory-search" role="search">
-          <Search aria-hidden="true" />
-          <input
-            defaultValue={query}
-            maxLength={100}
-            name="q"
-            placeholder={`Search ${kind} or products`}
-          />
-          <button type="submit">Search</button>
-        </form>
+        <HomeSearch
+          action={`/${kind}`}
+          defaultValue={query}
+          formClassName="directory-search"
+          placeholder={`Search ${kind} or products`}
+        />
       </section>
 
       <section className="directory-results">
@@ -237,16 +234,12 @@ export function StoreTypeDirectory({
           <h1>{storeType.customerSectionName}</h1>
           <p>{storeType.description}</p>
         </div>
-        <form action={`/explore/${storeType.slug}`} className="directory-search" role="search">
-          <Search aria-hidden="true" />
-          <input
-            defaultValue={query}
-            maxLength={100}
-            name="q"
-            placeholder={`Search ${storeType.customerSectionName.toLowerCase()} or products`}
-          />
-          <button type="submit">Search</button>
-        </form>
+        <HomeSearch
+          action={`/explore/${storeType.slug}`}
+          defaultValue={query}
+          formClassName="directory-search"
+          placeholder={`Search ${storeType.customerSectionName.toLowerCase()} or products`}
+        />
       </section>
 
       <section className="directory-results">

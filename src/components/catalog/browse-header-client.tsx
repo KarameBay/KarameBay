@@ -5,8 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
-  Compass,
-  Home,
   LogIn,
   LogOut,
   MapPin,
@@ -24,8 +22,6 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { DELIVERY_ADDRESS_KEY } from "@/lib/delivery";
 
 const primaryLinks = [
-  { href: "/", label: "Home", icon: Home, exact: true },
-  { href: "/explore", label: "Explore", icon: Compass, exact: true },
   { href: "/restaurants", label: "Restaurants", icon: Utensils, exact: false },
   { href: "/markets", label: "Markets", icon: Store, exact: false },
   {
@@ -137,10 +133,7 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
               portal="customer"
             />
           )}
-          <Link className="header-account" href="/customer/account">
-            <User aria-hidden="true" />
-            <span>Account</span>
-          </Link>
+          {signedIn && <Link className="header-account" href="/customer/account"><User aria-hidden="true" /><span>Account</span></Link>}
           <Link className="header-cart" href="/cart" aria-label={`Basket${hydrated && itemCount ? `, ${itemCount} items` : ""}`}>
             <ShoppingBag aria-hidden="true" />
             <span>Basket</span>
@@ -218,9 +211,7 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
                   <NotificationBellIcon /> Notifications
                 </Link>
               )}
-              <Link href="/customer/account" onClick={() => setMenuOpen(false)}>
-                <User aria-hidden="true" /> Account
-              </Link>
+              {signedIn && <Link href="/customer/account" onClick={() => setMenuOpen(false)}><User aria-hidden="true" /> Account</Link>}
               {signedIn ? (
                 <button type="button" onClick={() => void signOut()} disabled={loggingOut}>
                   <LogOut aria-hidden="true" />

@@ -1,5 +1,7 @@
 import { BrowseHeader } from "@/components/catalog/browse-header";
+import { PublicFooter } from "@/components/catalog/public-footer";
 import { StoreCard } from "@/components/catalog/store-card";
+import { HomeSearch } from "@/components/catalog/home-search";
 import { getStores } from "@/lib/catalog";
 import { MapPin, Search } from "lucide-react";
 
@@ -13,7 +15,7 @@ export default async function StoresPage({
   const query = q.trim().slice(0, 100);
   const stores = await getStores(query);
   return (
-    <>
+    <div className="app-shell">
       <BrowseHeader />
       <main className="browse-page">
         <section className="browse-hero">
@@ -24,16 +26,12 @@ export default async function StoresPage({
             <h1>What can we bring you?</h1>
             <p>Browse trusted local stores and businesses near you.</p>
           </div>
-          <form action="/stores" className="browse-search">
-            <Search />
-            <input
-              name="q"
-              defaultValue={query}
-              maxLength={100}
-              placeholder="Search stores or products"
-            />
-            <button>Search</button>
-          </form>
+          <HomeSearch
+            action="/stores"
+            defaultValue={query}
+            formClassName="browse-search"
+            placeholder="Search stores or products"
+          />
           <div className="browse-location">
             <MapPin />
             <span>
@@ -63,6 +61,7 @@ export default async function StoresPage({
           )}
         </section>
       </main>
-    </>
+      <PublicFooter />
+    </div>
   );
 }

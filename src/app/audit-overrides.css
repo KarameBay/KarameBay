@@ -1,0 +1,46 @@
+/* Shared responsive polish from the platform-wide UI audit. */
+html,
+body {
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+:where(.app-shell, main, section, article, form) {
+  min-width: 0;
+}
+
+/* Keep task-focused screens compact without changing their workflows. */
+.cart-page,
+.review-page {
+  padding-top: 24px;
+  padding-bottom: 84px;
+}
+
+.cart-page-title,
+.review-title {
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.cart-items > header {
+  height: 62px;
+}
+
+.checkout-page,
+.tracking-page {
+  padding-top: 28px;
+}
+
+@media (max-width: 700px) {
+  .cart-page,
+  .review-page,
+  .checkout-page,
+  .tracking-page {
+    padding-top: 18px;
+    padding-bottom: 78px;
+  }
+}

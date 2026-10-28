@@ -9,14 +9,14 @@ import { getBusinessProfile } from "@/lib/business-profile";
 export const dynamic = "force-dynamic";
 
 const tiles = [
-  { href: "/customer/profile", label: "My Profile", icon: UserRound, note: "View your name, email, and phone." },
-  { href: "/customer/settings", label: "Account Settings", icon: Settings, note: "Update account preferences." },
-  { href: "/customer/addresses", label: "Saved Addresses", icon: MapPin, note: "Manage Home, Work, and Other." },
-  { href: "/customer/orders", label: "My Orders", icon: ShoppingBag, note: "Track your deliveries and history." },
-  { href: "/customer/parcels", label: "My Parcel Deliveries", icon: Package, note: "Send packages and follow each handover." },
+  { href: "/customer/profile", label: "Profile", icon: UserRound, note: "Your personal details" },
+  { href: "/customer/settings", label: "Settings", icon: Settings, note: "Account preferences" },
+  { href: "/customer/addresses", label: "Saved addresses", icon: MapPin, note: "Home, work, and other places" },
+  { href: "/customer/orders", label: "Orders", icon: ShoppingBag, note: "Track store deliveries" },
+  { href: "/customer/parcels", label: "Parcels", icon: Package, note: "Send and follow packages" },
   { href: "/customer/notifications", label: "Notifications", icon: Bell, note: "See order and parcel delivery updates." },
-  { href: "/customer/reviews", label: "My Reviews", icon: Star, note: "View and edit recent ratings." },
-  { href: "/customer/help", label: "Help & Support", icon: LifeBuoy, note: "Contact support and read policies." },
+  { href: "/customer/reviews", label: "Reviews", icon: Star, note: "Your recent ratings" },
+  { href: "/customer/help", label: "Support", icon: LifeBuoy, note: "Help and service policies" },
 ];
 
 export default async function CustomerAccountPage() {

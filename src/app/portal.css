@@ -81,8 +81,8 @@
   margin: 0 auto;
   padding: 26px 4% 94px;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 16px;
 }
 
 .customer-portal-sidebar,
@@ -94,14 +94,14 @@
 }
 
 .customer-portal-sidebar {
-  padding: 24px;
+  padding: 20px;
   position: sticky;
   top: 96px;
   height: fit-content;
 }
 
 .customer-portal-sidebar h1 {
-  font: 800 30px var(--font-display);
+  font: 800 26px var(--font-display);
   letter-spacing: -1.2px;
   margin: 8px 0;
 }
@@ -114,16 +114,16 @@
 
 .customer-portal-nav {
   display: grid;
-  gap: 8px;
-  margin-top: 22px;
+  gap: 5px;
+  margin-top: 16px;
 }
 
 .customer-portal-nav a {
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 13px 14px;
-  border-radius: 15px;
+  padding: 10px 11px;
+  border-radius: 11px;
   text-decoration: none;
   color: var(--ink);
   border: 1px solid transparent;
@@ -202,7 +202,7 @@
 }
 
 .customer-portal-content {
-  padding: 24px;
+  padding: 20px;
   min-width: 0;
 }
 
@@ -430,6 +430,11 @@
   max-width: none;
   padding: 0;
 }
+
+/* Match the marketplace's compact, scan-friendly card language across every
+   customer account section without changing order or parcel behaviour. */
+.customer-portal-content :is(button, input, select, textarea) { min-height: 42px; }
+.customer-portal-content :is(h1, h2, h3) { letter-spacing: -0.02em; }
 
 @media (max-width: 1100px) {
   .customer-portal-shell {

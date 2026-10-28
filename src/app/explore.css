@@ -13,7 +13,7 @@
 }
 
 .explore-hero {
-  padding: clamp(44px, 6vw, 86px) 0 clamp(36px, 5vw, 70px);
+  padding: clamp(36px, 4.5vw, 64px) 0 clamp(30px, 3.5vw, 52px);
   display: grid;
   grid-template-columns: minmax(320px, 0.8fr) minmax(620px, 1.2fr);
   align-items: end;
@@ -44,8 +44,8 @@
 
 .explore-jump-grid > a {
   min-width: 0;
-  min-height: 178px;
-  padding: 22px;
+  min-height: 156px;
+  padding: 18px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: #fff;
@@ -66,7 +66,7 @@
 .explore-jump-grid > a > span {
   width: 46px;
   height: 46px;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   border-radius: 13px;
   background: var(--cream);
   color: var(--green);
@@ -158,8 +158,8 @@
 .directory-empty p { margin: 0; font-size: 12px; }
 
 .explore-parcel {
-  margin-block: clamp(40px, 6vw, 88px);
-  padding: clamp(28px, 4vw, 52px);
+  margin-block: clamp(34px, 4.5vw, 64px);
+  padding: clamp(24px, 3vw, 40px);
   border-radius: 24px;
   background: var(--ink);
   color: #fff;
@@ -201,31 +201,43 @@
 .explore-parcel > a svg { width: 16px; }
 
 .directory-hero {
-  padding: clamp(44px, 6vw, 80px) 0;
+  padding: clamp(22px, 2.4vw, 34px) 0 22px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.75fr);
-  align-items: end;
-  gap: clamp(35px, 7vw, 100px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.68fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
 }
 
-.directory-hero > div { position: relative; padding-left: 78px; }
+.directory-hero > div { position: relative; padding-left: 62px; }
 .directory-icon {
   position: absolute;
   left: 0;
-  top: 2px;
-  width: 58px;
-  height: 58px;
-  border-radius: 17px;
+  top: 1px;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   background: var(--cream);
   color: var(--green);
   display: grid;
   place-items: center;
 }
-.directory-icon svg { width: 27px; }
+.directory-icon svg { width: 23px; }
+
+.directory-hero h1 {
+  margin: 5px 0 7px;
+  font-size: clamp(32px, 3.3vw, 48px);
+}
+
+.directory-hero p {
+  max-width: 560px;
+  font-size: 14px;
+  line-height: 1.45;
+}
 
 .directory-search {
-  min-height: 60px;
-  padding: 6px 6px 6px 17px;
+  width: 100%;
+  min-height: 50px;
+  padding: 4px 4px 4px 14px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
@@ -234,11 +246,11 @@
   align-items: center;
   gap: 10px;
 }
-.directory-search > svg { width: 19px; color: #8c847a; }
+.directory-search > svg { width: 18px; color: #8c847a; }
 .directory-search input { min-width: 0; flex: 1; border: 0; outline: 0; font-size: 13px; }
 .directory-search button {
-  height: 46px;
-  padding: 0 18px;
+  height: 40px;
+  padding: 0 16px;
   border: 0;
   border-radius: 9px;
   background: var(--green);
@@ -247,7 +259,9 @@
   font-weight: 800;
 }
 
-.directory-results { padding-block: 40px 90px; border-top: 1px solid var(--line); }
+.directory-results { padding-block: 20px 64px; border-top: 1px solid var(--line); }
+.directory-results-heading { margin-bottom: 16px; }
+.directory-results-heading h2 { margin: 4px 0 0; font-size: clamp(26px, 2.3vw, 34px); }
 .directory-results-heading > p { font-size: 11px; }
 .directory-empty { min-height: 260px; flex-direction: column; text-align: center; }
 .directory-empty > svg { width: 38px; color: #b6afa5; }
@@ -258,7 +272,7 @@
   .explore-jump-grid { max-width: 850px; }
   .explore-store-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .directory-hero { grid-template-columns: 1fr; align-items: start; }
-  .directory-search { max-width: 700px; }
+  .directory-search { max-width: 620px; }
 }
 
 @media (max-width: 800px) {
@@ -294,8 +308,11 @@
   .explore-parcel { grid-template-columns: 1fr; }
   .explore-parcel-icon { width: 58px; height: 58px; }
   .explore-parcel > a { grid-column: 1; width: 100%; justify-content: center; }
-  .directory-hero > div { padding-left: 0; padding-top: 68px; }
+  .directory-hero { padding-top: 20px; gap: 16px; }
+  .directory-hero > div { padding-left: 56px; padding-top: 0; }
   .directory-icon { top: 0; }
-  .directory-search { min-height: 54px; }
+  .directory-hero h1 { font-size: 32px; }
+  .directory-hero p { font-size: 12px; }
+  .directory-search { min-height: 48px; max-width: none; }
   .directory-search button { height: 42px; padding-inline: 14px; }
 }
