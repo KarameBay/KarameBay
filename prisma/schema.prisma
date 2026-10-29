@@ -660,6 +660,11 @@ model Order {
   deliveryLongitude      Float
   deliveryAddress        String
   ebmRequested           Boolean                @default(false)
+  ebmUsePhone            Boolean                @default(false)
+  ebmPhone               String?
+  ebmTin                 String?
+  ebmOwnerName           String?
+  ebmPurchaseCode        String?
   riderCurrentLatitude   Float?
   riderCurrentLongitude  Float?
   riderLocationAccuracyM Float?

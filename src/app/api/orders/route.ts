@@ -71,6 +71,11 @@ const schema = z.object({
   deliveryLongitude: z.number().min(-180).max(180),
   deliveryAddress: z.string().trim().min(5).max(240),
   ebmRequested: z.boolean().default(false),
+  ebmUsePhone: z.boolean().default(false),
+  ebmPhone: z.string().trim().max(30).optional().nullable(),
+  ebmTin: z.string().trim().max(40).optional().nullable(),
+  ebmOwnerName: z.string().trim().max(160).optional().nullable(),
+  ebmPurchaseCode: z.string().trim().max(80).optional().nullable(),
   expectedItemsSubtotalRwf: z.number().int().nonnegative(),
   expectedDeliveryFeeRwf: z.number().int().nonnegative(),
   paymentConfirmed: z.literal(true),
@@ -409,6 +414,11 @@ export async function POST(request: NextRequest) {
         deliveryLongitude: input.deliveryLongitude,
         deliveryAddress: input.deliveryAddress,
         ebmRequested: input.ebmRequested,
+        ebmUsePhone: input.ebmUsePhone,
+        ebmPhone: input.ebmPhone || null,
+        ebmTin: input.ebmTin || null,
+        ebmOwnerName: input.ebmOwnerName || null,
+        ebmPurchaseCode: input.ebmPurchaseCode || null,
         items: {
           create: input.items.map((inputItem) => {
             const product = productById.get(inputItem.productId)!;
@@ -485,6 +495,7 @@ export async function POST(request: NextRequest) {
         status: true,
         grandTotalRwf: true,
         customerId: true,
+        ebmRequested: true,
       },
     });
     await notifyOrderPlaced(tx, {
@@ -505,6 +516,7 @@ export async function POST(request: NextRequest) {
       orderNumber: created.orderNumber,
       status: created.status,
       grandTotalRwf: created.grandTotalRwf,
+      ebmRequested: created.ebmRequested,
       payment: { status: "PENDING_VERIFICATION" },
     };
   });
@@ -515,6 +527,7 @@ export async function POST(request: NextRequest) {
         id: order.id,
         orderNumber: order.orderNumber,
         grandTotalRwf: order.grandTotalRwf,
+        ebmRequested: order.ebmRequested,
       },
       store: {
         name: products[0].store.name,
@@ -540,7 +553,7 @@ export async function POST(request: NextRequest) {
     });
     if (owner?.email && owner.role === "PARTNER") {
       const partnerEmail = await sendPartnerNewOrderEmail({
-        order: { id: order.id, orderNumber: order.orderNumber, grandTotalRwf: order.grandTotalRwf },
+        order: { id: order.id, orderNumber: order.orderNumber, grandTotalRwf: order.grandTotalRwf, ebmRequested: order.ebmRequested },
         store: { name: products[0].store.name, ownerEmail: owner.email },
       });
       if (!partnerEmail.ok) console.warn("Partner new order email failed", { orderId: order.id, error: partnerEmail.error });

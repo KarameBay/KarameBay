@@ -1,4 +1,15 @@
 export const CART_STORAGE_KEY = "karame_customer_cart";
+export const EBM_DETAILS_STORAGE_KEY = "karame_customer_ebm_details";
+
+export type EbmDetails = {
+  requested: boolean;
+  storeId?: string;
+  usePhone: boolean;
+  phone: string;
+  tin: string;
+  ownerName: string;
+  purchaseCode: string;
+};
 
 export type CartChoiceSelection = {
   groupId: string;

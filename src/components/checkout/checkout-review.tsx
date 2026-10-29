@@ -26,6 +26,7 @@ import {
 } from "@/lib/delivery";
 import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
+import { EBM_DETAILS_STORAGE_KEY, EbmDetails } from "@/lib/cart-types";
 
 export function CheckoutReview() {
   const cart = useCart();
@@ -34,21 +35,24 @@ export function CheckoutReview() {
   const [address, setAddress] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [ebmRequested, setEbmRequested] = useState(false);
+  const [ebmDetails, setEbmDetails] = useState<EbmDetails>({ requested: false, usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const currentStoreId = cart.items[0]?.storeId ?? "";
   useEffect(() => {
     try {
       const saved = JSON.parse(
         localStorage.getItem(DELIVERY_QUOTE_KEY) ?? "null",
       );
       const savedAddress = localStorage.getItem(DELIVERY_ADDRESS_KEY) ?? "";
+      const savedEbm = JSON.parse(localStorage.getItem(EBM_DETAILS_STORAGE_KEY) ?? "null");
       queueMicrotask(() => {
         if (validSavedDeliveryQuote(saved)) setQuote(saved);
         if (savedAddress) setAddress(savedAddress);
+        if (savedEbm && typeof savedEbm === "object" && (!savedEbm.storeId || !currentStoreId || savedEbm.storeId === currentStoreId)) setEbmDetails((current) => ({ ...current, ...savedEbm }));
       });
     } catch {}
-  }, []);
+  }, [currentStoreId]);
   async function submit(event: FormEvent) {
     event.preventDefault();
     const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
@@ -77,7 +81,12 @@ export function CheckoutReview() {
           deliveryLatitude: quote.latitude,
           deliveryLongitude: quote.longitude,
           deliveryAddress: address,
-          ebmRequested,
+          ebmRequested: ebmDetails.requested,
+          ebmUsePhone: ebmDetails.usePhone,
+          ebmPhone: ebmDetails.phone || null,
+          ebmTin: ebmDetails.tin || null,
+          ebmOwnerName: ebmDetails.ownerName || null,
+          ebmPurchaseCode: ebmDetails.purchaseCode || null,
           expectedItemsSubtotalRwf: cart.itemsSubtotal,
           expectedDeliveryFeeRwf: quote.deliveryFeeRwf,
           paymentConfirmed: confirmed,
@@ -99,6 +108,7 @@ export function CheckoutReview() {
         return;
       }
       cart.clear();
+      localStorage.removeItem(EBM_DETAILS_STORAGE_KEY);
       localStorage.removeItem(DELIVERY_QUOTE_KEY);
       if (localStorage.getItem(DELIVERY_ADDRESS_MODE_KEY) !== "save") {
         localStorage.removeItem(DELIVERY_LOCATION_KEY);
@@ -229,14 +239,10 @@ export function CheckoutReview() {
           <section className="ebm-card" aria-labelledby="ebm-title">
             <div className="ebm-card-icon"><FileCheck2 aria-hidden="true" /></div>
             <div className="ebm-card-copy">
-              <h2 id="ebm-title">Need an EBM receipt?</h2>
-              <p>Request an electronic invoice before placing your order. Our team will follow up if business details are needed.</p>
+              <h2 id="ebm-title">EBM receipt</h2>
+              <p>{ebmDetails.requested ? `Requested for ${ebmDetails.ownerName} · TIN ${ebmDetails.tin}` : "Add EBM details from your cart before placing this order."}</p>
             </div>
-            <label className="ebm-toggle">
-              <input type="checkbox" checked={ebmRequested} onChange={(event) => setEbmRequested(event.target.checked)} />
-              <span aria-hidden="true" />
-              <b>{ebmRequested ? "Requested" : "Add request"}</b>
-            </label>
+            <Link className="ebm-edit-link" href="/cart">{ebmDetails.requested ? "Edit" : "Add request"}</Link>
           </section>
           <section className="momo-card">
             <div className="momo-brand">

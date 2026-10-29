@@ -208,6 +208,7 @@ export async function sendAdminNewOrderEmail(input: {
     id: string;
     orderNumber: string;
     grandTotalRwf: number;
+    ebmRequested?: boolean;
   };
   store: {
     name: string;
@@ -223,6 +224,7 @@ export async function sendAdminNewOrderEmail(input: {
     `Order number: ${input.order.orderNumber}`,
     `Store: ${input.store.name}`,
     `Total: ${input.order.grandTotalRwf.toLocaleString()} RWF`,
+    ...(input.order.ebmRequested ? ["EBM receipt requested: Yes"] : []),
     "Payment status: Pending Verification",
     "",
     "Please open the Admin Orders page and verify the MoMo payment before processing the order.",
@@ -249,7 +251,7 @@ export async function sendAdminNewOrderEmail(input: {
 }
 
 export async function sendPartnerNewOrderEmail(input: {
-  order: { id: string; orderNumber: string; grandTotalRwf: number };
+  order: { id: string; orderNumber: string; grandTotalRwf: number; ebmRequested?: boolean };
   store: { name: string; ownerEmail: string };
 }) {
   const business = await getBusinessProfile();
@@ -261,6 +263,7 @@ export async function sendPartnerNewOrderEmail(input: {
     "",
     `Order number: ${input.order.orderNumber}`,
     `Total: ${input.order.grandTotalRwf.toLocaleString()} RWF`,
+    ...(input.order.ebmRequested ? ["EBM receipt requested: Yes"] : []),
     "Payment status: Pending admin verification",
     "",
     "Open your Partner workspace to review the order after payment is verified. You can accept it, start preparation, and mark it ready for pickup.",
