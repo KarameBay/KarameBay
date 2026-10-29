@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { getPartnerWorkspace } from "@/lib/partner";
 import { LogoutButton } from "@/components/logout-button";
 import { PartnerWorkspace } from "@/components/partner/partner-workspace";
+import { PartnerOrders } from "@/components/partner/partner-orders";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -28,6 +29,7 @@ export default async function PartnerPage() {
         <h1>Hello, {user.firstName}.</h1>
         <p>Your shop, your products. Reach more customers with Karame Bay.</p>
       </section>
+      <PartnerOrders />
       <PartnerWorkspace {...workspace} />
     </main>
   );

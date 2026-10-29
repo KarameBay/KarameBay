@@ -4,6 +4,22 @@
   padding: 20px 24px 64px;
   color: #243b30;
 }
+
+.partner-orders { max-width: 1180px; margin: 0 auto 28px; padding: 0 24px; }
+.partner-section-heading { display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:16px; }
+.partner-section-heading h2 { margin:4px 0 0; }
+.partner-secondary-button { border:1px solid #ded7cc; background:#fff; border-radius:10px; padding:9px 14px; font-weight:700; cursor:pointer; }
+.partner-order-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+.partner-order-card { border:1px solid #e7dfd4; border-radius:16px; background:#fff; padding:18px; box-shadow:0 8px 24px rgba(45,31,17,.05); }
+.partner-order-card-header,.partner-order-footer { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+.partner-order-card-header small { display:block; color:#766f66; margin-top:4px; }
+.partner-order-status { border-radius:999px; padding:5px 9px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.status-pending { background:#fff2d8; color:#986117; }.status-accepted,.status-preparing { background:#eaf2ff; color:#245d9b; }.status-ready_for_pickup { background:#e7f6ec; color:#167344; }
+.partner-order-customer,.partner-order-footer span,.partner-muted { color:#766f66; font-size:13px; }
+.partner-order-card ul { list-style:none; padding:12px 0; margin:0; border-block:1px solid #eee8e0; }.partner-order-card li { display:flex; justify-content:space-between; gap:10px; padding:4px 0; font-size:14px; }.partner-order-card li span { color:#766f66; }
+.partner-order-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }.partner-order-actions button { display:inline-flex; align-items:center; gap:7px; border:0; border-radius:9px; background:#bd7a17; color:#fff; padding:10px 12px; font-weight:700; cursor:pointer; }.partner-order-actions button svg { width:16px; height:16px; }.partner-order-actions button:disabled { opacity:.6; cursor:wait; }
+.partner-empty { border:1px dashed #d8cfc2; border-radius:14px; padding:28px; text-align:center; color:#766f66; }.partner-empty svg { color:#bd7a17; }
+@media (max-width:640px) { .partner-orders { padding:0 16px; }.partner-section-heading { align-items:start; }.partner-order-list { grid-template-columns:1fr; } }
 .partner-header,
 .partner-header nav,
 .partner-toolbar,

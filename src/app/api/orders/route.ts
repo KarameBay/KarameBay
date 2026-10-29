@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getDrivingRoute } from "@/lib/routing";
 import { rateLimit } from "@/lib/rate-limit";
-import { notifyOrderPlaced, sendAdminNewOrderEmail } from "@/lib/order-notifications";
+import { notifyOrderPlaced, sendAdminNewOrderEmail, sendPartnerNewOrderEmail } from "@/lib/order-notifications";
 import { isStoreOpenInKigali } from "@/lib/store-hours";
 import {
   computeRestaurantUnitPrice,
@@ -382,6 +382,7 @@ export async function POST(request: NextRequest) {
       { status: 502 },
     );
   }
+
   if (route.deliveryFeeRwf !== input.expectedDeliveryFeeRwf)
     return NextResponse.json(
       {
@@ -528,6 +529,22 @@ export async function POST(request: NextRequest) {
       orderId: order.id,
       error: error instanceof Error ? error.message : "Unknown email error",
     });
+  }
+
+  try {
+    const owner = await db.user.findUnique({
+      where: { id: products[0].store.ownerId },
+      select: { email: true, role: true },
+    });
+    if (owner?.email && owner.role === "PARTNER") {
+      const partnerEmail = await sendPartnerNewOrderEmail({
+        order: { id: order.id, orderNumber: order.orderNumber, grandTotalRwf: order.grandTotalRwf },
+        store: { name: products[0].store.name, ownerEmail: owner.email },
+      });
+      if (!partnerEmail.ok) console.warn("Partner new order email failed", { orderId: order.id, error: partnerEmail.error });
+    }
+  } catch (error) {
+    console.warn("Partner new order email failed", { orderId: order.id, error: error instanceof Error ? error.message : "Unknown email error" });
   }
 
   return NextResponse.json({ order }, { status: 201 });

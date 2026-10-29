@@ -248,6 +248,39 @@ export async function sendAdminNewOrderEmail(input: {
   );
 }
 
+export async function sendPartnerNewOrderEmail(input: {
+  order: { id: string; orderNumber: string; grandTotalRwf: number };
+  store: { name: string; ownerEmail: string };
+}) {
+  const business = await getBusinessProfile();
+  const subject = `New order for ${input.store.name} — ${input.order.orderNumber}`;
+  const body = [
+    `Hello ${input.store.name} partner,`,
+    "",
+    `A new customer order has been placed for ${input.store.name}.`,
+    "",
+    `Order number: ${input.order.orderNumber}`,
+    `Total: ${input.order.grandTotalRwf.toLocaleString()} RWF`,
+    "Payment status: Pending admin verification",
+    "",
+    "Open your Partner workspace to review the order after payment is verified. You can accept it, start preparation, and mark it ready for pickup.",
+    "",
+    `Partner portal: ${process.env.NEXT_PUBLIC_STAFF_ORIGIN ?? "https://portal.karamebay.com"}/partner`,
+    "",
+    `${business.businessName} notification system`,
+  ].join("\n");
+
+  return writeNotificationEmail(
+    {
+      orderId: input.order.id,
+      recipientEmail: input.store.ownerEmail,
+      subject,
+      body,
+    },
+    () => sendSmtpMail({ to: input.store.ownerEmail, subject, text: body }),
+  );
+}
+
 export async function notifyPaymentVerified(
   tx: Prisma.TransactionClient,
   input: {
