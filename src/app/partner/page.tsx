@@ -34,10 +34,15 @@ export default async function PartnerPage() {
         <h1>Hello, {user.firstName}.</h1>
         <p>Your shop, your products. Reach more customers with Karame Bay.</p>
       </section>
-      <PartnerOrders />
-      <PartnerWorkspace {...workspace} />
+      <nav className="partner-quick-nav" aria-label="Partner workspace sections">
+        <a href="#partner-orders">Orders</a>
+        <a href="#partner-catalog">Catalog</a>
+        {restaurantMenuStores.length > 0 && <a href="#partner-menu-builder">Menu builder</a>}
+      </nav>
+      <div id="partner-orders"><PartnerOrders /></div>
+      <section id="partner-catalog" className="partner-workspace-section"><PartnerWorkspace {...workspace} /></section>
       {restaurantMenuStores.length > 0 && (
-        <section className="partner-menu-builder">
+        <section id="partner-menu-builder" className="partner-menu-builder">
           <div className="partner-toolbar">
             <div>
               <span className="catalog-kicker">RESTAURANT MENU BUILDER</span>

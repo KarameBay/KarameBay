@@ -4,6 +4,13 @@
   padding: 20px 24px 64px;
   color: #243b30;
 }
+.partner-page { background: linear-gradient(180deg, #fbfcf9 0, #fff 240px); }
+.partner-header { position: sticky; top: 0; z-index: 10; padding: 12px 14px; margin: -20px -10px 0; background: rgba(255,255,255,.94); backdrop-filter: blur(14px); border: 1px solid rgba(224,230,223,.8); border-radius: 0 0 14px 14px; }
+.partner-quick-nav { display:flex; flex-wrap:wrap; gap:8px; margin: 0 0 22px; padding: 8px; border:1px solid #e0e6df; border-radius:12px; background:#f7faf5; }
+.partner-quick-nav a { padding:8px 12px; border-radius:8px; color:#245639; font-size:12px; font-weight:800; text-decoration:none; }
+.partner-quick-nav a:hover, .partner-quick-nav a:focus-visible { background:#e4f0df; outline:0; }
+.partner-workspace-section { scroll-margin-top: 88px; }
+#partner-orders, #partner-menu-builder { scroll-margin-top: 88px; }
 
 .partner-orders { max-width: 1180px; margin: 0 auto 28px; padding: 0 24px; }
 .partner-section-heading { display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:16px; }

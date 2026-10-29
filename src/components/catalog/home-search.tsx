@@ -103,6 +103,8 @@ export function HomeSearch({
         <input
           aria-autocomplete="list"
           aria-controls="home-search-suggestions"
+          aria-expanded={showPanel}
+          role="combobox"
           autoComplete="off"
           maxLength={100}
           name="q"
@@ -129,6 +131,7 @@ export function HomeSearch({
           className="home-search-suggestions"
           id="home-search-suggestions"
           aria-label="Search suggestions"
+          role="listbox"
         >
           {loading && <p className="home-search-message">Finding matches…</p>}
           {!loading && suggestions.length === 0 && (
@@ -141,6 +144,8 @@ export function HomeSearch({
                 <button
                   key={`${suggestion.kind}-${suggestion.id}`}
                   onClick={() => chooseSuggestion(suggestion)}
+                  role="option"
+                  aria-selected="false"
                   type="button"
                 >
                   <span>
