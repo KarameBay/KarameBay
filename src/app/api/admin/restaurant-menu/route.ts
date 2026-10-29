@@ -182,12 +182,12 @@ const payloadSchema = z.discriminatedUnion("entity", [
 ]);
 
 export async function POST(request: Request) {
-  const admin = await getCurrentUser("ADMIN");
-  if (!admin)
+  const actor = await getCurrentUser();
+  if (!actor)
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  if (admin.role !== "ADMIN")
+  if (actor.role !== "ADMIN" && actor.role !== "PARTNER")
     return NextResponse.json(
-      { error: "Administrator access required" },
+      { error: "Admin or partner access required" },
       { status: 403 },
     );
 
@@ -197,6 +197,92 @@ export async function POST(request: Request) {
   }
 
   const input = parsed.data;
+
+  if (actor.role === "PARTNER") {
+    const raw = input as unknown as Record<string, unknown>;
+    const storeIds = new Set<string>();
+    const addStoreId = (value: unknown) => {
+      if (typeof value === "string" && value) storeIds.add(value);
+    };
+    const addProductStore = async (productId: unknown) => {
+      if (typeof productId !== "string" || !productId) return;
+      const product = await db.restaurantProduct.findUnique({
+        where: { id: productId },
+        select: { storeId: true },
+      });
+      addStoreId(product?.storeId);
+    };
+    const addCategoryStore = async (categoryId: unknown) => {
+      if (typeof categoryId !== "string" || !categoryId) return;
+      const category = await db.restaurantCategory.findUnique({
+        where: { id: categoryId },
+        select: { storeId: true },
+      });
+      addStoreId(category?.storeId);
+    };
+    const addGroupStore = async (groupId: unknown) => {
+      if (typeof groupId !== "string" || !groupId) return;
+      const group = await db.restaurantChoiceGroup.findUnique({
+        where: { id: groupId },
+        select: { product: { select: { storeId: true } } },
+      });
+      addStoreId(group?.product.storeId);
+    };
+    const addAddOnStore = async (addOnId: unknown) => {
+      if (typeof addOnId !== "string" || !addOnId) return;
+      const addOn = await db.restaurantAddOn.findUnique({
+        where: { id: addOnId },
+        select: { storeId: true },
+      });
+      addStoreId(addOn?.storeId);
+    };
+
+    addStoreId(raw.storeId);
+    await addProductStore(raw.productId);
+    await addCategoryStore(raw.categoryId);
+    await addGroupStore(raw.groupId);
+    await addGroupStore(raw.sourceGroupId);
+    await addAddOnStore(raw.addOnId);
+    if (Array.isArray(raw.productIds)) {
+      await Promise.all(raw.productIds.map(addProductStore));
+    }
+    await addProductStore(raw.targetProductId);
+    if (Array.isArray(raw.targetProductIds)) {
+      await Promise.all(raw.targetProductIds.map(addProductStore));
+    }
+
+    if (raw.action === "delete" && typeof raw.id === "string") {
+      if (input.entity === "category") await addCategoryStore(raw.id);
+      if (input.entity === "product") await addProductStore(raw.id);
+      if (input.entity === "variant") await addProductStore(
+        (await db.restaurantVariant.findUnique({ where: { id: raw.id }, select: { productId: true } }))?.productId,
+      );
+      if (input.entity === "choice-group") await addGroupStore(raw.id);
+      if (input.entity === "choice-option") await addGroupStore(
+        (await db.restaurantChoiceOption.findUnique({ where: { id: raw.id }, select: { groupId: true } }))?.groupId,
+      );
+      if (input.entity === "addon") await addAddOnStore(raw.id);
+      if (input.entity === "addon-option") await addAddOnStore(
+        (await db.restaurantAddOnOption.findUnique({ where: { id: raw.id }, select: { addOnId: true } }))?.addOnId,
+      );
+    }
+
+    const ownedStores = await db.store.findMany({
+      where: {
+        id: { in: [...storeIds] },
+        ownerId: actor.id,
+        catalogEngine: "RESTAURANT",
+        status: { in: ["PENDING", "APPROVED"] },
+      },
+      select: { id: true },
+    });
+    if (!storeIds.size || ownedStores.length !== storeIds.size) {
+      return NextResponse.json(
+        { error: "You can only manage the restaurant menu for your own approved or pending store." },
+        { status: 403 },
+      );
+    }
+  }
 
   if (input.entity === "category") {
     if (input.action === "delete") {

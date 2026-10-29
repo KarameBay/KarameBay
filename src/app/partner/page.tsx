@@ -4,6 +4,8 @@ import { getPartnerWorkspace } from "@/lib/partner";
 import { LogoutButton } from "@/components/logout-button";
 import { PartnerWorkspace } from "@/components/partner/partner-workspace";
 import { PartnerOrders } from "@/components/partner/partner-orders";
+import { AdminRestaurantMenuBuilder } from "@/components/admin/admin-restaurant-menu-builder";
+import { getRestaurantMenuBuilderStores } from "@/lib/restaurant-menu";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -13,6 +15,7 @@ export const metadata = {
 export default async function PartnerPage() {
   const user = await requireRole("PARTNER");
   const workspace = await getPartnerWorkspace(user.id);
+  const restaurantMenuStores = await getRestaurantMenuBuilderStores(user.id);
   return (
     <main className="partner-page">
       <header className="partner-header">
@@ -31,6 +34,24 @@ export default async function PartnerPage() {
       </section>
       <PartnerOrders />
       <PartnerWorkspace {...workspace} />
+      {restaurantMenuStores.length > 0 && (
+        <section className="partner-menu-builder">
+          <div className="partner-toolbar">
+            <div>
+              <span className="catalog-kicker">RESTAURANT MENU BUILDER</span>
+              <h2>Build your restaurant menu</h2>
+              <p>
+                Add categories, menu items, variants, choices, and add-ons. Admin reviews changes before they appear live.
+              </p>
+            </div>
+          </div>
+          <AdminRestaurantMenuBuilder
+            stores={restaurantMenuStores}
+            apiPath="/api/admin/restaurant-menu"
+            imageUploadEndpoint="/api/partner/uploads/images"
+          />
+        </section>
+      )}
     </main>
   );
 }

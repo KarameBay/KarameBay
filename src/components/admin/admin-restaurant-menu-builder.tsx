@@ -190,8 +190,8 @@ function isBlank(value: string) {
   return value.trim().length === 0;
 }
 
-async function postMenu(payload: Record<string, unknown>) {
-  const response = await fetch("/api/admin/restaurant-menu", {
+async function postMenu(payload: Record<string, unknown>, apiPath: string) {
+  const response = await fetch(apiPath, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload),
@@ -202,7 +202,15 @@ async function postMenu(payload: Record<string, unknown>) {
   }
 }
 
-export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) {
+export function AdminRestaurantMenuBuilder({
+  stores,
+  apiPath = "/api/admin/restaurant-menu",
+  imageUploadEndpoint = "/api/admin/uploads/images",
+}: {
+  stores: MenuStore[];
+  apiPath?: string;
+  imageUploadEndpoint?: string;
+}) {
   const router = useRouter();
   const [selectedStoreId, setSelectedStoreId] = useState(stores[0]?.id ?? "");
   const selectedStore = useMemo(
@@ -412,7 +420,7 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
     setError("");
     setMessage("");
     try {
-      await postMenu(payload);
+      await postMenu(payload, apiPath);
       setMessage(successMessage);
       router.refresh();
     } catch (exception) {
@@ -923,6 +931,7 @@ export function AdminRestaurantMenuBuilder({ stores }: { stores: MenuStore[] }) 
                 />
               </label>
               <AdminImageUpload
+                endpoint={imageUploadEndpoint}
                 label="Product image"
                 purpose="product"
                 value={productForm.imageUrl}
