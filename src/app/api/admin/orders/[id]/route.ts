@@ -12,6 +12,7 @@ import {
   notifyPaymentVerified,
   notifyReadyForPickup,
   notifyRejected,
+  sendRiderAssignedEmail,
 } from "@/lib/order-notifications";
 
 const updateSchema = z.discriminatedUnion("action", [
@@ -131,7 +132,7 @@ export async function PATCH(
         role: "RIDER",
         status: "ACTIVE",
       },
-      select: { id: true, firstName: true, lastName: true, phone: true },
+      select: { id: true, firstName: true, lastName: true, phone: true, email: true },
     });
     if (!rider)
       return NextResponse.json(
@@ -191,6 +192,27 @@ export async function PATCH(
         },
         { status: 409 },
       );
+    try {
+      const riderEmail = await sendRiderAssignedEmail({
+        order: { id: order.id, orderNumber: order.orderNumber },
+        store: { name: order.store.name },
+        rider,
+        admin,
+      });
+      if (!riderEmail.ok) {
+        console.warn("Rider assignment email failed", {
+          orderId: order.id,
+          riderId: rider.id,
+          error: riderEmail.error,
+        });
+      }
+    } catch (error) {
+      console.warn("Rider assignment email failed", {
+        orderId: order.id,
+        riderId: rider.id,
+        error: error instanceof Error ? error.message : "Unknown email error",
+      });
+    }
     return NextResponse.json({
       order: {
         id,

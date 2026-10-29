@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Plus, Store, Package, Pencil, Trash2 } from "lucide-react";
+import { LocateFixed, Plus, Store, Package, Pencil, Trash2 } from "lucide-react";
 import { AdminImageUpload } from "@/components/admin/admin-image-upload";
 import { formatRwf } from "@/lib/money";
 import type { getPartnerWorkspace } from "@/lib/partner";
@@ -101,6 +101,7 @@ export function PartnerWorkspace({ stores, storeTypes }: Workspace) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [locatingPickup, setLocatingPickup] = useState(false);
   const store = stores.find((s) => s.id === storeId);
   const canEdit = store && ["PENDING", "APPROVED"].includes(store.status);
 
@@ -215,6 +216,44 @@ export function PartnerWorkspace({ stores, storeTypes }: Workspace) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function useCurrentPickupLocation() {
+    if (!navigator.geolocation) {
+      setError("Your browser does not support location access. Tap the map or enter the coordinates instead.");
+      return;
+    }
+    setLocatingPickup(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const latitude = coords.latitude.toFixed(6);
+        const longitude = coords.longitude.toFixed(6);
+        setStoreForm((current) => ({ ...current, latitude, longitude }));
+        try {
+          const response = await fetch(
+            `/api/geocoding/reverse?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`,
+          );
+          const body = await response.json().catch(() => ({}));
+          if (response.ok && body.address) {
+            setStoreForm((current) => ({ ...current, latitude, longitude, address: body.address }));
+          }
+        } catch {
+          // Coordinates are still saved even if address lookup is unavailable.
+        } finally {
+          setLocatingPickup(false);
+        }
+      },
+      (geoError) => {
+        setLocatingPickup(false);
+        setError(
+          geoError.code === geoError.PERMISSION_DENIED
+            ? "Location access was denied. Allow it in your browser or place the pin manually."
+            : "Could not read your current location. Place the pin manually or enter the coordinates.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
+    );
   }
   async function removeProduct(p: Product) {
     if (!window.confirm(`Remove ${p.name} from your catalog?`)) return;
@@ -380,7 +419,18 @@ export function PartnerWorkspace({ stores, storeTypes }: Workspace) {
                 />
               </label>
               <div className="wide">
-                <b>Choose your pickup location</b>
+                <div className="partner-location-heading">
+                  <b>Choose your pickup location</b>
+                  <button
+                    type="button"
+                    className="partner-location-button"
+                    onClick={useCurrentPickupLocation}
+                    disabled={busy || locatingPickup}
+                  >
+                    <LocateFixed size={16} />
+                    {locatingPickup ? "Finding location…" : "Use my current location"}
+                  </button>
+                </div>
                 <p>
                   Tap the map to place your store pin. Riders will collect
                   orders here.

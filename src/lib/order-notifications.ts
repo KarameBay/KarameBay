@@ -745,6 +745,38 @@ export async function createRiderAssignmentNotifications(
   });
 }
 
+export async function sendRiderAssignedEmail(input: {
+  order: { id: string; orderNumber: string };
+  store: { name: string };
+  rider: { id: string; firstName: string; lastName: string; email: string };
+  admin: { firstName: string; lastName: string };
+}) {
+  const business = await getBusinessProfile();
+  const subject = `New delivery assigned: ${input.order.orderNumber}`;
+  const body = [
+    `Hello ${input.rider.firstName},`,
+    "",
+    `A new delivery has been assigned to you by ${input.admin.firstName} ${input.admin.lastName}.`,
+    `Order: ${input.order.orderNumber}`,
+    `Store: ${input.store.name}`,
+    "",
+    "Open the Karame Bay Rider Portal to review the pickup details and accept the delivery.",
+    "https://portal.karamebay.com/rider",
+    "",
+    `— ${business.businessName}`,
+  ].join("\n");
+  return writeNotificationEmail(
+    {
+      userId: input.rider.id,
+      orderId: input.order.id,
+      recipientEmail: input.rider.email,
+      subject,
+      body,
+    },
+    () => sendSmtpMail({ to: input.rider.email, subject, text: body }),
+  );
+}
+
 export async function sendCustomerEmailNotification(input: {
   notificationId?: string | null;
   userId?: string | null;

@@ -221,6 +221,35 @@
 .partner-form .wide {
   grid-column: 1/-1;
 }
+.partner-location-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.partner-location-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #cfd9cf;
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: #f8faf5;
+  color: #245639;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.partner-location-button:hover {
+  border-color: #245639;
+  background: #edf5e8;
+}
+.partner-location-button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
 .partner-form label.partner-checkbox {
   flex-direction: row;
   align-items: center;
