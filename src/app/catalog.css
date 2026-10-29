@@ -1652,6 +1652,22 @@
   gap: 18px;
   align-items: start;
 }
+.menu-builder-help {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid #d8e6d1;
+  border-radius: 12px;
+  background: #f3f8ef;
+  color: #31513d;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.menu-builder-help b {
+  color: #245639;
+  font-size: 14px;
+}
 
 .menu-builder-sidebar,
 .menu-builder-main {

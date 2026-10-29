@@ -561,6 +561,14 @@ export function AdminRestaurantMenuBuilder({
 
   return (
     <section className="menu-builder-shell">
+      <div className="menu-builder-help" role="note">
+        <b>How the menu works</b>
+        <span>
+          Category = menu section (for example, Breakfast). Product = the item customers order (for example, Chicken Burger).
+          Version = a size or version of the same item (Small, Medium, Large). Question = something customers choose (Choose your sauce).
+          Extra = an optional addition (Cheese or Avocado).
+        </span>
+      </div>
       <div className="menu-builder-sidebar">
         <div className="admin-management-card">
           <div className="panel-head">
@@ -614,8 +622,8 @@ export function AdminRestaurantMenuBuilder({
             <span>Cat</span>
             <div>
               <span className="catalog-kicker">CATEGORIES</span>
-              <h2>Manage restaurant categories</h2>
-              <p>Categories are store-specific.</p>
+              <h2>Menu sections</h2>
+              <p>Make sections such as Breakfast, Lunch, Drinks, or Desserts. Each store has its own sections.</p>
             </div>
           </div>
 
@@ -812,8 +820,8 @@ export function AdminRestaurantMenuBuilder({
             <span>Prod</span>
             <div>
               <span className="catalog-kicker">PRODUCTS</span>
-              <h2>Restaurant product editor</h2>
-              <p>Create and update menu items with the right category and price.</p>
+              <h2>Menu items</h2>
+              <p>Add the items customers can order, with a price, photo, and menu section.</p>
             </div>
           </div>
 
@@ -1185,17 +1193,17 @@ export function AdminRestaurantMenuBuilder({
             <div className="panel-head">
               <span>Build</span>
               <div>
-                <span className="catalog-kicker">PRODUCT STRUCTURE</span>
+                <span className="catalog-kicker">ITEM OPTIONS</span>
                 <h2>{selectedProduct.name}</h2>
                 <p>
-                  Add variants, required choices, optional choices, and add-ons for the detail page.
+                  Add sizes, customer questions, and extras for this item.
                 </p>
               </div>
             </div>
 
             <div className="structure-grid">
               <section>
-                <h3>Variants</h3>
+                <h3>Sizes or versions</h3>
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -1221,7 +1229,7 @@ export function AdminRestaurantMenuBuilder({
                 >
                   <div className="menu-builder-grid">
                     <label>
-                      Name
+                      Name (for example, Small or Large)
                       <input
                         value={variantForm.name}
                         onChange={(event) =>
@@ -1314,7 +1322,7 @@ export function AdminRestaurantMenuBuilder({
               </section>
 
               <section>
-                <h3>Product choice groups</h3>
+                <h3>Questions for customers</h3>
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -1340,7 +1348,7 @@ export function AdminRestaurantMenuBuilder({
                 >
                   <div className="menu-builder-grid">
                     <label>
-                      Name
+                      Question (for example, Choose your sauce)
                       <input
                         value={groupForm.name}
                         onChange={(event) =>
@@ -1781,7 +1789,7 @@ export function AdminRestaurantMenuBuilder({
             </div>
 
             <section style={{ marginTop: "18px" }}>
-              <h3>Add-on groups for this store</h3>
+              <h3>Extras for this store</h3>
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -1812,7 +1820,7 @@ export function AdminRestaurantMenuBuilder({
               >
                 <div className="menu-builder-grid">
                   <label>
-                    Group name
+                    Extra group name (for example, Toppings)
                     <input
                       value={addOnForm.name}
                       onChange={(event) =>
@@ -1822,7 +1830,7 @@ export function AdminRestaurantMenuBuilder({
                     />
                   </label>
                   <label>
-                    Category
+                    Extra section (optional)
                     <input
                       value={addOnForm.category}
                       onChange={(event) =>
@@ -1832,7 +1840,7 @@ export function AdminRestaurantMenuBuilder({
                     />
                   </label>
                   <label>
-                    Description / instruction
+                    Customer instruction
                     <input
                       value={addOnForm.description}
                       onChange={(event) =>
@@ -1853,7 +1861,7 @@ export function AdminRestaurantMenuBuilder({
                     />
                   </label>
                   <label>
-                    Selection type
+                    How many can customers choose?
                     <select
                       value={addOnForm.selectionMode}
                       onChange={(event) =>
@@ -2060,8 +2068,8 @@ export function AdminRestaurantMenuBuilder({
                   <div className="panel-head">
                     <span>Linked</span>
                     <div>
-                      <span className="catalog-kicker">PRODUCT ADD-ON GROUPS</span>
-                      <h2>Linked groups on {selectedProduct.name}</h2>
+                      <span className="catalog-kicker">ITEM EXTRAS</span>
+                      <h2>Extras for {selectedProduct.name}</h2>
                       <p>
                         Link reusable add-on groups to this product, then override the group name,
                         required state, selection limits, hidden options, or option prices when needed.
@@ -2266,9 +2274,9 @@ export function AdminRestaurantMenuBuilder({
                   <div className="panel-head">
                     <span>Opt</span>
                     <div>
-                      <span className="catalog-kicker">ADD-ON OPTIONS</span>
-                      <h2>Set options for {selectedAddOn.name}</h2>
-                      <p>Use this when an add-on should let the customer pick one choice.</p>
+                      <span className="catalog-kicker">EXTRA CHOICES</span>
+                      <h2>Choices inside {selectedAddOn.name}</h2>
+                      <p>For example, choose Small, Large, or Extra shot.</p>
                     </div>
                   </div>
 
