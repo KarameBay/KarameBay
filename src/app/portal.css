@@ -13,7 +13,7 @@
 }
 .operations-auth .auth-brand {
   background:
-    linear-gradient(145deg, rgba(17, 27, 23, 0.62), rgba(52, 39, 20, 0.48)),
+    linear-gradient(145deg, rgba(17, 27, 23, 0.34), rgba(52, 39, 20, 0.22)),
     url("/images/karame-rider-hero.png") 68% center/cover;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.34);
 }
