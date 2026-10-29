@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 
-if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
+// Next.js imports route modules while collecting the production build. That
+// phase must not require a live database connection; pages and API handlers
+// remain dynamic and will validate the URL when they execute at runtime.
+const isNextBuild = process.env.NEXT_PHASE === "phase-production-build";
+if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL && !isNextBuild) {
   throw new Error("DATABASE_URL is required in production.");
 }
 
