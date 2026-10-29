@@ -93,7 +93,7 @@ export function AuthForm({
   }
 
   return (
-    <div className={`auth-screen ${staff ? "operations-auth" : ""}`}>
+    <div className={`auth-screen ${staff || partner ? "operations-auth" : ""}`}>
       <div className="auth-brand">
         <Link href={customerUrl("/")} className="auth-logo">
           <Image
