@@ -23,6 +23,8 @@
     "test:role-logins": "tsx scripts/verify-role-logins.ts",
     "test:role-isolation": "tsx scripts/verify-production-role-isolation.ts",
     "test:partner-portal": "tsx scripts/verify-partner-portal.ts",
+    "test:critical-contracts": "tsx scripts/verify-critical-contracts.ts",
+    "test:portal-surfaces": "tsx scripts/verify-portal-surfaces.ts",
     "test:parcel-delivery": "tsx scripts/verify-parcel-lifecycle.ts",
     "test:reviews-support": "tsx scripts/verify-reviews-support.ts",
     "audit:production": "tsx scripts/audit-production-readiness.ts",

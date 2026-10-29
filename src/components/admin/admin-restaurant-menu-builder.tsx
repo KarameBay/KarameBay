@@ -426,7 +426,6 @@ export function AdminRestaurantMenuBuilder({
     } catch (exception) {
       const message = exception instanceof Error ? exception.message : "Could not save menu item.";
       setError(message);
-      window.alert(message);
     } finally {
       setSaving(false);
     }
@@ -569,6 +568,13 @@ export function AdminRestaurantMenuBuilder({
           Extra = an optional addition (Cheese or Avocado).
         </span>
       </div>
+      <nav className="menu-builder-jump-links" aria-label="Menu builder sections">
+        <span>Jump to:</span>
+        <a href="#menu-categories">Sections</a>
+        <a href="#menu-items">Items</a>
+        <a href="#menu-options">Choices</a>
+        <a href="#menu-extras">Extras</a>
+      </nav>
       <div className="menu-builder-sidebar">
         <div className="admin-management-card">
           <div className="panel-head">
@@ -617,7 +623,7 @@ export function AdminRestaurantMenuBuilder({
           </div>
         </div>
 
-        <div className="admin-management-card" style={{ marginTop: "16px" }}>
+        <div id="menu-categories" className="admin-management-card" style={{ marginTop: "16px" }}>
           <div className="panel-head">
             <span>Cat</span>
             <div>
@@ -815,7 +821,7 @@ export function AdminRestaurantMenuBuilder({
       </div>
 
       <div className="menu-builder-main">
-        <div className="admin-management-card">
+        <div id="menu-items" className="admin-management-card">
           <div className="panel-head">
             <span>Prod</span>
             <div>
@@ -1189,7 +1195,7 @@ export function AdminRestaurantMenuBuilder({
         </div>
 
         {selectedProduct && selectedStore && (
-          <div className="admin-management-card" style={{ marginTop: "16px" }}>
+          <div id="menu-options" className="admin-management-card" style={{ marginTop: "16px" }}>
             <div className="panel-head">
               <span>Build</span>
               <div>
@@ -1788,7 +1794,7 @@ export function AdminRestaurantMenuBuilder({
               </section>
             </div>
 
-            <section style={{ marginTop: "18px" }}>
+            <section id="menu-extras" style={{ marginTop: "18px" }}>
               <h3>Extras for this store</h3>
               <form
                 onSubmit={(event) => {
@@ -2583,8 +2589,8 @@ export function AdminRestaurantMenuBuilder({
         )}
       </div>
 
-      {error && <p className="form-error">{error}</p>}
-      {message && <p className="form-success">{message}</p>}
+      {error && <p className="form-error" role="alert" aria-live="assertive">{error}</p>}
+      {message && <p className="form-success" role="status" aria-live="polite">{message}</p>}
     </section>
   );
 }

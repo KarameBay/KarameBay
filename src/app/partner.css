@@ -298,6 +298,11 @@
   height: 36px;
   color: #809779;
 }
+.partner-empty h3 { margin: 10px 0 6px; color: #245639; }
+.partner-empty p { max-width: 460px; margin: 0 auto 14px; line-height: 1.5; }
+.partner-inline-error { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:10px; background:#fff0ed; color:#9d3025; }
+.partner-inline-error p { margin:0; }
+.partner-inline-error button { border:1px solid #d9aaa3; border-radius:8px; background:#fff; color:#8c2d24; padding:7px 10px; font-weight:800; }
 .partner-pagination {
   border-top: 1px solid #e0e6df;
   margin-top: 24px;

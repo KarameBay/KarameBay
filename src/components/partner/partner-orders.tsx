@@ -76,8 +76,8 @@ export function PartnerOrders() {
         </div>
         <button className="partner-secondary-button" onClick={() => void load()} type="button">Refresh</button>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {loading ? <p className="partner-muted">Loading orders…</p> : orders.length === 0 ? <div className="partner-empty"><PackageCheck /><p>No orders for your stores yet.</p></div> : (
+      {error && <div className="partner-inline-error" role="alert"><p>{error}</p><button type="button" onClick={() => void load()}>Try again</button></div>}
+      {loading ? <p className="partner-muted" role="status" aria-live="polite">Loading orders…</p> : orders.length === 0 ? <div className="partner-empty"><PackageCheck /><h3>No orders to prepare yet</h3><p>New customer orders for your stores will appear here. Keep this page open to respond quickly.</p><button type="button" className="partner-secondary-button" onClick={() => void load()}>Refresh orders</button></div> : (
         <div className="partner-order-list">
           {orders.map((order) => (
             <article className="partner-order-card" key={order.id}>

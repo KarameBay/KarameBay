@@ -14,8 +14,10 @@ export const metadata = {
 };
 export default async function PartnerPage() {
   const user = await requireRole("PARTNER");
-  const workspace = await getPartnerWorkspace(user.id);
-  const restaurantMenuStores = await getRestaurantMenuBuilderStores(user.id);
+  const [workspace, restaurantMenuStores] = await Promise.all([
+    getPartnerWorkspace(user.id),
+    getRestaurantMenuBuilderStores(user.id),
+  ]);
   return (
     <main className="partner-page">
       <header className="partner-header">

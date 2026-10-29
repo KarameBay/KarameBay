@@ -422,7 +422,7 @@ export function AdminMarketplaceCatalogBuilder({ markets }: { markets: Market[] 
                 <button type="button" className="secondary danger" onClick={() => deleteProduct(item)} aria-label={`Delete ${item.name}`}><Trash2 /></button>
               </article>;
             })}
-            {!loading && !products.length && <p>No products found. Add the first product using the editor.</p>}
+            {!loading && !products.length && <div className="market-empty-state"><h3>{search.trim() ? "No products match that search" : "No products in this store yet"}</h3><p>{search.trim() ? "Try a shorter name, SKU, or brand, or clear the search to see everything." : "Add the first product using the editor above."}</p>{search.trim() && <button type="button" className="secondary" onClick={() => { setSearch(""); setPage(1); }}>Clear search</button>}</div>}
           </div>
           <div className="market-pagination">
             <button type="button" className="secondary" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}><ChevronLeft /> Previous</button>
