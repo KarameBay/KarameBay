@@ -436,6 +436,248 @@
 .customer-portal-content :is(button, input, select, textarea) { min-height: 42px; }
 .customer-portal-content :is(h1, h2, h3) { letter-spacing: -0.02em; }
 
+/* Customer portal refresh: a calmer, denser workspace that keeps every
+   existing route and action intact while making the important information
+   easier to scan. */
+.customer-portal-shell {
+  width: min(100% - 32px, 1480px);
+  padding: 24px 0 88px;
+  grid-template-columns: 284px minmax(0, 1fr);
+  gap: 20px;
+}
+
+.customer-portal-sidebar,
+.customer-portal-content {
+  border-color: #e7e9e1;
+  box-shadow: 0 18px 55px rgba(37, 48, 38, 0.07);
+}
+
+.customer-portal-sidebar {
+  padding: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(213, 161, 55, 0.14), transparent 34%),
+    linear-gradient(180deg, #fffefb 0%, #f7faf4 100%);
+}
+
+.customer-portal-sidebar h1 {
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  line-height: 1.08;
+}
+
+.customer-portal-sidebar > p {
+  font-size: 12px;
+  max-width: 215px;
+}
+
+.customer-portal-nav a {
+  min-height: 54px;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.customer-portal-nav a:hover,
+.customer-portal-nav a.active {
+  color: #1f2e26;
+  background: #edf5e9;
+  border-color: #d6e7d0;
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
+.customer-portal-nav a.active svg { color: var(--orange); }
+.customer-portal-nav a svg { width: 19px; height: 19px; }
+.customer-portal-nav b { font-size: 12px; }
+.customer-portal-nav small { font-size: 9px; }
+
+.customer-portal-sidebar-card {
+  background: linear-gradient(135deg, #eff7e9 0%, #fffdf8 100%);
+  border-color: #dce9d4;
+}
+
+.customer-portal-sidebar-actions a {
+  min-height: 44px;
+  border: 1px solid #e1e7de;
+  background: rgba(255, 255, 255, 0.82);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.customer-portal-sidebar-actions a:first-child {
+  color: #fff;
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.customer-portal-sidebar-actions a:hover {
+  transform: translateY(-2px);
+  border-color: #d3b06b;
+  background: #fffaf0;
+}
+
+.customer-portal-content {
+  padding: 24px;
+  background: rgba(255, 255, 255, .88);
+}
+
+.customer-account-hero,
+.customer-summary-card {
+  position: relative;
+  overflow: hidden;
+  border-color: #e4e9df;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(223, 174, 71, .16), transparent 32%),
+    linear-gradient(140deg, #f7fbf3 0%, #fff 70%);
+}
+
+.customer-account-hero::after,
+.customer-summary-card::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -70px;
+  bottom: -90px;
+  border-radius: 50%;
+  background: rgba(183, 121, 31, .07);
+}
+
+.customer-account-hero h2,
+.customer-summary-card h2,
+.customer-orders > header h1 {
+  font-size: clamp(1.85rem, 3vw, 2.7rem);
+  line-height: 1.02;
+}
+
+.customer-account-stats { gap: 10px; }
+.customer-account-stats article {
+  border: 1px solid #e5ebdf;
+  background: rgba(255, 255, 255, .8);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.customer-account-stats article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(36, 53, 41, .08);
+}
+.customer-account-stats strong { color: var(--ink); }
+
+.customer-account-grid { gap: 12px; }
+.customer-account-card {
+  min-height: 92px;
+  border-color: #e5e9e1;
+  box-shadow: none;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.customer-account-card:hover {
+  transform: translateY(-3px);
+  border-color: #d5dfce;
+  box-shadow: 0 12px 28px rgba(36, 53, 41, .09);
+}
+.customer-account-card > span,
+.customer-account-footer > div > span {
+  background: #edf5e8;
+}
+
+.customer-account-footer {
+  border-color: #e5e9e1;
+  box-shadow: none;
+}
+
+.customer-orders > header {
+  border-color: #e5e9e1;
+  background: linear-gradient(135deg, #f8fbf6, #fff);
+  box-shadow: none;
+}
+.customer-orders > header > div:last-child a,
+.customer-account-footer a,
+.customer-no-orders a,
+.role-actions a {
+  transition: transform .2s ease, background .2s ease;
+}
+.customer-orders > header > div:last-child a:hover,
+.customer-account-footer a:hover,
+.customer-no-orders a:hover,
+.role-actions a:hover { transform: translateY(-2px); background: #e4efde; }
+
+.customer-orders section > article {
+  min-height: 116px;
+  border-color: #e5e9e1;
+  box-shadow: none;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.customer-orders section > article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(36, 53, 41, .08);
+}
+.customer-orders section > article h2 { margin: 5px 0 3px; font-size: 17px; }
+.customer-orders section > article > b { color: var(--ink); font-size: 15px; }
+.customer-order-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.customer-order-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dfe7da;
+  border-radius: 9px;
+  color: var(--green);
+  background: #f6faf3;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.customer-address-list article,
+.customer-no-orders {
+  border-color: #e5e9e1;
+  box-shadow: none;
+}
+.customer-address-list article:hover { border-color: #d3dfce; }
+
+/* Shared customer shopping surfaces */
+.store-card,
+.product-card,
+.cart-card,
+.delivery-card,
+.summary,
+.payment-card,
+.status-card {
+  border-color: #e5e9e1;
+  box-shadow: 0 8px 24px rgba(36, 53, 41, .045);
+}
+.store-card:hover,
+.product-card:hover { border-color: #d1dfca; }
+.store-img,
+.product-image { background-color: #f1f4ef; }
+.product-image { height: 188px; }
+.product-card { display: flex; flex-direction: column; min-height: 100%; }
+.product-details { flex: 1; display: flex; flex-direction: column; }
+.product-details > div { margin-top: auto; }
+
+@media (max-width: 1100px) {
+  .customer-portal-shell { width: min(100% - 28px, 900px); }
+  .customer-portal-content { padding: 20px; }
+}
+
+@media (max-width: 700px) {
+  .customer-portal-shell { width: calc(100% - 20px); padding: 12px 0 78px; gap: 12px; }
+  .customer-portal-sidebar { padding: 16px; border-radius: 18px; }
+  .customer-portal-content { padding: 14px; border-radius: 18px; }
+  .customer-account-hero,
+  .customer-summary-card { padding: 20px; }
+  .customer-account-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-account-stats strong { font-size: 23px; }
+  .customer-account-grid { grid-template-columns: 1fr 1fr; }
+  .customer-account-card { min-height: 105px; padding: 14px; flex-direction: column; gap: 10px; }
+  .customer-account-card > span { width: 36px; height: 36px; }
+  .customer-orders > header { padding: 18px; }
+  .customer-orders section > article { padding: 15px; }
+  .customer-orders section > article > b { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-account-card,
+  .customer-account-stats article,
+  .customer-orders section > article,
+  .customer-portal-sidebar-actions a { transition: none; }
+}
+
 @media (max-width: 1100px) {
   .customer-portal-shell {
     grid-template-columns: 1fr;
