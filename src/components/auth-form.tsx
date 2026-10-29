@@ -68,7 +68,20 @@ export function AuthForm({
       }
 
       const role = body.user?.role as Role | undefined;
+      const requestedNext = new URLSearchParams(window.location.search).get("next");
+      const safeNext =
+        requestedNext &&
+        requestedNext.startsWith("/") &&
+        !requestedNext.startsWith("//") &&
+        !requestedNext.startsWith("/admin") &&
+        !requestedNext.startsWith("/dashboard") &&
+        !requestedNext.startsWith("/partner") &&
+        !requestedNext.startsWith("/rider") &&
+        !requestedNext.startsWith("/staff")
+          ? requestedNext
+          : null;
       const redirectTo =
+        safeNext ??
         body.user?.redirectTo ??
         (role
           ? roleLandingPath(role)
