@@ -1,0 +1,1 @@
+ALTER TABLE "Order" ADD COLUMN "ebmRequested" BOOLEAN NOT NULL DEFAULT false;

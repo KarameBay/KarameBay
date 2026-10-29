@@ -8,6 +8,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock3,
+  FileCheck2,
   MapPin,
   Route,
   ShieldCheck,
@@ -33,6 +34,7 @@ export function CheckoutReview() {
   const [address, setAddress] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [ebmRequested, setEbmRequested] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -75,6 +77,7 @@ export function CheckoutReview() {
           deliveryLatitude: quote.latitude,
           deliveryLongitude: quote.longitude,
           deliveryAddress: address,
+          ebmRequested,
           expectedItemsSubtotalRwf: cart.itemsSubtotal,
           expectedDeliveryFeeRwf: quote.deliveryFeeRwf,
           paymentConfirmed: confirmed,
@@ -222,6 +225,18 @@ export function CheckoutReview() {
                 <Clock3 /> About {quote.durationMinutes} min
               </span>
             </div>
+          </section>
+          <section className="ebm-card" aria-labelledby="ebm-title">
+            <div className="ebm-card-icon"><FileCheck2 aria-hidden="true" /></div>
+            <div className="ebm-card-copy">
+              <h2 id="ebm-title">Need an EBM receipt?</h2>
+              <p>Request an electronic invoice before placing your order. Our team will follow up if business details are needed.</p>
+            </div>
+            <label className="ebm-toggle">
+              <input type="checkbox" checked={ebmRequested} onChange={(event) => setEbmRequested(event.target.checked)} />
+              <span aria-hidden="true" />
+              <b>{ebmRequested ? "Requested" : "Add request"}</b>
+            </label>
           </section>
           <section className="momo-card">
             <div className="momo-brand">

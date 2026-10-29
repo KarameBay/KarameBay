@@ -58,6 +58,7 @@
 .rider-profile-card .catalog-kicker{margin-bottom:2px}
 
 .admin-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.admin-header-actions a{height:39px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:0 13px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:8px;font-weight:900;text-decoration:none}.admin-header-actions a:last-child{background:var(--green);border-color:var(--green);color:#fff}.admin-header-actions .notification-bell{display:flex;align-items:center}
+.ebm-request-chip{display:inline-flex;align-items:center;width:max-content;margin:0 0 5px;padding:4px 7px;border-radius:999px;background:#fff0cf;color:#8e5b08;font-size:8px;font-weight:900;letter-spacing:.03em}
 
 @media(max-width:1000px){
   .admin-dashboard-grid{grid-template-columns:repeat(2,1fr)}

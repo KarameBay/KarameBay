@@ -9,6 +9,7 @@ type PartnerOrder = {
   orderNumber: string;
   status: string;
   grandTotalRwf: number;
+  ebmRequested: boolean;
   createdAt: string;
   customer: { firstName: string; lastName: string; phone: string | null };
   store: { id: string; name: string };
@@ -87,7 +88,7 @@ export function PartnerOrders() {
               </div>
               <p className="partner-order-customer">Customer: {order.customer.firstName} {order.customer.lastName} {order.customer.phone ? `· ${order.customer.phone}` : ""}</p>
               <ul>{order.items.map((item) => <li key={item.id}>{item.quantity} × {item.productName} <span>{formatRwf(item.lineTotalRwf)}</span></li>)}</ul>
-              <div className="partner-order-footer"><strong>{formatRwf(order.grandTotalRwf)}</strong><span>Payment: {order.payment?.status ?? "Pending"}</span>{order.rider && <span>Rider: {order.rider.firstName} {order.rider.lastName}</span>}</div>
+              <div className="partner-order-footer"><strong>{formatRwf(order.grandTotalRwf)}</strong><span>Payment: {order.payment?.status ?? "Pending"}</span>{order.ebmRequested && <span className="ebm-request-chip">EBM requested</span>}{order.rider && <span>Rider: {order.rider.firstName} {order.rider.lastName}</span>}</div>
               <div className="partner-order-actions">
                 {order.status === "PENDING" && <button disabled={busy.length > 0} onClick={() => void update(order.id, "ACCEPTED")} type="button"><CheckCircle2 /> Accept order</button>}
                 {nextActions[order.status]?.map((action) => <button disabled={busy.length > 0} key={action.status} onClick={() => void update(order.id, action.status)} type="button">{action.status === "REJECTED" ? <XCircle /> : action.status === "READY_FOR_PICKUP" ? <PackageCheck /> : <Clock3 />}{busy === `${order.id}:${action.status}` ? "Saving…" : action.label}</button>)}

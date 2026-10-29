@@ -70,6 +70,7 @@ const schema = z.object({
   deliveryLatitude: z.number().min(-90).max(90),
   deliveryLongitude: z.number().min(-180).max(180),
   deliveryAddress: z.string().trim().min(5).max(240),
+  ebmRequested: z.boolean().default(false),
   expectedItemsSubtotalRwf: z.number().int().nonnegative(),
   expectedDeliveryFeeRwf: z.number().int().nonnegative(),
   paymentConfirmed: z.literal(true),
@@ -407,6 +408,7 @@ export async function POST(request: NextRequest) {
         deliveryLatitude: input.deliveryLatitude,
         deliveryLongitude: input.deliveryLongitude,
         deliveryAddress: input.deliveryAddress,
+        ebmRequested: input.ebmRequested,
         items: {
           create: input.items.map((inputItem) => {
             const product = productById.get(inputItem.productId)!;

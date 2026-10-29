@@ -659,6 +659,7 @@ model Order {
   deliveryLatitude       Float
   deliveryLongitude      Float
   deliveryAddress        String
+  ebmRequested           Boolean                @default(false)
   riderCurrentLatitude   Float?
   riderCurrentLongitude  Float?
   riderLocationAccuracyM Float?

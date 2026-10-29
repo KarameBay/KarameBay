@@ -29,6 +29,7 @@ export type AdminOrder = {
   itemsSubtotalRwf: number;
   deliveryFeeRwf: number;
   grandTotalRwf: number;
+  ebmRequested: boolean;
   deliveryAddress: string;
   deliveryLatitude: number;
   deliveryLongitude: number;
@@ -301,6 +302,7 @@ function AdminOrderRow({
           </span>
         </td>
         <td>
+          {order.ebmRequested && <span className="ebm-request-chip">EBM requested</span>}
           <span
             className={`payment-chip ${(order.payment?.status ?? "").toLowerCase()}`}
           >
