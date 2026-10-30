@@ -15,6 +15,7 @@ import {
   Navigation,
   PackageCheck,
   Phone,
+  RefreshCw,
   ShoppingBag,
   Store,
   User,
@@ -154,7 +155,7 @@ function AvailableCard({
       {error && <p className="rider-error">{error}</p>}
       <button onClick={accept} disabled={loading}>
         {loading ? <LoaderCircle className="spin" /> : <Bike />}
-        Accept delivery
+        Accept & start pickup
       </button>
     </article>
   );
@@ -173,11 +174,11 @@ function DeliveryCard({
   const next =
     delivery.status === "READY_FOR_PICKUP" &&
     delivery.assignmentStatus === "ACKNOWLEDGED"
-      ? { status: "PICKED_UP", label: "Mark Picked Up" }
+      ? { status: "PICKED_UP", label: "Confirm pickup" }
       : delivery.status === "PICKED_UP"
-        ? { status: "ON_THE_WAY", label: "Start Delivery" }
+        ? { status: "ON_THE_WAY", label: "Start delivery" }
         : delivery.status === "ON_THE_WAY"
-          ? { status: "DELIVERED", label: "Mark Delivered" }
+          ? { status: "DELIVERED", label: "Confirm delivered" }
           : null;
   async function update() {
     if (!next) return;
@@ -425,6 +426,16 @@ export function RiderDashboard({
             <b>{formatRwf(totalEarnings)}</b>
           </span>
         </div>
+        <button
+          type="button"
+          className="rider-refresh"
+          onClick={() => window.location.reload()}
+          aria-label="Refresh delivery list"
+          title="Refresh delivery list"
+        >
+          <RefreshCw />
+          <span>Refresh</span>
+        </button>
         <NotificationBell />
       </header>
       <main>
@@ -476,7 +487,7 @@ export function RiderDashboard({
             </small>
           </div>
           <div className="rider-profile-stats">
-            <article>
+            <article className={`rider-status-tile ${riderProfile?.riderStatus?.toLowerCase() ?? "offline"}`}>
               <small>Current status</small>
               <b>{riderProfile?.riderStatus ?? "OFFLINE"}</b>
             </article>
