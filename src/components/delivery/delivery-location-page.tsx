@@ -72,6 +72,7 @@ export function DeliveryLocationPage() {
   const [search, setSearch] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchMessage, setSearchMessage] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
   const [deliveryDetails, setDeliveryDetails] = useState("");
   const [addressMode, setAddressMode] = useState<"temporary" | "save">(
@@ -82,6 +83,7 @@ export function DeliveryLocationPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const initialised = useRef(false);
   const gpsAttempted = useRef(false);
+  const selectedSearch = useRef("");
 
   useEffect(() => {
     if (initialised.current) return;
@@ -165,8 +167,12 @@ export function DeliveryLocationPage() {
 
   useEffect(() => {
     const query = search.trim();
+    if (query === selectedSearch.current) return;
     if (query.length < 2) {
-      const clearTimer = window.setTimeout(() => setResults([]), 0);
+      const clearTimer = window.setTimeout(() => {
+        setResults([]);
+        setSearchMessage("");
+      }, 0);
       return () => window.clearTimeout(clearTimer);
     }
     const controller = new AbortController();
@@ -177,12 +183,16 @@ export function DeliveryLocationPage() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         setResults(data.results ?? []);
-      } catch {
-        if (!controller.signal.aborted) setResults([]);
+        setSearchMessage(data.results?.length ? "" : "No matching Kigali places. Try a nearby landmark or a shorter name.");
+      } catch (reason) {
+        if (!controller.signal.aborted) {
+          setResults([]);
+          setSearchMessage(reason instanceof Error ? reason.message : "Location search is unavailable. Try again.");
+        }
       } finally {
         if (!controller.signal.aborted) setSearching(false);
       }
-    }, 240);
+    }, 400);
     return () => {
       controller.abort();
       window.clearTimeout(timer);
@@ -202,12 +212,12 @@ export function DeliveryLocationPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setResults(data.results);
-      if (!data.results.length)
-        setError("No matching Kigali address was found. Try a nearby landmark or street.");
+      setSearchMessage(data.results.length ? "" : "No matching Kigali places. Try a nearby landmark or a shorter name.");
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Location search failed.",
       );
+      setSearchMessage(reason instanceof Error ? reason.message : "Location search failed.");
     } finally {
       setSearching(false);
     }
@@ -221,8 +231,10 @@ export function DeliveryLocationPage() {
       { latitude: result.latitude, longitude: result.longitude },
       result.label,
     );
+    selectedSearch.current = result.label;
     setSearch(result.label);
     setResults([]);
+    setSearchMessage("");
   }
   function chooseSavedAddress(address: SavedAddress) {
     if (!isWithinKigali(address)) {
@@ -235,7 +247,10 @@ export function DeliveryLocationPage() {
     );
     setDeliveryDetails(address.details);
     setAddressLabel(address.label);
+    selectedSearch.current = address.address;
     setSearch(address.address);
+    setResults([]);
+    setSearchMessage("");
   }
   function changeDeliveryDetails(value: string) {
     setDeliveryDetails(value);
@@ -421,7 +436,11 @@ export function DeliveryLocationPage() {
               <Search />
               <input
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  selectedSearch.current = "";
+                  setSearch(event.target.value);
+                  setSearchMessage("");
+                }}
                 placeholder="Enter an area, street, landmark or address"
                 aria-label="Search Kigali delivery address"
                 aria-autocomplete="list"
@@ -431,6 +450,7 @@ export function DeliveryLocationPage() {
                 {searching ? "Searching…" : "Find"}
               </button>
             </form>
+            {searchMessage && <p className="location-search-message" role="status">{searchMessage}</p>}
             {results.length > 0 && (
               <div className="location-results" id="kigali-location-results" role="listbox">
                 {results.map((result) => (
