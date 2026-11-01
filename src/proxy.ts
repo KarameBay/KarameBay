@@ -27,10 +27,21 @@ function isPublicAuthRoute(path: string) {
 }
 
 async function hasCustomerSession(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_BY_ROLE.CUSTOMER)?.value;
-  if (!token) return false;
-  const session = await verifySession(token);
-  return session?.role === "CUSTOMER";
+  const cookieName = SESSION_COOKIE_BY_ROLE.CUSTOMER;
+  const rawCookieHeader = request.headers.get("cookie") ?? "";
+  const tokens = rawCookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part.startsWith(`${cookieName}=`))
+    .map((part) => part.slice(cookieName.length + 1))
+    .filter(Boolean);
+  const fallback = request.cookies.get(cookieName)?.value;
+  if (fallback && !tokens.includes(fallback)) tokens.push(fallback);
+  for (const token of tokens) {
+    const session = await verifySession(token);
+    if (session?.role === "CUSTOMER") return true;
+  }
+  return false;
 }
 
 export async function proxy(request: NextRequest) {

@@ -107,38 +107,43 @@ export async function destroySession(role: Role) {
 
 async function readCurrentUser(role: Role) {
   const jar = await cookies();
-  let token = jar.get(SESSION_COOKIE_BY_ROLE[role])?.value;
+  const roleCookie = SESSION_COOKIE_BY_ROLE[role];
+  const roleTokens = jar.getAll(roleCookie).map((cookie) => cookie.value).filter(Boolean);
   // Allow an existing pre-upgrade login to work once. New logins always use
   // the isolated role cookie and remove this legacy cookie.
-  token ??= jar.get(LEGACY_SESSION_COOKIE)?.value;
-  const payload = token ? await verifySession(token) : null;
-  if (!payload || payload.role !== role) return null;
-  const session = await db.session.findUnique({
-    where: { id: payload.jti },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          phone: true,
-          profilePhotoUrl: true,
-          emailVerifiedAt: true,
-          firstName: true,
-          lastName: true,
-          role: true,
-          status: true,
+  const legacyToken = jar.get(LEGACY_SESSION_COOKIE)?.value;
+  if (legacyToken) roleTokens.push(legacyToken);
+  for (const token of roleTokens) {
+    const payload = await verifySession(token);
+    if (!payload || payload.role !== role) continue;
+    const session = await db.session.findUnique({
+      where: { id: payload.jti },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            profilePhotoUrl: true,
+            emailVerifiedAt: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            status: true,
+          },
         },
       },
-    },
-  });
-  if (
-    !session ||
-    session.expiresAt <= new Date() ||
-    session.user.role !== role ||
-    session.user.status !== "ACTIVE"
-  )
-    return null;
-  return session.user;
+    });
+    if (
+      session &&
+      session.expiresAt > new Date() &&
+      session.user.role === role &&
+      session.user.status === "ACTIVE"
+    ) {
+      return session.user;
+    }
+  }
+  return null;
 }
 
 export const getCurrentUser = cache(async (role?: Role) => {
