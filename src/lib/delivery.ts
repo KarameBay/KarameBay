@@ -9,7 +9,11 @@ export const KIGALI_CENTRE: Coordinates = { latitude: -1.9706, longitude: 30.104
 // Kigali delivery is intentionally limited to the city. A radius keeps the
 // boundary predictable for GPS pins and geocoder results without pretending
 // that a street address alone is enough to determine serviceability.
-export const KIGALI_SERVICE_RADIUS_KM = 25;
+export const KIGALI_SERVICE_RADIUS_KM = 20;
+
+export function isKigaliAddress(value: string) {
+  return /\bkigali\b/i.test(value);
+}
 export function distanceBetweenCoordinates(a: Coordinates, b: Coordinates) {
   const earthRadiusKm = 6371;
   const lat1 = (a.latitude * Math.PI) / 180;

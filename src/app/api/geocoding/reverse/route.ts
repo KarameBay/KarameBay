@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
-import { isWithinKigali } from "@/lib/delivery";
+import { isKigaliAddress, isWithinKigali } from "@/lib/delivery";
 
 const schema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -40,12 +40,16 @@ export async function GET(request: NextRequest) {
       },
     );
     if (!response.ok) throw new Error(`Nominatim ${response.status}`);
-    const place = (await response.json()) as { display_name?: string };
+    const place = (await response.json()) as { display_name?: string; address?: Record<string, string> };
+    const address = place.display_name ?? "";
+    if (!isKigaliAddress(address)) {
+      return NextResponse.json({ error: "That pin is not in Kigali. Choose a Kigali delivery location." }, { status: 422 });
+    }
     return NextResponse.json({
-      address: place.display_name ?? "Pinned location, Rwanda",
+      address,
     });
   } catch (error) {
     console.error("Reverse geocoding failed", error);
-    return NextResponse.json({ address: "Pinned location, Rwanda" });
+    return NextResponse.json({ error: "We could not verify this pin right now. Please try again." }, { status: 502 });
   }
 }

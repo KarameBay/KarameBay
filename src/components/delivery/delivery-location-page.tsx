@@ -163,9 +163,35 @@ export function DeliveryLocationPage() {
     queueMicrotask(() => locate(true));
   }, [cart.hydrated, cart.items.length, locate]);
 
+  useEffect(() => {
+    const query = search.trim();
+    if (query.length < 2) {
+      const clearTimer = window.setTimeout(() => setResults([]), 0);
+      return () => window.clearTimeout(clearTimer);
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setSearching(true);
+      try {
+        const response = await fetch(`/api/geocoding/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        setResults(data.results ?? []);
+      } catch {
+        if (!controller.signal.aborted) setResults([]);
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 240);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [search]);
+
   async function searchLocation(event: FormEvent) {
     event.preventDefault();
-    if (search.trim().length < 3) return;
+    if (search.trim().length < 2) return;
     setSearching(true);
     setError("");
     setResults([]);
@@ -244,8 +270,8 @@ export function DeliveryLocationPage() {
         });
         const response = await fetch(`/api/geocoding/reverse?${params}`);
         const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        address = data.address || "Pinned location, Kigali";
+        if (!response.ok || data.error || !data.address) throw new Error(data.error ?? "We could not verify this Kigali pin. Please try again.");
+        address = data.address;
       }
       const completeAddress = `${deliveryDetails.trim()}, ${address}`;
       if (addressMode === "save") {
@@ -274,23 +300,7 @@ export function DeliveryLocationPage() {
       setSelectedAddress(address);
       setConfirmed(true);
     } catch (reason) {
-      if (addressMode === "save") {
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : "Sign in or choose temporary use.",
-        );
-        setConfirming(false);
-        return;
-      }
-      localStorage.setItem(DELIVERY_LOCATION_KEY, JSON.stringify(customer));
-      localStorage.setItem(DELIVERY_DETAILS_KEY, deliveryDetails.trim());
-      localStorage.setItem(
-        DELIVERY_ADDRESS_KEY,
-        `${deliveryDetails.trim()}, Pinned location, Kigali`,
-      );
-      localStorage.setItem(DELIVERY_ADDRESS_MODE_KEY, "temporary");
-      setConfirmed(true);
+      setError(reason instanceof Error ? reason.message : "We could not verify this location. Please try again.");
     } finally {
       setConfirming(false);
     }
@@ -413,15 +423,18 @@ export function DeliveryLocationPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Enter an area, street, landmark or address"
+                aria-label="Search Kigali delivery address"
+                aria-autocomplete="list"
+                aria-controls="kigali-location-results"
               />
-              <button disabled={searching || search.trim().length < 3}>
+              <button disabled={searching || search.trim().length < 2}>
                 {searching ? "Searching…" : "Find"}
               </button>
             </form>
             {results.length > 0 && (
-              <div className="location-results">
+              <div className="location-results" id="kigali-location-results" role="listbox">
                 {results.map((result) => (
-                  <button key={result.id} onClick={() => chooseResult(result)}>
+                  <button type="button" key={result.id} onClick={() => chooseResult(result)} role="option" aria-selected="false">
                     <MapPin />
                     <span>
                       <b>{result.label.split(",")[0]}</b>
@@ -524,7 +537,7 @@ export function DeliveryLocationPage() {
                 "Confirming…"
               ) : (
                 <>
-                  <MapPin /> Confirm this location
+                  <MapPin /> Confirm this pin
                 </>
               )}
             </button>

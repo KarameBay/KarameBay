@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
-import { isWithinKigali } from "@/lib/delivery";
+import { isKigaliAddress, isWithinKigali } from "@/lib/delivery";
 
-const schema = z.string().trim().min(3).max(120);
+const schema = z.string().trim().min(2).max(120);
 type Place = {
   place_id: number;
   display_name: string;
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const places = (await response.json()) as Place[];
     return NextResponse.json({
       results: places
-        .filter((place) => isWithinKigali({ latitude: Number(place.lat), longitude: Number(place.lon) }))
+        .filter((place) => isWithinKigali({ latitude: Number(place.lat), longitude: Number(place.lon) }) && isKigaliAddress(place.display_name))
         .map((place) => ({
         id: String(place.place_id),
         label: place.display_name,
