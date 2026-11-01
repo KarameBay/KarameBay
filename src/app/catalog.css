@@ -1505,6 +1505,80 @@
   margin-top: 8px;
 }
 
+.product-unavailable-page {
+  min-height: 62vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px 80px;
+  background: #fafaf8;
+}
+
+.product-unavailable-card {
+  width: min(100%, 520px);
+  padding: 32px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(18, 27, 21, 0.07);
+}
+
+.product-unavailable-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #f5eddf;
+  color: var(--orange);
+}
+
+.product-unavailable-icon svg {
+  width: 28px;
+}
+
+.product-unavailable-card h1 {
+  margin: 10px 0 10px;
+  font: 800 clamp(24px, 4vw, 34px) var(--font-display);
+  letter-spacing: -1px;
+  color: var(--ink);
+}
+
+.product-unavailable-card p {
+  margin: 0 auto 22px;
+  max-width: 42ch;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.product-unavailable-link {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: var(--green);
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.product-unavailable-link svg {
+  width: 16px;
+}
+
+@media (max-width: 520px) {
+  .product-unavailable-card {
+    padding: 24px 18px;
+    border-radius: 18px;
+  }
+}
+
 @media (max-width: 950px) {
   .menu-engine-page {
     grid-template-columns: 1fr;
