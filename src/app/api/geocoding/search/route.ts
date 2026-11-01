@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
+import { isWithinKigali } from "@/lib/delivery";
 
 const schema = z.string().trim().min(3).max(120);
 type Place = {
@@ -44,13 +45,15 @@ export async function GET(request: NextRequest) {
     if (!response.ok) throw new Error(`Nominatim ${response.status}`);
     const places = (await response.json()) as Place[];
     return NextResponse.json({
-      results: places.map((place) => ({
+      results: places
+        .filter((place) => isWithinKigali({ latitude: Number(place.lat), longitude: Number(place.lon) }))
+        .map((place) => ({
         id: String(place.place_id),
         label: place.display_name,
         latitude: Number(place.lat),
         longitude: Number(place.lon),
         type: place.type,
-      })),
+        })),
     });
   } catch (error) {
     console.error("Geocoding failed", error);

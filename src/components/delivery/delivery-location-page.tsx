@@ -25,7 +25,7 @@ import {
   DELIVERY_LOCATION_KEY,
   DELIVERY_QUOTE_KEY,
   RouteQuote,
-  validCoordinates,
+  isWithinKigali,
 } from "@/lib/delivery";
 import { formatRwf } from "@/lib/money";
 
@@ -78,6 +78,7 @@ export function DeliveryLocationPage() {
     "temporary",
   );
   const [addressLabel, setAddressLabel] = useState("Home");
+  const [mapType, setMapType] = useState<"normal" | "satellite">("normal");
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const initialised = useRef(false);
   const gpsAttempted = useRef(false);
@@ -91,7 +92,7 @@ export function DeliveryLocationPage() {
       );
       const savedDetails = localStorage.getItem(DELIVERY_DETAILS_KEY) ?? "";
       queueMicrotask(() => {
-        if (validCoordinates(saved)) setCustomer(saved);
+        if (isWithinKigali(saved)) setCustomer(saved);
         if (savedDetails) setDeliveryDetails(savedDetails);
       });
     } catch {}
@@ -119,6 +120,13 @@ export function DeliveryLocationPage() {
     setError("");
     localStorage.removeItem(DELIVERY_QUOTE_KEY);
   }, []);
+  const handleMapChange = useCallback((location: Coordinates) => {
+    if (!isWithinKigali(location)) {
+      setError("That pin is outside Kigali. Move it back inside the Kigali delivery area.");
+      return;
+    }
+    updateLocation(location);
+  }, [updateLocation]);
   const locate = useCallback(
     (automatic = false) => {
       if (!navigator.geolocation) {
@@ -128,10 +136,13 @@ export function DeliveryLocationPage() {
       setLocating(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          updateLocation({
+          const next = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-          });
+          };
+          if (!isWithinKigali(next)) {
+            setError("Karame Bay currently delivers in Kigali only. Search for a Kigali address.");
+          } else updateLocation(next);
           setLocating(false);
         },
         () => {
@@ -166,7 +177,7 @@ export function DeliveryLocationPage() {
       if (!response.ok) throw new Error(data.error);
       setResults(data.results);
       if (!data.results.length)
-        setError("No matching location was found in Rwanda.");
+        setError("No matching Kigali address was found. Try a nearby landmark or street.");
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Location search failed.",
@@ -176,6 +187,10 @@ export function DeliveryLocationPage() {
     }
   }
   function chooseResult(result: SearchResult) {
+    if (!isWithinKigali(result)) {
+      setError("That place is outside Kigali. Choose a Kigali address.");
+      return;
+    }
     updateLocation(
       { latitude: result.latitude, longitude: result.longitude },
       result.label,
@@ -184,6 +199,10 @@ export function DeliveryLocationPage() {
     setResults([]);
   }
   function chooseSavedAddress(address: SavedAddress) {
+    if (!isWithinKigali(address)) {
+      setError("This saved address is outside Kigali and cannot be used for delivery.");
+      return;
+    }
     updateLocation(
       { latitude: address.latitude, longitude: address.longitude },
       address.address,
@@ -206,6 +225,10 @@ export function DeliveryLocationPage() {
     localStorage.removeItem(DELIVERY_QUOTE_KEY);
   }
   async function confirmLocation() {
+    if (!isWithinKigali(customer)) {
+      setError("Karame Bay currently delivers in Kigali only. Choose a Kigali pin.");
+      return;
+    }
     if (deliveryDetails.trim().length < 3) {
       setError("Add your exact delivery details before confirming the pin.");
       return;
@@ -221,7 +244,8 @@ export function DeliveryLocationPage() {
         });
         const response = await fetch(`/api/geocoding/reverse?${params}`);
         const data = await response.json();
-        address = data.address || "Pinned location, Rwanda";
+        if (data.error) throw new Error(data.error);
+        address = data.address || "Pinned location, Kigali";
       }
       const completeAddress = `${deliveryDetails.trim()}, ${address}`;
       if (addressMode === "save") {
@@ -263,7 +287,7 @@ export function DeliveryLocationPage() {
       localStorage.setItem(DELIVERY_DETAILS_KEY, deliveryDetails.trim());
       localStorage.setItem(
         DELIVERY_ADDRESS_KEY,
-        `${deliveryDetails.trim()}, Pinned location, Rwanda`,
+        `${deliveryDetails.trim()}, Pinned location, Kigali`,
       );
       localStorage.setItem(DELIVERY_ADDRESS_MODE_KEY, "temporary");
       setConfirmed(true);
@@ -338,12 +362,9 @@ export function DeliveryLocationPage() {
         <ArrowLeft /> Back to cart
       </Link>
       <div className="delivery-title">
-        <span className="catalog-kicker">DELIVERY LOCATION</span>
-        <h1>Where should we bring it?</h1>
-        <p>
-          Use GPS, search for your address, or move the pin—then confirm the
-          location.
-        </p>
+        <span className="catalog-kicker">KIGALI DELIVERY</span>
+        <h1>Choose your delivery location</h1>
+        <p>Search an address, use your current location, or move the pin. We deliver in Kigali only.</p>
       </div>
       <div className="delivery-layout">
         <section className="delivery-map-card">
@@ -351,8 +372,9 @@ export function DeliveryLocationPage() {
             <div>
               <MapPin />
               <span>
-                <small>DELIVERING FROM</small>
-                <b>{store?.name ?? cart.items[0].storeName}</b>
+                <small>DELIVERY AREA</small>
+                <b>Kigali, Rwanda</b>
+                <small className="delivery-from-store">From {store?.name ?? cart.items[0].storeName}</small>
               </span>
             </div>
             <button onClick={() => locate(false)} disabled={locating}>
@@ -361,6 +383,10 @@ export function DeliveryLocationPage() {
             </button>
           </header>
           <div className="location-search-wrap">
+            <div className="location-helper-row">
+              <span>Where should we deliver?</span>
+              <small>Choose a saved place or search below</small>
+            </div>
             {savedAddresses.length > 0 && (
               <div className="saved-address-picker">
                 <span>Saved addresses</span>
@@ -406,31 +432,31 @@ export function DeliveryLocationPage() {
               </div>
             )}
             <label className="delivery-details-field">
-              <span>Exact delivery details</span>
+              <span>Help your rider find you</span>
               <textarea
                 value={deliveryDetails}
                 onChange={(event) => changeDeliveryDetails(event.target.value)}
                 maxLength={180}
-                placeholder="House number, gate, sector or nearby landmark — e.g. Nyarugenge downtown, near Nyamirambo sector"
+                placeholder="House number, gate, sector or nearby landmark"
               />
               <small>{deliveryDetails.length}/180</small>
             </label>
             <div className="address-use-choice">
-              <span>Use this address</span>
+              <span>Save this place</span>
               <div>
                 <button
                   type="button"
                   className={addressMode === "temporary" ? "active" : ""}
                   onClick={() => changeAddressMode("temporary")}
                 >
-                  This order only
+                  This order
                 </button>
                 <button
                   type="button"
                   className={addressMode === "save" ? "active" : ""}
                   onClick={() => changeAddressMode("save")}
                 >
-                  Save for future
+                  Save address
                 </button>
               </div>
               {addressMode === "save" && (
@@ -445,6 +471,13 @@ export function DeliveryLocationPage() {
                 </label>
               )}
             </div>
+            <div className="map-type-picker" aria-label="Map type">
+              <span>Map view</span>
+              <div>
+                <button type="button" className={mapType === "normal" ? "active" : ""} onClick={() => setMapType("normal")}>Normal</button>
+                <button type="button" className={mapType === "satellite" ? "active" : ""} onClick={() => setMapType("satellite")}>Satellite</button>
+              </div>
+            </div>
           </div>
           <div className="delivery-map-shell">
             {store ? (
@@ -452,7 +485,8 @@ export function DeliveryLocationPage() {
                 store={store}
                 customer={customer}
                 route={quote?.route ?? []}
-                onChange={updateLocation}
+                onChange={handleMapChange}
+                mapType={mapType}
               />
             ) : (
               <div className="delivery-map-loading">
@@ -460,7 +494,7 @@ export function DeliveryLocationPage() {
               </div>
             )}
             <div className="drag-hint">
-              <Navigation /> Click the map or drag the delivery pin
+              <Navigation /> Move the pin to your exact spot
             </div>
           </div>
           <footer>

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
 import { db } from "@/lib/db";
 import { getDrivingRoute } from "@/lib/routing";
+import { isWithinKigali } from "@/lib/delivery";
 
 const coordinate = z.coerce.number().finite();
 const querySchema = z.object({
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   const { storeId, customerLat, customerLng } = parsed.data;
+  if (!isWithinKigali({ latitude: customerLat, longitude: customerLng })) {
+    return NextResponse.json({ error: "Karame Bay currently delivers in Kigali only." }, { status: 422 });
+  }
   const store = await db.store.findFirst({
     where: { id: storeId, status: "APPROVED", storeType: { is: { isActive: true } } },
     select: { latitude: true, longitude: true },

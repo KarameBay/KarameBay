@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimit } from "@/lib/rate-limit";
+import { isWithinKigali } from "@/lib/delivery";
 
 const schema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -18,6 +19,9 @@ export async function GET(request: NextRequest) {
       { error: "Invalid coordinates." },
       { status: 400 },
     );
+  if (!isWithinKigali({ latitude: parsed.data.lat, longitude: parsed.data.lon })) {
+    return NextResponse.json({ error: "Karame Bay currently delivers in Kigali only." }, { status: 422 });
+  }
   const params = new URLSearchParams({
     lat: String(parsed.data.lat),
     lon: String(parsed.data.lon),
