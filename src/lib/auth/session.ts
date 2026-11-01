@@ -18,6 +18,13 @@ function shouldUseSecureCookies() {
   );
 }
 
+function sessionCookieDomain() {
+  // Share sessions between karamebay.com and www.karamebay.com. The
+  // customer site is served on both hostnames, and a host-only cookie would
+  // make a signed-in customer appear logged out after a hostname switch.
+  return process.env.NODE_ENV === "production" ? ".karamebay.com" : undefined;
+}
+
 export async function createSession(user: { id: string; role: string }) {
   const role = user.role as Role;
   if (!(role in SESSION_COOKIE_BY_ROLE)) {
@@ -50,6 +57,7 @@ export async function createSession(user: { id: string; role: string }) {
     secure: shouldUseSecureCookies(),
     sameSite: "lax",
     path: "/",
+    domain: sessionCookieDomain(),
     maxAge: SESSION_DURATION_SECONDS,
   });
   // Retire the old shared cookie without touching the other portal
@@ -63,6 +71,7 @@ function cookieOptions(maxAge = SESSION_DURATION_SECONDS) {
     secure: shouldUseSecureCookies(),
     sameSite: "lax" as const,
     path: "/",
+    domain: sessionCookieDomain(),
     maxAge,
   };
 }

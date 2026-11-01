@@ -7,8 +7,18 @@ function portalUrl(origin: string, path = "/") {
   return new URL(path, origin).toString();
 }
 
+/**
+ * Customer pages must stay on the host the customer is already using.
+ *
+ * The customer deployment is reachable through both the apex domain and
+ * `www`. Absolute links built from NEXT_PUBLIC_CUSTOMER_ORIGIN could move a
+ * signed-in customer between those hosts, where a host-only session cookie is
+ * invisible. Relative links keep the session and the `next` return path on
+ * the same host. Operations links remain absolute because they intentionally
+ * live on a separate portal host.
+ */
 export function customerUrl(path = "/") {
-  return portalUrl(customerOrigin, path);
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
 export function adminUrl(path = "/admin/login") {
