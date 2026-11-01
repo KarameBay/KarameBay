@@ -5,7 +5,7 @@ import { LogoutButton } from "@/components/logout-button";
 import { PartnerWorkspace } from "@/components/partner/partner-workspace";
 import { PartnerOrders } from "@/components/partner/partner-orders";
 import { AdminRestaurantMenuBuilder } from "@/components/admin/admin-restaurant-menu-builder";
-import { getRestaurantMenuBuilderStores } from "@/lib/restaurant-menu";
+import { getRestaurantMenuBuilderStores } from "@/lib/restaurant-menu-builder";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
