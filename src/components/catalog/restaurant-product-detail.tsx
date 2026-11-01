@@ -352,7 +352,7 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
               />
             </div>
             <div className="menu-engine-heading-copy">
-              <span className="catalog-kicker">RESTAURANT MENU</span>
+              <span className="catalog-kicker">{product.category.name}</span>
               <h1>{product.name}</h1>
               <div className="menu-engine-title-meta">
                 <span className="menu-engine-store">{product.store.name}</span>
@@ -360,38 +360,18 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
                   {product.isAvailable ? "Available now" : "Currently unavailable"}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <section className="menu-engine-intro">
-            <div className="menu-engine-intro-head">
-              <h2>About this item</h2>
-            </div>
-            <p className="menu-engine-description">
-              {product.description || "Customize this item before adding it to your cart."}
-            </p>
-          </section>
-
-          <div className="menu-engine-meta">
-            <article>
-              <small>Base price</small>
-              <b>{formatRwf(product.basePriceRwf)}</b>
-            </article>
-            {(product.containerChargePerUnitRwf > 0 || product.containerChargeFlatRwf > 0) && (
-              <article>
-                <small>Container charge</small>
-                <b>
-                  {[
+              <p className="menu-engine-description">
+                {product.description || "Choose any options, then add this item to your cart."}
+              </p>
+              {(product.containerChargePerUnitRwf > 0 || product.containerChargeFlatRwf > 0) && (
+                <p className="menu-engine-fee">
+                  Container charge: {[
                     product.containerChargePerUnitRwf > 0 ? `${formatRwf(product.containerChargePerUnitRwf)} each` : "",
                     product.containerChargeFlatRwf > 0 ? `${formatRwf(product.containerChargeFlatRwf)} once` : "",
                   ].filter(Boolean).join(" + ")}
-                </b>
-              </article>
-            )}
-            <article>
-              <small>Category</small>
-              <b>{product.category.name}</b>
-            </article>
+                </p>
+              )}
+            </div>
           </div>
 
           {!!product.variants.length && (
@@ -609,20 +589,20 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
             </section>
           )}
 
-          <section className="menu-engine-section">
-            <div className="menu-engine-section-head">
-              <h2>Special instructions</h2>
-              <span className="menu-engine-chip">Optional</span>
-            </div>
+          <details className="menu-engine-section menu-engine-notes-section">
+            <summary className="menu-engine-group-summary">
+              <span className="menu-engine-group-copy"><b>Special instructions</b><small>Optional · add a note for the store</small></span>
+              <ChevronDown aria-hidden="true" />
+            </summary>
             <textarea
               className="menu-engine-notes"
               value={specialInstructions}
               onChange={(event) => setSpecialInstructions(event.target.value)}
               placeholder="Example: extra crispy fries, no onions, sauce on the side"
-              rows={4}
+              rows={2}
               maxLength={240}
             />
-          </section>
+          </details>
         </div>
       </section>
 
