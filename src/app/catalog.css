@@ -1539,6 +1539,28 @@
 }
 
 @media (max-width: 720px) {
+  /* Keep product detail pages readable on narrow phones instead of falling
+     back to a desktop-sized canvas that browsers appear to "zoom" out. */
+  .menu-engine-page {
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
+    overflow-x: clip;
+    display: block;
+    padding: 8px 10px 84px;
+  }
+
+  .menu-engine-page > *,
+  .menu-engine-hero,
+  .menu-engine-copy,
+  .menu-engine-summary,
+  .menu-engine-section,
+  .menu-engine-product-overview,
+  .menu-engine-heading-copy {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .menu-engine-page {
     padding: 12px 10px 68px;
   }
@@ -1569,12 +1591,34 @@
   }
 
   .menu-engine-product-overview {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
   }
 
   .menu-engine-product-photo {
-    height: 230px;
+    width: 92px;
+    height: 92px;
+    border-radius: 14px;
+  }
+
+  .menu-engine-heading-copy h1,
+  .menu-engine-copy h1 {
+    max-width: none;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: clamp(22px, 7vw, 30px);
+    letter-spacing: -1px;
+  }
+
+  .menu-engine-title-meta {
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .menu-engine-store,
+  .menu-engine-live {
+    font-size: 9px;
   }
 
   .menu-engine-intro {
@@ -1584,6 +1628,11 @@
 
   .menu-engine-meta {
     display: none;
+  }
+
+  .menu-engine-description {
+    font-size: 13px;
+    line-height: 1.5;
   }
 
   .menu-engine-section {
@@ -1609,6 +1658,9 @@
 
   .menu-engine-option,
   .menu-engine-choice {
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
     border-radius: 14px;
     padding: 12px 13px;
     min-height: 58px;
@@ -1619,6 +1671,10 @@
     padding: 14px;
     border-radius: 16px;
     margin-top: 14px;
+    position: sticky;
+    bottom: 10px;
+    z-index: 20;
+    box-shadow: 0 12px 30px rgba(18, 27, 21, 0.16);
   }
 
   .menu-engine-qty-row {

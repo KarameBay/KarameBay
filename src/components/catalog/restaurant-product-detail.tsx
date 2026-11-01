@@ -310,12 +310,19 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
   async function shareProduct() {
     const url = window.location.href;
     const text = `${product.name} at ${product.store.name}`;
-    if (navigator.share) {
-      await navigator.share({ title: text, text, url });
-      return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: text, text, url });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setError("Link copied to clipboard.");
+      }
+    } catch {
+      // Sharing is optional; cancelling the native sheet must not break the
+      // product page or show a customer-facing error.
     }
-    await navigator.clipboard.writeText(url);
-    setError("Link copied to clipboard.");
   }
 
   return (
