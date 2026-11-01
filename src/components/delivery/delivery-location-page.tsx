@@ -48,6 +48,7 @@ type SearchResult = {
   latitude: number;
   longitude: number;
   type: string;
+  approximate?: boolean;
 };
 type SavedAddress = {
   id: string;
@@ -73,6 +74,7 @@ export function DeliveryLocationPage() {
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchMessage, setSearchMessage] = useState("");
+  const [pinNeedsAdjustment, setPinNeedsAdjustment] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [deliveryDetails, setDeliveryDetails] = useState("");
   const [addressMode, setAddressMode] = useState<"temporary" | "save">(
@@ -118,6 +120,7 @@ export function DeliveryLocationPage() {
     setCustomer(location);
     setSelectedAddress(address);
     setConfirmed(false);
+    setPinNeedsAdjustment(false);
     setQuote(null);
     setError("");
     localStorage.removeItem(DELIVERY_QUOTE_KEY);
@@ -229,12 +232,13 @@ export function DeliveryLocationPage() {
     }
     updateLocation(
       { latitude: result.latitude, longitude: result.longitude },
-      result.label,
+      result.approximate ? "" : result.label,
     );
+    setPinNeedsAdjustment(Boolean(result.approximate));
     selectedSearch.current = result.label;
     setSearch(result.label);
     setResults([]);
-    setSearchMessage("");
+    setSearchMessage(result.approximate ? "Area selected. Move the map pin to the exact building before confirming." : "");
   }
   function chooseSavedAddress(address: SavedAddress) {
     if (!isWithinKigali(address)) {
@@ -266,6 +270,10 @@ export function DeliveryLocationPage() {
     localStorage.removeItem(DELIVERY_QUOTE_KEY);
   }
   async function confirmLocation() {
+    if (pinNeedsAdjustment) {
+      setError("Move the pin to the exact building before confirming this area.");
+      return;
+    }
     if (!isWithinKigali(customer)) {
       setError("Karame Bay currently delivers in Kigali only. Choose a Kigali pin.");
       return;
@@ -458,7 +466,7 @@ export function DeliveryLocationPage() {
                     <MapPin />
                     <span>
                       <b>{result.label.split(",")[0]}</b>
-                      <small>{result.label}</small>
+                      <small>{result.approximate ? "Approximate area · move pin to exact building" : result.label}</small>
                     </span>
                   </button>
                 ))}
@@ -544,6 +552,7 @@ export function DeliveryLocationPage() {
                 confirming ||
                 confirmed ||
                 deliveryDetails.trim().length < 3 ||
+                pinNeedsAdjustment ||
                 (addressMode === "save" && addressLabel.trim().length < 2)
               }
             >
@@ -551,6 +560,8 @@ export function DeliveryLocationPage() {
                 <>
                   <Check /> Location confirmed
                 </>
+              ) : pinNeedsAdjustment ? (
+                "Move pin to exact building"
               ) : deliveryDetails.trim().length < 3 ? (
                 "Add delivery details"
               ) : confirming ? (
