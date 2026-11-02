@@ -126,8 +126,8 @@ async function main() {
       phone: "+250788300000",
       latitude: -1.9536,
       longitude: 30.0935,
-      opensAt: "07:00",
-      closesAt: "22:00",
+      opensAt: stagingPartnerId ? "00:00" : "07:00",
+      closesAt: stagingPartnerId ? "23:59" : "22:00",
     },
     {
       ownerId: admin.id,
