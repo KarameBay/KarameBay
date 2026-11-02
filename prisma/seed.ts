@@ -55,6 +55,19 @@ async function main() {
     "Admin",
     "ADMIN",
   );
+  if (process.env.STAGING_SEED_ACCOUNTS === "true") {
+    if (String(process.env.NODE_ENV) !== "staging")
+      throw new Error("Staging test accounts require NODE_ENV=staging.");
+    await user("customer@karamebay.rw", "+250788000002", "Staging", "Customer", "CUSTOMER");
+    const rider = await user("rider@karamebay.rw", "+250788000003", "Staging", "Rider", "RIDER");
+    const partner = await user("partner@karamebay.rw", "+250788000004", "Staging", "Partner", "PARTNER");
+    await db.user.update({ where: { id: partner.id }, data: { emailVerifiedAt: new Date() } });
+    await db.riderProfile.upsert({
+      where: { userId: rider.id },
+      update: {},
+      create: { userId: rider.id, riderStatus: "AVAILABLE" },
+    });
+  }
   // Production launches must start with zero customers and zero riders.
   // Customer registration creates customer accounts; Admin creates rider accounts.
   // This development-only seed preserves the Admin and catalog baseline only.
