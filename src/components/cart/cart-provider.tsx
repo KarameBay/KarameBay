@@ -22,6 +22,7 @@ import {
 type CartContextValue = {
   items: CartItem[];
   hydrated: boolean;
+  storageError: boolean;
   itemCount: number;
   itemsSubtotal: number;
   addItem: (product: CartProduct) => AddResult;
@@ -219,29 +220,39 @@ function validItems(value: unknown): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [storageError, setStorageError] = useState(false);
 
   useEffect(() => {
     let saved: CartItem[] = [];
+    let raw = "[]";
+    let readFailed = false;
     try {
-      saved = validItems(
-        JSON.parse(
-          localStorage.getItem(CART_STORAGE_KEY) ??
-            localStorage.getItem("karame_cart_v2") ??
-            localStorage.getItem("karame_cart") ??
-            "[]",
-        ),
-      );
+      raw = localStorage.getItem(CART_STORAGE_KEY) ??
+        localStorage.getItem("karame_cart_v2") ??
+        localStorage.getItem("karame_cart") ??
+        "[]";
+    } catch {
+      readFailed = true;
+    }
+    try {
+      saved = validItems(JSON.parse(raw));
     } catch {
       saved = [];
     }
     queueMicrotask(() => {
       setItems(saved);
       setHydrated(true);
+      if (readFailed) setStorageError(true);
     });
   }, []);
 
   useEffect(() => {
-    if (hydrated) localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      queueMicrotask(() => setStorageError(true));
+    }
   }, [items, hydrated]);
 
   useEffect(() => {
@@ -319,6 +330,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       items,
       hydrated,
+      storageError,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       itemsSubtotal: items.reduce(
         (sum, item) => sum + item.priceRwf * item.quantity + (item.containerChargeFlatRwf ?? 0),
@@ -331,7 +343,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       remove,
       clear,
     }),
-    [items, hydrated, addItem, replaceWith, increase, decrease, remove, clear],
+    [items, hydrated, storageError, addItem, replaceWith, increase, decrease, remove, clear],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

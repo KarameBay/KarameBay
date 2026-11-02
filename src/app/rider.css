@@ -98,6 +98,9 @@
 .rider-delivery-card > footer a,
 .rider-delivery-card > footer button { min-height: 42px; border-radius: 10px; font-size: 10px; }
 .rider-empty { border-color: #dfe8dc; background: #fbfdf9; padding: 72px 24px; }
+.rider-refresh-error { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #e8d6b4; border-radius: 12px; background: #fff8ed; color: #694813; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; }
+.rider-refresh-error button, .rider-refresh-error a { min-height: 40px; padding: 0 12px; border: 1px solid #d7b36e; border-radius: 9px; background: #fff; color: #694813; display: inline-flex; align-items: center; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
+.rider-refresh-error button:focus-visible, .rider-refresh-error a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
 
 @media (max-width: 980px) {
   .rider-profile-card { grid-template-columns: auto 1fr; }

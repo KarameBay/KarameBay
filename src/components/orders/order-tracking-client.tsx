@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Bike,
@@ -71,27 +72,50 @@ const FLOW = [
 export function OrderTrackingClient({ initial }: { initial: TrackingOrder }) {
   const [order, setOrder] = useState(initial);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<"" | "session" | "connection">("");
 
   useEffect(() => {
     let active = true;
+    let inFlight = false;
+    let currentController: AbortController | null = null;
     async function refresh() {
+      if (!active || document.hidden || inFlight) return;
+      inFlight = true;
+      const controller = new AbortController();
+      currentController = controller;
       setRefreshing(true);
       try {
         const response = await fetch(`/api/orders/${initial.orderNumber}`, {
           cache: "no-store",
+          signal: controller.signal,
         });
-        if (response.ok) {
-          const data = await response.json();
-          if (active) setOrder(data.order);
+        if (response.status === 401) {
+          if (active) setRefreshError("session");
+          return;
         }
+        if (!response.ok) throw new Error("Order refresh failed");
+        const data = await response.json();
+        if (data?.order?.orderNumber !== initial.orderNumber) throw new Error("Invalid order response");
+        if (active) {
+          setOrder(data.order);
+          setRefreshError("");
+        }
+      } catch {
+        if (active && !controller.signal.aborted) setRefreshError("connection");
       } finally {
+        inFlight = false;
+        currentController = null;
         if (active) setRefreshing(false);
       }
     }
-    const timer = window.setInterval(refresh, 8_000);
+    const timer = window.setInterval(() => void refresh(), 8_000);
+    const onVisible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      currentController?.abort();
     };
   }, [initial.orderNumber]);
 
@@ -109,23 +133,33 @@ export function OrderTrackingClient({ initial }: { initial: TrackingOrder }) {
     <main className="tracking-live-page">
       <header>
         <div>
+          <Link className="tracking-back" href="/customer/orders">← All orders</Link>
           <span className="catalog-kicker">ORDER {order.orderNumber}</span>
           <h1>
             {terminal
               ? orderStatusLabel(order.status)
               : order.status === "DELIVERED"
                 ? "Order delivered"
-                : "Your order is in progress"}
+                : orderStatusLabel(order.status)}
           </h1>
           <p>
             Updates appear automatically when the Karame Bay team changes your
             status.
           </p>
         </div>
-        <span className={`live-indicator ${refreshing ? "refreshing" : ""}`}>
-          <RefreshCw /> {refreshing ? "Checking..." : "Live updates"}
+        <span className={`live-indicator ${refreshing ? "refreshing" : ""} ${refreshError ? "error" : ""}`}>
+          <RefreshCw /> {refreshing ? "Checking..." : refreshError ? "Updates paused" : "Live updates"}
         </span>
       </header>
+      {refreshError && (
+        <p className="tracking-refresh-error" role="status">
+          {refreshError === "session" ? (
+            <>Your session expired. <Link href="/customer/login">Sign in</Link> to see new updates.</>
+          ) : (
+            "We could not load the latest update. Your last known order details are shown; we will retry automatically."
+          )}
+        </p>
+      )}
       <div className="tracking-live-layout">
         <section className="tracking-progress">
           <div className="tracking-store">
@@ -298,6 +332,7 @@ export function OrderTrackingClient({ initial }: { initial: TrackingOrder }) {
               </p>
             ))}
           </div>
+          <Link className="tracking-help" href="/customer/help">Need help with this order?</Link>
         </aside>
       </div>
     </main>

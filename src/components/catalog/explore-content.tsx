@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   ChefHat,
-  MapPin,
   Package,
   Search,
   ShoppingBasket,
@@ -45,21 +44,11 @@ function ExploreSection({
         </Link>
       </div>
 
-      {stores.length > 0 ? (
-        <div className="explore-store-grid">
-          {stores.map((store) => (
-            <StoreCard key={store.id} store={store} />
-          ))}
-        </div>
-      ) : (
-        <div className="explore-empty">
-          <MapPin aria-hidden="true" />
-          <div>
-            <h3>More locations are coming</h3>
-            <p>Karame Bay will show approved stores here as they are added.</p>
-          </div>
-        </div>
-      )}
+      <div className="explore-store-grid">
+        {stores.map((store) => (
+          <StoreCard key={store.id} store={store} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -71,19 +60,20 @@ export function ExploreOverview({
   stores: StoreList;
   storeTypes: StoreTypeList;
 }) {
+  const availableStoreTypes = storeTypes.filter((storeType) =>
+    stores.some((store) => store.storeTypeId === storeType.id),
+  );
+
   return (
     <main className="explore-page">
       <section className="explore-hero">
         <div className="explore-hero-copy">
           <span className="catalog-kicker">EXPLORE KARAME BAY</span>
-          <h1>Discover Kigali, delivered.</h1>
-          <p>
-            Browse local businesses by category or book a secure parcel
-            delivery from one place.
-          </p>
+          <h1>Explore local partners.</h1>
+          <p>Find a store to shop from or send a parcel across Kigali.</p>
         </div>
         <nav className="explore-jump-grid" aria-label="Explore services">
-          {storeTypes.map((storeType) => (
+          {availableStoreTypes.map((storeType) => (
             <Link href={`#${storeType.slug}`} key={storeType.id}>
               <span>
                 {storeType.iconUrl || storeType.imageUrl ? (
@@ -109,7 +99,7 @@ export function ExploreOverview({
         </nav>
       </section>
 
-      {storeTypes.map((storeType) => (
+      {availableStoreTypes.map((storeType) => (
         <ExploreSection
           key={storeType.id}
           id={storeType.slug}
@@ -174,22 +164,18 @@ export function StoreDirectory({
           defaultValue={query}
           formClassName="directory-search"
           placeholder={`Search ${kind} or products`}
+          storeTypeSlug={kind}
         />
       </section>
 
-      <section className="directory-results">
+      <section className="directory-results" aria-label={`${title} directory`}>
         <div className="directory-results-heading">
-          <div>
-            <span className="catalog-kicker">
-              {query ? "SEARCH RESULTS" : `ALL ${title.toUpperCase()}`}
-            </span>
-            <h2>{query ? `Results for “${query}”` : title}</h2>
-          </div>
+          <p>{query ? `Results for "${query}"` : `Browse ${title.toLowerCase()} in Kigali`}</p>
           <p>{stores.length} {stores.length === 1 ? "store" : "stores"}</p>
         </div>
 
         {stores.length > 0 ? (
-          <div className="explore-store-grid">
+          <div className={`explore-store-grid directory-store-grid directory-store-grid-${Math.min(stores.length, 4)}`}>
             {stores.map((store) => (
               <StoreCard key={store.id} store={store} />
             ))}
@@ -197,9 +183,9 @@ export function StoreDirectory({
         ) : (
           <div className="directory-empty">
             <Search aria-hidden="true" />
-            <h3>No matching {kind}</h3>
-            <p>Try another store, product, or category name.</p>
-            <Link href={`/${kind}`}>Clear search</Link>
+            <h3>{query ? `No matching ${kind}` : `No ${kind} available yet`}</h3>
+            <p>{query ? "Try another store, product, or category name." : "Approved partners will appear here when available."}</p>
+            {query && <Link href={`/${kind}`}>Clear search</Link>}
           </div>
         )}
       </section>
@@ -239,28 +225,26 @@ export function StoreTypeDirectory({
           defaultValue={query}
           formClassName="directory-search"
           placeholder={`Search ${storeType.customerSectionName.toLowerCase()} or products`}
+          storeTypeSlug={storeType.slug}
         />
       </section>
 
-      <section className="directory-results">
+      <section className="directory-results" aria-label={`${storeType.customerSectionName} directory`}>
         <div className="directory-results-heading">
-          <div>
-            <span className="catalog-kicker">{query ? "SEARCH RESULTS" : "ALL STORES"}</span>
-            <h2>{query ? `Results for “${query}”` : storeType.customerSectionName}</h2>
-          </div>
+          <p>{query ? `Results for "${query}"` : `Browse ${storeType.customerSectionName.toLowerCase()} in Kigali`}</p>
           <p>{stores.length} {stores.length === 1 ? "store" : "stores"}</p>
         </div>
 
         {stores.length > 0 ? (
-          <div className="explore-store-grid">
+          <div className={`explore-store-grid directory-store-grid directory-store-grid-${Math.min(stores.length, 4)}`}>
             {stores.map((store) => <StoreCard key={store.id} store={store} />)}
           </div>
         ) : (
           <div className="directory-empty">
             <Search aria-hidden="true" />
-            <h3>No matching stores</h3>
-            <p>Try another store, product, category, or keyword.</p>
-            <Link href={`/explore/${storeType.slug}`}>Clear search</Link>
+            <h3>{query ? "No matching stores" : "No stores available yet"}</h3>
+            <p>{query ? "Try another store, product, category, or keyword." : "Approved partners will appear here when available."}</p>
+            {query && <Link href={`/explore/${storeType.slug}`}>Clear search</Link>}
           </div>
         )}
       </section>

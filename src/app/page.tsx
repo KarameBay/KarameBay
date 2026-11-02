@@ -43,28 +43,28 @@ export default async function HomePage() {
         <section className="home-hero">
           <div className="home-hero-image" />
           <div className="home-hero-content">
-            <div className="home-hero-copy">
-              <span className="eyebrow">KIGALI, DELIVERED</span>
-              <h1>
-                Shop local, get it <i>delivered.</i>
-              </h1>
-              <p>Search products or choose a local shop below.</p>
+            <div className="home-hero-intro">
+              <div className="home-hero-copy">
+                <span className="eyebrow">KIGALI, DELIVERED</span>
+                <h1>Shop local. <i>We&apos;ll bring it.</i></h1>
+                <p>Find a product or start with a shop you know.</p>
+              </div>
+              <HomeSearch />
             </div>
-            <HomeSearch />
           </div>
         </section>
 
         <section className="home-stores" aria-labelledby="home-stores-title">
           <div className="home-section-title">
             <div>
-              <span className="catalog-kicker">SHOP PARTNERS</span>
-              <h2 id="home-stores-title">Browse local shops</h2>
-              <p>Open a shop to see its live products and availability.</p>
+              <span className="catalog-kicker">START SHOPPING</span>
+              <h2 id="home-stores-title">Choose a local shop</h2>
+              <p>Browse {stores.length} {stores.length === 1 ? "shop" : "shops"} and see what&apos;s available.</p>
             </div>
             <Link href="/stores">Shop directory <ArrowRight /></Link>
           </div>
           {stores.length > 0 ? (
-            <div className="browse-store-grid home-partner-grid">
+            <div className={`browse-store-grid home-partner-grid home-partner-grid-${Math.min(stores.length, 3)}`}>
               {stores.map((store) => (
                 <StoreCard key={store.id} store={store} />
               ))}

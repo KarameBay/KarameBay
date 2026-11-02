@@ -182,6 +182,9 @@ function AdminOrderRow({
             type="button"
             className="order-expand"
             onClick={() => setOpen(!open)}
+            aria-label={`${open ? "Hide" : "Show"} details for order ${order.orderNumber}`}
+            aria-expanded={open}
+            aria-controls={`order-details-${order.id}`}
           >
             <ChevronDown className={open ? "open" : ""} />
           </button>
@@ -223,6 +226,7 @@ function AdminOrderRow({
               <select
                 value={selectedRiderId}
                 onChange={(event) => setSelectedRiderId(event.target.value)}
+                aria-label={`Assign rider for order ${order.orderNumber}`}
               >
                 {riders.length ? (
                   riders.map((rider) => (
@@ -327,7 +331,7 @@ function AdminOrderRow({
         </td>
       </tr>
       {open && (
-        <tr className="order-details-row">
+        <tr className="order-details-row" id={`order-details-${order.id}`}>
           <td colSpan={10}>
             <div>
               <section>

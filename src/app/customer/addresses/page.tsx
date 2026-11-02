@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { CustomerPortalShell } from "@/components/customer/customer-portal-shell";
+import { AddressActions } from "@/components/customer/address-actions";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 
@@ -22,6 +22,14 @@ export default async function CustomerAddressesPage() {
         title="Delivery addresses"
         description="Use saved locations for faster checkout and delivery."
       >
+        <div className="customer-address-heading">
+          <div>
+            <span className="catalog-kicker">YOUR PLACES</span>
+            <h2>Saved addresses</h2>
+            <p>{addresses.length} {addresses.length === 1 ? "address" : "addresses"} in your account</p>
+          </div>
+          <AddressActions />
+        </div>
         <section className="customer-address-list customer-portal-stack">
           {addresses.length ? (
             addresses.map((address) => (
@@ -36,14 +44,10 @@ export default async function CustomerAddressesPage() {
           ) : (
             <div className="customer-no-orders">
               <h2>No saved addresses yet</h2>
-              <p>Use the delivery map to save Home, Work, or Other.</p>
+              <p>Save a Kigali address while choosing delivery for your next order.</p>
             </div>
           )}
         </section>
-        <div className="role-actions">
-          <Link href="/checkout/delivery">Add or confirm location</Link>
-          <Link href="/customer/account">Back to account</Link>
-        </div>
       </CustomerPortalShell>
     </>
   );

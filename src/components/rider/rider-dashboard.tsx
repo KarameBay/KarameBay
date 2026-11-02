@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -335,6 +335,8 @@ export function RiderDashboard({
   const [available, setAvailable] = useState(initialAvailable);
   const [assigned, setAssigned] = useState(initialAssigned);
   const [totalEarnings, setTotalEarnings] = useState(earnings);
+  const [refreshError, setRefreshError] = useState<"" | "session" | "connection">("");
+  const mutationVersion = useRef(0);
   useEffect(() => {
     const updateTime = () => setCurrentTime(Date.now());
     updateTime();
@@ -344,23 +346,41 @@ export function RiderDashboard({
 
   useEffect(() => {
     let active = true;
+    let inFlight = false;
     async function refresh() {
+      if (!active || document.hidden || inFlight) return;
+      inFlight = true;
+      const version = mutationVersion.current;
       try {
         const response = await fetch("/api/rider/deliveries", {
           cache: "no-store",
         });
-        if (!response.ok) return;
+        if (response.status === 401) {
+          if (active && version === mutationVersion.current) setRefreshError("session");
+          return;
+        }
+        if (!response.ok) throw new Error("Delivery refresh failed");
         const data = await response.json();
-        if (!active) return;
+        if (!Array.isArray(data.available) || !Array.isArray(data.assigned))
+          throw new Error("Invalid delivery response");
+        if (!active || version !== mutationVersion.current) return;
         setAvailable(data.available);
         setAssigned(data.assigned);
         setTotalEarnings(data.earnings);
-      } catch {}
+        setRefreshError("");
+      } catch {
+        if (active && version === mutationVersion.current) setRefreshError("connection");
+      } finally {
+        inFlight = false;
+      }
     }
-    const timer = window.setInterval(refresh, 10_000);
+    const timer = window.setInterval(() => void refresh(), 10_000);
+    const onVisible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
       window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
   const active = assigned.filter(isAcceptedActiveDelivery);
@@ -368,6 +388,7 @@ export function RiderDashboard({
     (delivery) => delivery.status === "DELIVERED",
   );
   function accepted(delivery: Delivery) {
+    mutationVersion.current += 1;
     setAvailable((current) => current.filter((job) => job.id !== delivery.id));
     setAssigned((current) =>
       current.some((item) => item.id === delivery.id)
@@ -377,6 +398,7 @@ export function RiderDashboard({
     setTab("active");
   }
   function changed(delivery: Delivery) {
+    mutationVersion.current += 1;
     setAssigned((current) =>
       current.map((item) => (item.id === delivery.id ? delivery : item)),
     );
@@ -439,6 +461,12 @@ export function RiderDashboard({
         <NotificationBell />
       </header>
       <main>
+        {refreshError && (
+          <div className="rider-refresh-error" role="status">
+            <span>{refreshError === "session" ? "Your session has ended. Sign in again to see new deliveries." : "Could not check for new deliveries. Your current list is still shown."}</span>
+            {refreshError === "session" ? <Link href="/rider/login">Sign in</Link> : <button type="button" onClick={() => window.location.reload()}>Retry</button>}
+          </div>
+        )}
         <div className="rider-page-title">
           <span className="catalog-kicker">DELIVERY WORKSPACE</span>
           <h1>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell, Check, CheckCheck, PackageCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { orderStatusLabel } from "@/lib/order-status";
 import { parcelStatusLabel } from "@/components/parcel/parcel-status";
 import { formatKigaliDateTime } from "@/lib/date-format";
@@ -32,11 +32,64 @@ export function NotificationsClient({
 }) {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [refreshError, setRefreshError] = useState<"" | "session" | "connection">("");
+  const savingRef = useRef(false);
+  const mutationVersion = useRef(0);
   const unread = notifications.filter((item) => !item.readAt).length;
   const Wrapper: "main" | "div" = asPage ? "main" : "div";
 
+  useEffect(() => {
+    let active = true;
+    let inFlight = false;
+    let controller: AbortController | null = null;
+    async function refresh() {
+      if (!active || document.hidden || inFlight || savingRef.current) return;
+      inFlight = true;
+      const version = mutationVersion.current;
+      const request = new AbortController();
+      controller = request;
+      try {
+        const response = await fetch(`/api/notifications?portal=${portal}&limit=50`, {
+          cache: "no-store",
+          signal: request.signal,
+        });
+        if (response.status === 401) {
+          if (active && version === mutationVersion.current) setRefreshError("session");
+          return;
+        }
+        if (!response.ok) throw new Error("Notification refresh failed");
+        const data = await response.json();
+        if (!Array.isArray(data.notifications)) throw new Error("Invalid notification response");
+        if (active && version === mutationVersion.current && !savingRef.current) {
+          setNotifications(data.notifications);
+          setRefreshError("");
+        }
+      } catch {
+        if (active && !request.signal.aborted && version === mutationVersion.current)
+          setRefreshError("connection");
+      } finally {
+        inFlight = false;
+        controller = null;
+      }
+    }
+    const timer = window.setInterval(() => void refresh(), 20_000);
+    const onVisible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      controller?.abort();
+    };
+  }, [portal]);
+
   async function markRead(id?: string) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    mutationVersion.current += 1;
     setSaving(true);
+    setError("");
     try {
       const response = await fetch(`/api/notifications?portal=${portal}`, {
         method: "PATCH",
@@ -45,7 +98,7 @@ export function NotificationsClient({
           id ? { action: "MARK_READ", id } : { action: "MARK_ALL_READ" },
         ),
       });
-      if (!response.ok) return;
+      if (!response.ok) throw new Error("Could not mark the update as read.");
       const now = new Date().toISOString();
       setNotifications((current) =>
         current.map((item) =>
@@ -54,21 +107,31 @@ export function NotificationsClient({
             : item,
         ),
       );
+    } catch {
+      setError("Could not mark the update as read. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
 
   async function deleteNotification(id: string) {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    mutationVersion.current += 1;
     setSaving(true);
+    setError("");
     try {
       const response = await fetch(
         `/api/notifications/${encodeURIComponent(id)}?portal=${portal}`,
         { method: "DELETE" },
       );
-      if (!response.ok) return;
+      if (!response.ok) throw new Error("Could not delete the update.");
       setNotifications((current) => current.filter((item) => item.id !== id));
+    } catch {
+      setError("Could not delete the update. Please try again.");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -91,6 +154,16 @@ export function NotificationsClient({
           </button>
         )}
       </header>
+      {error && <p className="notifications-error" role="alert">{error}</p>}
+      {refreshError && (
+        <p className="notifications-refresh-error" role="status">
+          {refreshError === "session" ? (
+            <>Your session expired. <Link href={portal === "admin" ? "/admin/login" : portal === "rider" ? "/rider/login" : "/customer/login"}>Sign in</Link> to see new updates.</>
+          ) : (
+            "New updates are temporarily unavailable. Your last known notifications are shown; we will retry automatically."
+          )}
+        </p>
+      )}
       {notifications.length ? (
         <section className="notifications-list">
           {notifications.map((notification) => {
@@ -100,7 +173,7 @@ export function NotificationsClient({
                 className={notification.readAt ? "" : "unread"}
                 key={notification.id}
               >
-                <span><PackageCheck /></span>
+                <span>{isParcel ? <PackageCheck /> : <Bell />}</span>
                 <div>
                   <small>{notification.contextLabel}</small>
                   <h2>{notification.title}</h2>
@@ -117,11 +190,11 @@ export function NotificationsClient({
                     {isParcel ? "Open parcel" : "Open order"}
                   </Link>
                   {!notification.readAt && (
-                    <button onClick={() => void markRead(notification.id)} disabled={saving}>
+                    <button onClick={() => void markRead(notification.id)} disabled={saving} aria-label={`Mark ${notification.title} as read`}>
                       <Check /> Mark read
                     </button>
                   )}
-                  <button onClick={() => void deleteNotification(notification.id)} disabled={saving}>
+                  <button onClick={() => void deleteNotification(notification.id)} disabled={saving} aria-label={`Delete ${notification.title}`}>
                     Delete
                   </button>
                 </aside>
@@ -134,7 +207,7 @@ export function NotificationsClient({
           <Bell />
           <h2>No notifications yet</h2>
           <p>Order and parcel delivery updates will appear here.</p>
-          {portal === "customer" && <Link href="/customer">Back to home</Link>}
+          {portal === "customer" && <Link href="/stores">Browse stores</Link>}
         </section>
       )}
     </Wrapper>

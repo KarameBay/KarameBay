@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Clock3, PackageCheck, XCircle } from "lucide-react";
 import { formatRwf } from "@/lib/money";
 
@@ -27,29 +27,55 @@ const nextActions: Record<string, { status: string; label: string }[]> = {
 export function PartnerOrders() {
   const [orders, setOrders] = useState<PartnerOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const inFlightRef = useRef(false);
+  const busyRef = useRef(false);
+  const mutationVersion = useRef(0);
 
-  async function load() {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (inFlightRef.current || busyRef.current) return;
+    inFlightRef.current = true;
+    if (!silent) setLoading(true);
+    const version = mutationVersion.current;
     try {
       const response = await fetch("/api/partner/orders", { cache: "no-store" });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Could not load orders.");
-      setOrders(body.orders);
+      if (!Array.isArray(body.orders)) throw new Error("Could not read the latest orders.");
+      if (version === mutationVersion.current) {
+        setOrders(body.orders);
+        setLoaded(true);
+        setError("");
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load orders.");
+      if (version === mutationVersion.current)
+        setError(e instanceof Error ? e.message : "Could not load orders.");
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => { void load(); }, 0);
-    return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const initial = window.setTimeout(() => { void load(); }, 0);
+    const interval = window.setInterval(() => {
+      if (!document.hidden) void load(true);
+    }, 15_000);
+    const onVisible = () => { if (!document.hidden) void load(true); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [load]);
+
   async function update(orderId: string, status: string) {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    mutationVersion.current += 1;
     setBusy(`${orderId}:${status}`);
     setError("");
     try {
@@ -60,10 +86,13 @@ export function PartnerOrders() {
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Could not update order.");
-      await load();
+      setOrders((current) => current.map((order) => order.id === orderId ? { ...order, status } : order));
+      busyRef.current = false;
+      await load(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update order.");
     } finally {
+      busyRef.current = false;
       setBusy("");
     }
   }
@@ -75,10 +104,10 @@ export function PartnerOrders() {
           <span className="catalog-kicker">CUSTOMER ORDERS</span>
           <h2 id="partner-orders-title">Orders to prepare</h2>
         </div>
-        <button className="partner-secondary-button" onClick={() => void load()} type="button">Refresh</button>
+        <button className="partner-secondary-button" onClick={() => void load(true)} type="button" disabled={loading || !!busy}>Refresh</button>
       </div>
       {error && <div className="partner-inline-error" role="alert"><p>{error}</p><button type="button" onClick={() => void load()}>Try again</button></div>}
-      {loading ? <p className="partner-muted" role="status" aria-live="polite">Loading orders…</p> : orders.length === 0 ? <div className="partner-empty"><PackageCheck /><h3>No orders to prepare yet</h3><p>New customer orders for your stores will appear here. Keep this page open to respond quickly.</p><button type="button" className="partner-secondary-button" onClick={() => void load()}>Refresh orders</button></div> : (
+      {loading && !loaded ? <p className="partner-muted" role="status" aria-live="polite">Loading orders…</p> : !loaded && error ? null : orders.length === 0 ? <div className="partner-empty"><PackageCheck /><h3>No orders to prepare yet</h3><p>New customer orders for your stores will appear here automatically.</p><button type="button" className="partner-secondary-button" onClick={() => void load(true)}>Refresh orders</button></div> : (
         <div className="partner-order-list">
           {orders.map((order) => (
             <article className="partner-order-card" key={order.id}>

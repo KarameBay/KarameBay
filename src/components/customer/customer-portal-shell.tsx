@@ -107,7 +107,7 @@ export function CustomerPortalShell({
   children: ReactNode;
 }) {
   return (
-    <main className="customer-portal-shell">
+    <main className={`customer-portal-shell customer-portal-${active}`}>
       <aside className="customer-portal-sidebar">
         <span className="catalog-kicker">CUSTOMER PORTAL</span>
         <h1>{title}</h1>

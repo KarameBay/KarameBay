@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,7 +26,35 @@ import {
 } from "@/lib/delivery";
 import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
-import { EBM_DETAILS_STORAGE_KEY, EbmDetails } from "@/lib/cart-types";
+import { EBM_DETAILS_STORAGE_KEY, EbmDetails, readStoredEbm } from "@/lib/cart-types";
+
+const emptyEbm: EbmDetails = { requested: false, usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" };
+const CHECKOUT_REQUEST_KEY = "karame_checkout_request_v1";
+
+async function checkoutRequestId(
+  payload: object,
+  current: React.MutableRefObject<{ signature: string; id: string } | null>,
+) {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const signature = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  if (current.current?.signature === signature) return current.current.id;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(CHECKOUT_REQUEST_KEY) ?? "null");
+    if (
+      saved?.signature === signature &&
+      typeof saved.id === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(saved.id)
+    ) {
+      current.current = { signature, id: saved.id };
+      return saved.id;
+    }
+  } catch {}
+  const id = crypto.randomUUID();
+  current.current = { signature, id };
+  try { sessionStorage.setItem(CHECKOUT_REQUEST_KEY, JSON.stringify({ signature, id })); } catch {}
+  return id;
+}
 
 export function CheckoutReview() {
   const cart = useCart();
@@ -35,63 +63,85 @@ export function CheckoutReview() {
   const [address, setAddress] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [ebmDetails, setEbmDetails] = useState<EbmDetails>({ requested: false, usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" });
+  const [ebmDetails, setEbmDetails] = useState<EbmDetails>(emptyEbm);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const checkoutRequestRef = useRef<{ signature: string; id: string } | null>(null);
+  const pendingRequestBodyRef = useRef<string | null>(null);
+  const [placedOrderNumber, setPlacedOrderNumber] = useState("");
+  const [submissionUncertain, setSubmissionUncertain] = useState(false);
   const [error, setError] = useState("");
   const currentStoreId = cart.items[0]?.storeId ?? "";
+  const activeEbm = ebmDetails.storeId === currentStoreId ? ebmDetails : emptyEbm;
   useEffect(() => {
+    let savedQuote: unknown = null;
+    let savedAddress = "";
+    let savedEbm: unknown = null;
     try {
-      const saved = JSON.parse(
-        localStorage.getItem(DELIVERY_QUOTE_KEY) ?? "null",
-      );
-      const savedAddress = localStorage.getItem(DELIVERY_ADDRESS_KEY) ?? "";
-      const savedEbm = JSON.parse(localStorage.getItem(EBM_DETAILS_STORAGE_KEY) ?? "null");
-      queueMicrotask(() => {
-        if (validSavedDeliveryQuote(saved)) setQuote(saved);
-        if (savedAddress) setAddress(savedAddress);
-        if (savedEbm && typeof savedEbm === "object" && (!savedEbm.storeId || !currentStoreId || savedEbm.storeId === currentStoreId)) setEbmDetails((current) => ({ ...current, ...savedEbm }));
-      });
+      savedQuote = JSON.parse(localStorage.getItem(DELIVERY_QUOTE_KEY) ?? "null");
     } catch {}
-  }, [currentStoreId]);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
-    if (!quote || !confirmed || (requiresAgeConfirmation && !ageConfirmed) || !cart.items.length) return;
-    setSubmitting(true);
-    setError("");
     try {
+      savedAddress = localStorage.getItem(DELIVERY_ADDRESS_KEY) ?? "";
+    } catch {}
+    try {
+      savedEbm = JSON.parse(localStorage.getItem(EBM_DETAILS_STORAGE_KEY) ?? "null");
+    } catch {}
+    queueMicrotask(() => {
+      if (validSavedDeliveryQuote(savedQuote)) setQuote(savedQuote);
+      if (savedAddress) setAddress(savedAddress);
+      if (currentStoreId) setEbmDetails(readStoredEbm(savedEbm, currentStoreId) ?? emptyEbm);
+    });
+  }, [currentStoreId]);
+  async function submit(event?: FormEvent, retryUncertain = false) {
+    event?.preventDefault();
+    if (submittingRef.current || placedOrderNumber || (submissionUncertain && !retryUncertain)) return;
+    if (retryUncertain && !pendingRequestBodyRef.current) return;
+    const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
+    if (!retryUncertain && (!quote || !confirmed || (requiresAgeConfirmation && !ageConfirmed) || !cart.items.length)) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError(retryUncertain ? "Checking your original order…" : "");
+    let placed = false;
+    let requestStarted = false;
+    try {
+      const payload = !retryUncertain && quote ? {
+        items: cart.items.map((item) => ({
+          productId: item.id,
+          catalogEngine: item.catalogEngine,
+          quantity: item.quantity,
+          lineKey: item.lineKey ?? item.id,
+          priceRwf: item.priceRwf,
+          basePriceRwf: item.basePriceRwf ?? item.priceRwf,
+          containerChargePerUnitRwf: item.containerChargePerUnitRwf ?? 0,
+          containerChargeFlatRwf: item.containerChargeFlatRwf ?? 0,
+          variant: item.variant ?? null,
+          selections: item.selections ?? [],
+          addOns: item.addOns ?? [],
+          specialInstructions: item.specialInstructions ?? "",
+        })),
+        deliveryLatitude: quote.latitude,
+        deliveryLongitude: quote.longitude,
+        deliveryAddress: address,
+        ebmRequested: activeEbm.requested,
+        ebmUsePhone: activeEbm.usePhone,
+        ebmPhone: activeEbm.phone || null,
+        ebmTin: activeEbm.tin || null,
+        ebmOwnerName: activeEbm.ownerName || null,
+        ebmPurchaseCode: activeEbm.purchaseCode || null,
+        expectedItemsSubtotalRwf: cart.itemsSubtotal,
+        expectedDeliveryFeeRwf: quote.deliveryFeeRwf,
+        paymentConfirmed: confirmed,
+        ageConfirmed,
+      } : null;
+      const requestBody = retryUncertain
+        ? pendingRequestBodyRef.current!
+        : JSON.stringify({ ...payload, checkoutRequestId: await checkoutRequestId(payload!, checkoutRequestRef) });
+      pendingRequestBodyRef.current = requestBody;
+      requestStarted = true;
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          items: cart.items.map((item) => ({
-            productId: item.id,
-            catalogEngine: item.catalogEngine,
-            quantity: item.quantity,
-            lineKey: item.lineKey ?? item.id,
-            priceRwf: item.priceRwf,
-            basePriceRwf: item.basePriceRwf ?? item.priceRwf,
-            containerChargePerUnitRwf: item.containerChargePerUnitRwf ?? 0,
-            containerChargeFlatRwf: item.containerChargeFlatRwf ?? 0,
-            variant: item.variant ?? null,
-            selections: item.selections ?? [],
-            addOns: item.addOns ?? [],
-            specialInstructions: item.specialInstructions ?? "",
-          })),
-          deliveryLatitude: quote.latitude,
-          deliveryLongitude: quote.longitude,
-          deliveryAddress: address,
-          ebmRequested: ebmDetails.requested,
-          ebmUsePhone: ebmDetails.usePhone,
-          ebmPhone: ebmDetails.phone || null,
-          ebmTin: ebmDetails.tin || null,
-          ebmOwnerName: ebmDetails.ownerName || null,
-          ebmPurchaseCode: ebmDetails.purchaseCode || null,
-          expectedItemsSubtotalRwf: cart.itemsSubtotal,
-          expectedDeliveryFeeRwf: quote.deliveryFeeRwf,
-          paymentConfirmed: confirmed,
-          ageConfirmed,
-        }),
+        body: requestBody,
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401) {
@@ -99,34 +149,79 @@ export function CheckoutReview() {
         return;
       }
       if (!response.ok) {
+        if (retryUncertain) {
+          setSubmissionUncertain(true);
+          setError(response.status === 429
+            ? "Please wait a moment, then retry this order or check your orders."
+            : "We still could not confirm this order. Retry it or check your orders.");
+          return;
+        }
         if (data.code === "QUOTE_CHANGED") {
-          localStorage.removeItem(DELIVERY_QUOTE_KEY);
+          pendingRequestBodyRef.current = null;
+          setSubmissionUncertain(false);
+          try { localStorage.removeItem(DELIVERY_QUOTE_KEY); } catch {}
           router.push("/checkout/delivery");
           return;
         }
+        if (response.status >= 500) {
+          setSubmissionUncertain(true);
+          setError("We could not confirm the result. Retry this order safely or check your orders.");
+          return;
+        }
+        pendingRequestBodyRef.current = null;
+        setSubmissionUncertain(false);
         setError(data.error ?? "Order submission failed.");
         return;
       }
-      cart.clear();
-      localStorage.removeItem(EBM_DETAILS_STORAGE_KEY);
-      localStorage.removeItem(DELIVERY_QUOTE_KEY);
-      if (localStorage.getItem(DELIVERY_ADDRESS_MODE_KEY) !== "save") {
-        localStorage.removeItem(DELIVERY_LOCATION_KEY);
-        localStorage.removeItem(DELIVERY_ADDRESS_KEY);
-        localStorage.removeItem(DELIVERY_DETAILS_KEY);
-        localStorage.removeItem(DELIVERY_ADDRESS_MODE_KEY);
+      const orderNumber = data?.order?.orderNumber;
+      if (typeof orderNumber !== "string" || !orderNumber) {
+        setSubmissionUncertain(true);
+        setError("We could not confirm the result. Retry this order safely or check your orders.");
+        return;
       }
-      router.replace(`/orders/${data.order.orderNumber}`);
+      placed = true;
+      pendingRequestBodyRef.current = null;
+      setPlacedOrderNumber(orderNumber);
+      cart.clear();
+      try {
+        sessionStorage.removeItem(CHECKOUT_REQUEST_KEY);
+        localStorage.removeItem(EBM_DETAILS_STORAGE_KEY);
+        localStorage.removeItem(DELIVERY_QUOTE_KEY);
+        if (localStorage.getItem(DELIVERY_ADDRESS_MODE_KEY) !== "save") {
+          localStorage.removeItem(DELIVERY_LOCATION_KEY);
+          localStorage.removeItem(DELIVERY_ADDRESS_KEY);
+          localStorage.removeItem(DELIVERY_DETAILS_KEY);
+          localStorage.removeItem(DELIVERY_ADDRESS_MODE_KEY);
+        }
+      } catch {
+        // The order is already placed; browser cleanup must not trigger a retry.
+      }
+      router.replace(`/orders/${orderNumber}`);
     } catch {
-      setError(
-        "We could not submit the order. Check your connection and try again.",
-      );
+      if (!placed) {
+        setSubmissionUncertain(requestStarted);
+        setError(requestStarted
+          ? "We could not confirm the result. Retry this order safely or check your orders."
+          : "We could not start checkout. Please try again.");
+      }
     } finally {
-      setSubmitting(false);
+      if (!placed) {
+        submittingRef.current = false;
+        setSubmitting(false);
+      }
     }
   }
   if (!cart.hydrated)
     return <div className="checkout-loading">Loading checkout…</div>;
+  if (placedOrderNumber)
+    return (
+      <main className="checkout-blocked" role="status">
+        <CheckCircle2 aria-hidden="true" />
+        <h1>Order received</h1>
+        <p>Opening your order details now.</p>
+        <Link href={`/orders/${placedOrderNumber}`}>View order</Link>
+      </main>
+    );
   if (!cart.items.length)
     return (
       <main className="checkout-blocked">
@@ -146,6 +241,13 @@ export function CheckoutReview() {
     );
   const total = cart.itemsSubtotal + quote.deliveryFeeRwf;
   const requiresAgeConfirmation = cart.items.some((item) => item.ageConfirmationRequired);
+  const actionHint = !confirmed
+    ? "Confirm your Mobile Money payment above to submit."
+    : requiresAgeConfirmation && !ageConfirmed
+      ? "Confirm the age requirement above to submit."
+      : address.trim().length < 5
+        ? "Add delivery directions to submit."
+        : "";
   return (
     <main className="review-page">
       <Link className="review-back" href="/checkout/delivery">
@@ -240,9 +342,9 @@ export function CheckoutReview() {
             <div className="ebm-card-icon"><FileCheck2 aria-hidden="true" /></div>
             <div className="ebm-card-copy">
               <h2 id="ebm-title">EBM receipt</h2>
-              <p>{ebmDetails.requested ? `Requested for ${ebmDetails.ownerName} · TIN ${ebmDetails.tin}` : "Add EBM details from your cart before placing this order."}</p>
+              <p>{activeEbm.requested ? `Requested for ${activeEbm.ownerName} · ${activeEbm.usePhone ? `Phone ${activeEbm.phone}` : `TIN ${activeEbm.tin}`}` : "Add EBM details from your cart before placing this order."}</p>
             </div>
-            <Link className="ebm-edit-link" href="/cart">{ebmDetails.requested ? "Edit" : "Add request"}</Link>
+            <Link className="ebm-edit-link" href="/cart">{activeEbm.requested ? "Edit" : "Add request"}</Link>
           </section>
           <section className="momo-card">
             <div className="momo-brand">
@@ -336,10 +438,23 @@ export function CheckoutReview() {
               <b>Pending Verification</b>
             </span>
           </div>
-          {error && <div className="review-error">{error}</div>}
+          {error && (
+            <div className="review-error" role="alert">
+              <span>{error}</span>
+              {submissionUncertain && (
+                <div className="review-error-actions">
+                  <button type="button" onClick={() => void submit(undefined, true)} disabled={submitting}>
+                    {submitting ? "Checking order…" : "Retry this order"}
+                  </button>
+                  <Link href="/customer/orders">Check my orders</Link>
+                </div>
+              )}
+            </div>
+          )}
+          {actionHint && !submissionUncertain && <p className="review-action-hint" role="status">{actionHint}</p>}
           <button
             className="place-order"
-            disabled={!confirmed || (requiresAgeConfirmation && !ageConfirmed) || address.trim().length < 5 || submitting}
+            disabled={!confirmed || (requiresAgeConfirmation && !ageConfirmed) || address.trim().length < 5 || submitting || submissionUncertain}
           >
             {submitting ? "Submitting order…" : "Submit order"}
             <ArrowRight />

@@ -16,7 +16,7 @@ import {
   Utensils,
   X,
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { DELIVERY_ADDRESS_KEY } from "@/lib/delivery";
@@ -24,6 +24,7 @@ import { DELIVERY_ADDRESS_KEY } from "@/lib/delivery";
 const primaryLinks = [
   { href: "/restaurants", label: "Restaurants", icon: Utensils, exact: false },
   { href: "/markets", label: "Markets", icon: Store, exact: false },
+  { href: "/stores", label: "Shops", icon: ShoppingBag, exact: false },
   {
     href: "/customer/parcels/new",
     label: "Send a Parcel",
@@ -42,9 +43,15 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const menuId = useId();
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLElement>(null);
   const [deliveryLabel, setDeliveryLabel] = useState("Choose location");
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const canChooseDelivery = hydrated && itemCount > 0;
+  const shownDeliveryLabel = deliveryLabel === "Choose location" && !canChooseDelivery
+    ? "Choose at checkout"
+    : deliveryLabel;
 
   useEffect(() => {
     const address = localStorage.getItem(DELIVERY_ADDRESS_KEY);
@@ -57,8 +64,12 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
 
   useEffect(() => {
     if (!menuOpen) return;
+    mobileMenuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuToggleRef.current?.focus();
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
@@ -98,13 +109,23 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
           </span>
         </Link>
 
-        <Link className="header-location header-location-desktop" href="/checkout/delivery">
-          <MapPin aria-hidden="true" />
-          <span>
-            <small>DELIVERING TO</small>
-            <strong>{deliveryLabel}</strong>
-          </span>
-        </Link>
+        {canChooseDelivery ? (
+          <Link className="header-location header-location-desktop" href="/checkout/delivery">
+            <MapPin aria-hidden="true" />
+            <span>
+              <small>DELIVERING TO</small>
+              <strong>{shownDeliveryLabel}</strong>
+            </span>
+          </Link>
+        ) : (
+          <div className="header-location header-location-desktop">
+            <MapPin aria-hidden="true" />
+            <span>
+              <small>DELIVERY LOCATION</small>
+              <strong>{shownDeliveryLabel}</strong>
+            </span>
+          </div>
+        )}
 
         <nav className="browse-primary-nav" aria-label="Main navigation">
           {primaryLinks.map(({ href, label, exact }) => (
@@ -156,6 +177,7 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
           )}
           <button
             type="button"
+            ref={menuToggleRef}
             className="header-menu-toggle"
             aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-controls={menuId}
@@ -175,18 +197,28 @@ export function BrowseHeaderClient({ signedIn }: { signedIn: boolean }) {
             aria-label="Close navigation menu"
             onClick={() => setMenuOpen(false)}
           />
-          <nav id={menuId} className="customer-mobile-menu" aria-label="Mobile navigation">
-            <Link
-              className="mobile-delivery-location"
-              href="/checkout/delivery"
-              onClick={() => setMenuOpen(false)}
-            >
-              <MapPin aria-hidden="true" />
-              <span>
-                <small>DELIVERING TO</small>
-                <strong>{deliveryLabel}</strong>
-              </span>
-            </Link>
+          <nav id={menuId} ref={mobileMenuRef} className="customer-mobile-menu" aria-label="Mobile navigation">
+            {canChooseDelivery ? (
+              <Link
+                className="mobile-delivery-location"
+                href="/checkout/delivery"
+                onClick={() => setMenuOpen(false)}
+              >
+                <MapPin aria-hidden="true" />
+                <span>
+                  <small>DELIVERING TO</small>
+                  <strong>{shownDeliveryLabel}</strong>
+                </span>
+              </Link>
+            ) : (
+              <div className="mobile-delivery-location">
+                <MapPin aria-hidden="true" />
+                <span>
+                  <small>DELIVERY LOCATION</small>
+                  <strong>{shownDeliveryLabel}</strong>
+                </span>
+              </div>
+            )}
 
             <div className="customer-mobile-primary-links">
               {primaryLinks.map(({ href, label, icon: Icon, exact }) => (

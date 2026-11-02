@@ -3,3 +3,62 @@
 @media(max-width:620px){.delivery-page{padding:22px 12px 75px}.delivery-title h1{font-size:29px}.delivery-map-card>header{height:78px;padding:0 10px}.delivery-map-card>header b{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.delivery-map-card>header>button{font-size:0;width:40px;padding:0;justify-content:center}.delivery-map-shell{height:390px}.delivery-map-card>footer{align-items:flex-start;justify-content:center;flex-direction:column;gap:4px}.drag-hint{bottom:12px}.delivery-summary{padding:17px}}
 .delivery-title{margin:16px 0 18px}.delivery-title h1{font-size:32px}.delivery-map-card{box-shadow:0 12px 30px rgba(18,27,21,.05)}.delivery-map-card>header{height:62px}.delivery-map-card>header>div>svg{background:#e4f0df;padding:7px;border-radius:10px;width:34px;height:34px}.delivery-map-card>footer{height:58px}.delivery-summary{padding:16px}
 @media(max-width:620px){.delivery-page{padding:14px 10px 96px}.delivery-back{font-size:10px}.delivery-title{text-align:left;margin:14px 4px 12px}.delivery-title h1{font-size:27px;letter-spacing:-1px}.delivery-title p{font-size:10px;line-height:1.5}.delivery-map-card>header{height:62px;padding:0 10px}.delivery-map-card>header b{font-size:11px}.delivery-map-card>header>button{width:auto;min-width:40px}.delivery-map-card:has(.location-search-wrap) .delivery-map-shell{height:335px}.delivery-map-card>footer{height:74px;padding:8px 10px;position:sticky;bottom:env(safe-area-inset-bottom);z-index:600;background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 20px rgba(18,27,21,.1)}.delivery-map-card>footer>span{display:flex;order:2;align-items:center;flex-direction:row;gap:8px;width:100%;justify-content:center}.delivery-map-card>footer>span small{font-size:7px}.delivery-map-card>footer>span b{font-size:8px;margin-top:0}.delivery-map-card>footer>button{width:100%;height:44px;font-size:10px;order:1}.delivery-summary{margin-top:10px;padding:12px}.delivery-summary h2{font-size:16px;margin-bottom:10px}.delivery-metric{display:inline-flex;width:calc(50% - 5px);vertical-align:top;padding:8px;margin:4px 2px}.delivery-metric>span{width:28px;height:28px}.delivery-costs{margin-top:8px}.delivery-summary>p{display:none}}
+
+/* Checkout delivery: make the selected place and route easier to scan. */
+.delivery-title { text-align: left; margin: 12px 0 18px; }
+.delivery-title h1 { font-size: clamp(27px, 3vw, 34px); margin: 4px 0; }
+.delivery-title p { font-size: 13px; line-height: 1.5; }
+.delivery-back { font-size: 12px; }
+.delivery-map-card>header b { font-size: 13px; }
+.delivery-map-card>header>button { font-size: 11px; }
+.delivery-summary h2 { margin-bottom: 12px; }
+.delivery-costs>div { font-size: 12px; }
+.delivery-continue { font-size: 13px; }
+.delivery-back:focus-visible, .delivery-map-card>header>button:focus-visible,
+.delivery-map-card>footer>button:focus-visible, .delivery-continue:focus-visible {
+  outline: 3px solid #d79b31; outline-offset: 2px;
+}
+@media (max-width: 620px) {
+  .delivery-title { margin: 10px 4px 14px; }
+  .delivery-title h1 { font-size: 25px; }
+  .delivery-title p { font-size: 12px; }
+  .delivery-map-card>header>button { font-size: 0; }
+  .delivery-map-card>footer>button { font-size: 12px; }
+  .delivery-map-card>footer>span b { font-size: 10px; }
+}
+
+.delivery-footer-error { display: none; }
+@media (max-width: 620px) {
+  .delivery-page:has(.delivery-layout) { padding-bottom: 160px; }
+  .delivery-page:has(.delivery-footer-error) { padding-bottom: 220px; }
+  .delivery-map-card>header>button { min-height: 44px; font-size: 11px; padding: 0 9px; flex-shrink: 0; }
+  .delivery-map-card>header b { max-width: 120px; }
+  .delivery-from-store { display: none !important; }
+  .delivery-map-card>footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    max-height: 38dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+    z-index: 900;
+  }
+  .delivery-map-card>footer>span { order: 0; justify-content: space-between; gap: 10px; }
+  .delivery-map-card>footer>span small { font-size: 10px; letter-spacing: .04em; }
+  .delivery-map-card>footer>span b {
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .delivery-footer-error { order: 1; display: block; margin: 0; color: #9f4038; font-size: 12px; line-height: 1.4; }
+  .delivery-map-card>footer>button { order: 2; min-height: 48px; height: auto; font-size: 14px; }
+}

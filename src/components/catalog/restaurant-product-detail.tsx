@@ -616,6 +616,7 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
                 type="button"
                 onClick={() => setQuantity((current) => Math.max(1, current - 1))}
                 disabled={quantity === 1}
+                aria-label="Decrease quantity"
               >
                 <Minus />
               </button>
@@ -624,6 +625,7 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
                 type="button"
                 onClick={() => setQuantity((current) => Math.min(99, current + 1))}
                 disabled={quantity === 99}
+                aria-label="Increase quantity"
               >
                 <Plus />
               </button>
@@ -642,10 +644,10 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
           type="button"
           className="menu-engine-add"
           onClick={addToCart}
-          disabled={!product.isAvailable}
+          disabled={!product.isAvailable || !cart.hydrated}
         >
           {added ? <Check /> : <ShoppingBag />}
-          {added ? "Added to cart" : "Add to cart"}
+          {!cart.hydrated ? "Loading basket…" : added ? "Added to cart" : "Add to cart"}
           <ArrowRight />
         </button>
       </aside>

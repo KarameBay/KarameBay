@@ -93,8 +93,9 @@ export async function GET(request: NextRequest) {
     const places = await findPlaces(parsed.data);
     const results = toResults(places);
     const firstWord = parsed.data.split(/\s+/)[0];
-    const hasNamedMatch = places.some((place) =>
-      place.properties?.name?.toLowerCase().includes(firstWord.toLowerCase()),
+    const requestedName = parsed.data.toLowerCase();
+    const hasNamedMatch = results.some((place) =>
+      place.label.split(",")[0].toLowerCase().includes(requestedName),
     );
     if (firstWord.length >= 5 && parsed.data.includes(" ") && !hasNamedMatch) {
       const nearby = toResults(await findPlaces(firstWord));

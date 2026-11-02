@@ -335,6 +335,23 @@ export default async function Page({
           </div>
         </header>
 
+        <div className="admin-section-heading" id="admin-order-queue">
+          <h2 className="admin-section-title">Order queue</h2>
+        </div>
+        <AdminOrdersClient orders={ordersView} riders={riders} />
+        <nav className="catalog-pages" aria-label="Order pages">
+          <Link href={`/admin/orders?page=${Math.max(1, page - 1)}`} aria-disabled={page <= 1}>
+            Previous
+          </Link>
+          <span>Page {page} of {Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE))}</span>
+          <Link
+            href={`/admin/orders?page=${Math.min(Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE)), page + 1)}`}
+            aria-disabled={page >= Math.ceil(totalOrders / ORDER_PAGE_SIZE)}
+          >
+            Next
+          </Link>
+        </nav>
+
         <section className="admin-dashboard-grid" aria-label="Overall platform statistics">
           {platformCards.map((card) => (
             <article className="admin-dashboard-card" key={card.label}>
@@ -459,24 +476,6 @@ export default async function Page({
           </div>
         </section>
 
-        <AdminOrdersClient orders={ordersView} riders={riders} />
-        <nav className="catalog-pages" aria-label="Order pages">
-          <Link
-            href={`/admin/orders?page=${Math.max(1, page - 1)}`}
-            aria-disabled={page <= 1}
-          >
-            Previous
-          </Link>
-          <span>
-            Page {page} of {Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE))}
-          </span>
-          <Link
-            href={`/admin/orders?page=${Math.min(Math.max(1, Math.ceil(totalOrders / ORDER_PAGE_SIZE)), page + 1)}`}
-            aria-disabled={page >= Math.ceil(totalOrders / ORDER_PAGE_SIZE)}
-          >
-            Next
-          </Link>
-        </nav>
       </main>
       <OperationsPortalBadge role="Admin" destination="/admin/login" />
     </>

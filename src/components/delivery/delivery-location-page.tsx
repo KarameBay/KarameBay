@@ -68,13 +68,16 @@ export function DeliveryLocationPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [routing, setRouting] = useState(false);
+  const [routeAttempt, setRouteAttempt] = useState(0);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [activeResultIndex, setActiveResultIndex] = useState(-1);
   const [searchMessage, setSearchMessage] = useState("");
   const [pinNeedsAdjustment, setPinNeedsAdjustment] = useState(false);
+  const [pinMoved, setPinMoved] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [deliveryDetails, setDeliveryDetails] = useState("");
   const [addressMode, setAddressMode] = useState<"temporary" | "save">(
@@ -86,6 +89,8 @@ export function DeliveryLocationPage() {
   const initialised = useRef(false);
   const gpsAttempted = useRef(false);
   const selectedSearch = useRef("");
+  const submittedSearch = useRef("");
+  const searchVersion = useRef(0);
 
   useEffect(() => {
     if (initialised.current) return;
@@ -121,9 +126,10 @@ export function DeliveryLocationPage() {
     setSelectedAddress(address);
     setConfirmed(false);
     setPinNeedsAdjustment(false);
+    setPinMoved(false);
     setQuote(null);
     setError("");
-    localStorage.removeItem(DELIVERY_QUOTE_KEY);
+    try { localStorage.removeItem(DELIVERY_QUOTE_KEY); } catch {}
   }, []);
   const handleMapChange = useCallback((location: Coordinates) => {
     if (!isWithinKigali(location)) {
@@ -131,6 +137,7 @@ export function DeliveryLocationPage() {
       return;
     }
     updateLocation(location);
+    setPinMoved(true);
   }, [updateLocation]);
   const locate = useCallback(
     (automatic = false) => {
@@ -180,20 +187,24 @@ export function DeliveryLocationPage() {
     }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
+      if (submittedSearch.current === query) return;
+      const version = ++searchVersion.current;
       setSearching(true);
       try {
         const response = await fetch(`/api/geocoding/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
+        if (version !== searchVersion.current) return;
         setResults(data.results ?? []);
+        setActiveResultIndex(-1);
         setSearchMessage(data.results?.length ? "" : "No matching Kigali places. Try a nearby landmark or a shorter name.");
       } catch (reason) {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && version === searchVersion.current) {
           setResults([]);
           setSearchMessage(reason instanceof Error ? reason.message : "Location search is unavailable. Try again.");
         }
       } finally {
-        if (!controller.signal.aborted) setSearching(false);
+        if (!controller.signal.aborted && version === searchVersion.current) setSearching(false);
       }
     }, 400);
     return () => {
@@ -204,25 +215,31 @@ export function DeliveryLocationPage() {
 
   async function searchLocation(event: FormEvent) {
     event.preventDefault();
-    if (search.trim().length < 2) return;
+    const query = search.trim();
+    if (query.length < 2) return;
+    submittedSearch.current = query;
+    const version = ++searchVersion.current;
     setSearching(true);
     setError("");
     setResults([]);
+    setActiveResultIndex(-1);
     try {
       const response = await fetch(
-        `/api/geocoding/search?q=${encodeURIComponent(search.trim())}`,
+        `/api/geocoding/search?q=${encodeURIComponent(query)}`,
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setResults(data.results);
-      setSearchMessage(data.results.length ? "" : "No matching Kigali places. Try a nearby landmark or a shorter name.");
+      if (version !== searchVersion.current) return;
+      setResults(data.results ?? []);
+      setSearchMessage(data.results?.length ? "" : "No matching Kigali places. Try a nearby landmark or a shorter name.");
     } catch (reason) {
+      if (version !== searchVersion.current) return;
       setError(
         reason instanceof Error ? reason.message : "Location search failed.",
       );
       setSearchMessage(reason instanceof Error ? reason.message : "Location search failed.");
     } finally {
-      setSearching(false);
+      if (version === searchVersion.current) setSearching(false);
     }
   }
   function chooseResult(result: SearchResult) {
@@ -236,8 +253,10 @@ export function DeliveryLocationPage() {
     );
     setPinNeedsAdjustment(Boolean(result.approximate));
     selectedSearch.current = result.label;
+    searchVersion.current += 1;
     setSearch(result.label);
     setResults([]);
+    setActiveResultIndex(-1);
     setSearchMessage(result.approximate ? "Area selected. Move the map pin to the exact building before confirming." : "");
   }
   function chooseSavedAddress(address: SavedAddress) {
@@ -252,22 +271,26 @@ export function DeliveryLocationPage() {
     setDeliveryDetails(address.details);
     setAddressLabel(address.label);
     selectedSearch.current = address.address;
+    searchVersion.current += 1;
     setSearch(address.address);
     setResults([]);
+    setActiveResultIndex(-1);
     setSearchMessage("");
   }
   function changeDeliveryDetails(value: string) {
     setDeliveryDetails(value);
     setConfirmed(false);
     setQuote(null);
-    localStorage.setItem(DELIVERY_DETAILS_KEY, value);
-    localStorage.removeItem(DELIVERY_QUOTE_KEY);
+    try {
+      localStorage.setItem(DELIVERY_DETAILS_KEY, value);
+      localStorage.removeItem(DELIVERY_QUOTE_KEY);
+    } catch {}
   }
   function changeAddressMode(mode: "temporary" | "save") {
     setAddressMode(mode);
     setConfirmed(false);
     setQuote(null);
-    localStorage.removeItem(DELIVERY_QUOTE_KEY);
+    try { localStorage.removeItem(DELIVERY_QUOTE_KEY); } catch {}
   }
   async function confirmLocation() {
     if (pinNeedsAdjustment) {
@@ -321,6 +344,7 @@ export function DeliveryLocationPage() {
       localStorage.setItem(DELIVERY_ADDRESS_KEY, completeAddress);
       localStorage.setItem(DELIVERY_ADDRESS_MODE_KEY, addressMode);
       setSelectedAddress(address);
+      setRouting(true);
       setConfirmed(true);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "We could not verify this location. Please try again.");
@@ -376,7 +400,7 @@ export function DeliveryLocationPage() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [store, customer, confirmed]);
+  }, [store, customer, confirmed, routeAttempt]);
 
   if (!cart.hydrated)
     return <div className="delivery-loading">Loading checkout…</div>;
@@ -446,13 +470,39 @@ export function DeliveryLocationPage() {
                 value={search}
                 onChange={(event) => {
                   selectedSearch.current = "";
+                  submittedSearch.current = "";
+                  searchVersion.current += 1;
                   setSearch(event.target.value);
+                  setResults([]);
+                  setActiveResultIndex(-1);
+                  setSearching(false);
                   setSearchMessage("");
+                  setError("");
+                }}
+                onKeyDown={(event) => {
+                  if (!results.length) return;
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActiveResultIndex((index) => Math.min(index + 1, results.length - 1));
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActiveResultIndex((index) => Math.max(index - 1, -1));
+                  } else if (event.key === "Enter" && activeResultIndex >= 0) {
+                    event.preventDefault();
+                    chooseResult(results[activeResultIndex]);
+                  } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    setResults([]);
+                    setActiveResultIndex(-1);
+                  }
                 }}
                 placeholder="Enter an area, street, landmark or address"
                 aria-label="Search Kigali delivery address"
+                role="combobox"
                 aria-autocomplete="list"
-                aria-controls="kigali-location-results"
+                aria-expanded={results.length > 0}
+                aria-controls={results.length ? "kigali-location-results" : undefined}
+                aria-activedescendant={activeResultIndex >= 0 ? `kigali-location-option-${activeResultIndex}` : undefined}
               />
               <button disabled={searching || search.trim().length < 2}>
                 {searching ? "Searching…" : "Find"}
@@ -461,8 +511,16 @@ export function DeliveryLocationPage() {
             {searchMessage && <p className="location-search-message" role="status">{searchMessage}</p>}
             {results.length > 0 && (
               <div className="location-results" id="kigali-location-results" role="listbox">
-                {results.map((result) => (
-                  <button type="button" key={result.id} onClick={() => chooseResult(result)} role="option" aria-selected="false">
+                {results.map((result, index) => (
+                  <button
+                    type="button"
+                    key={result.id}
+                    id={`kigali-location-option-${index}`}
+                    onClick={() => chooseResult(result)}
+                    onFocus={() => setActiveResultIndex(index)}
+                    role="option"
+                    aria-selected={activeResultIndex === index}
+                  >
                     <MapPin />
                     <span>
                       <b>{result.label.split(",")[0]}</b>
@@ -539,24 +597,43 @@ export function DeliveryLocationPage() {
             </div>
           </div>
           <footer>
-            <span>
-              <small>SELECTED COORDINATES</small>
-              <b>
-                {customer.latitude.toFixed(6)}, {customer.longitude.toFixed(6)}
+            <span aria-live="polite">
+              <small>{confirmed ? "LOCATION CONFIRMED" : pinMoved ? "PIN MOVED — CHECK YOUR SPOT" : selectedAddress ? "SELECTED PLACE" : "SELECTED MAP PIN"}</small>
+              <b title={selectedAddress || undefined}>
+                {selectedAddress ? selectedAddress.split(",")[0] : `${customer.latitude.toFixed(6)}, ${customer.longitude.toFixed(6)}`}
               </b>
             </span>
+            {error && <p className="delivery-footer-error" role="alert">{error}</p>}
             <button
               className={confirmed ? "confirmed" : ""}
-              onClick={confirmLocation}
+              onClick={() => {
+                if (confirmed && !quote && !routing) {
+                  setRouting(true);
+                  setRouteAttempt((attempt) => attempt + 1);
+                }
+                else void confirmLocation();
+              }}
               disabled={
+                !store ||
                 confirming ||
-                confirmed ||
-                deliveryDetails.trim().length < 3 ||
-                pinNeedsAdjustment ||
-                (addressMode === "save" && addressLabel.trim().length < 2)
+                routing ||
+                (confirmed && Boolean(quote)) ||
+                (!confirmed && (
+                  deliveryDetails.trim().length < 3 ||
+                  pinNeedsAdjustment ||
+                  (addressMode === "save" && addressLabel.trim().length < 2)
+                ))
               }
             >
-              {confirmed ? (
+              {routing ? (
+                <>
+                  <RefreshCw className="spin" /> Calculating route…
+                </>
+              ) : confirmed && !quote ? (
+                <>
+                  <RefreshCw /> Retry route
+                </>
+              ) : confirmed ? (
                 <>
                   <Check /> Location confirmed
                 </>

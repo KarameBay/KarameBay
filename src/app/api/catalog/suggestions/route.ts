@@ -13,6 +13,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const term = (searchParams.get("q") ?? "").trim().slice(0, 100);
   const storeSlug = (searchParams.get("store") ?? "").trim().slice(0, 120);
+  const storeTypeSlug = (searchParams.get("storeType") ?? "").trim().slice(0, 120);
 
   if (term.length < 1) {
     return NextResponse.json({ suggestions: [] });
@@ -24,6 +25,10 @@ export async function GET(request: Request) {
         select: { id: true, slug: true },
       })
     : null;
+
+  if (storeSlug && !scopedStore) {
+    return NextResponse.json({ suggestions: [] });
+  }
 
   const [stores, restaurantProducts, marketplaceProducts, restaurantCategories, marketplaceCategories] =
     await Promise.all([
@@ -37,7 +42,7 @@ export async function GET(request: Request) {
             { storeType: { is: { name: containsInsensitive(term) } } },
             { storeType: { is: { customerSectionName: containsInsensitive(term) } } },
           ],
-          storeType: { is: { isActive: true } },
+          storeType: { is: { isActive: true, ...(storeTypeSlug ? { slug: storeTypeSlug } : {}) } },
         },
         orderBy: [{ featured: "desc" }, { name: "asc" }],
         take: 3,
@@ -56,7 +61,7 @@ export async function GET(request: Request) {
           store: {
             ...(scopedStore ? { id: scopedStore.id } : {}),
             status: "APPROVED",
-            storeType: { is: { isActive: true } },
+            storeType: { is: { isActive: true, ...(storeTypeSlug ? { slug: storeTypeSlug } : {}) } },
           },
           OR: [
             { name: containsInsensitive(term) },
@@ -78,7 +83,7 @@ export async function GET(request: Request) {
           store: {
             ...(scopedStore ? { id: scopedStore.id } : {}),
             status: "APPROVED",
-            storeType: { is: { isActive: true } },
+            storeType: { is: { isActive: true, ...(storeTypeSlug ? { slug: storeTypeSlug } : {}) } },
           },
           OR: [
             { name: containsInsensitive(term) },
@@ -103,7 +108,7 @@ export async function GET(request: Request) {
           store: {
             ...(scopedStore ? { id: scopedStore.id } : {}),
             status: "APPROVED",
-            storeType: { is: { isActive: true } },
+            storeType: { is: { isActive: true, ...(storeTypeSlug ? { slug: storeTypeSlug } : {}) } },
           },
         },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -122,7 +127,7 @@ export async function GET(request: Request) {
             store: {
               ...(scopedStore ? { id: scopedStore.id } : {}),
               status: "APPROVED",
-              storeType: { is: { isActive: true } },
+              storeType: { is: { isActive: true, ...(storeTypeSlug ? { slug: storeTypeSlug } : {}) } },
             },
           },
         },

@@ -106,7 +106,7 @@ export function AuthForm({
   }
 
   return (
-    <div className={`auth-screen ${staff || partner ? "operations-auth" : ""}`}>
+    <div className={`auth-screen ${staff || partner ? "operations-auth" : "customer-auth"}`}>
       <div className="auth-brand">
         <Link href={customerUrl("/")} className="auth-logo">
           <Image
@@ -246,6 +246,7 @@ export function AuthForm({
                 Phone number
                 <input
                   name="phone"
+                  type="tel"
                   required
                   autoComplete="tel"
                   inputMode="tel"
@@ -268,11 +269,13 @@ export function AuthForm({
                 <button
                   type="button"
                   onClick={() => setShow(!show)}
-                  aria-label="Show password"
+                  aria-label={show ? "Hide password" : "Show password"}
+                  aria-pressed={show}
                 >
                   {show ? <EyeOff /> : <Eye />}
                 </button>
               </div>
+              {mode === "register" && <small className="auth-field-hint">Use at least 10 characters.</small>}
             </label>
             {mode === "login" && !staff && (
               <div className="auth-forgot-link">

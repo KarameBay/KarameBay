@@ -11,6 +11,25 @@ export type EbmDetails = {
   purchaseCode: string;
 };
 
+export function readStoredEbm(value: unknown, storeId: string): EbmDetails | null {
+  if (!storeId || !value || typeof value !== "object") return null;
+  const data = value as Record<string, unknown>;
+  if (data.storeId !== storeId) return null;
+  const usePhone = data.usePhone === true;
+  const phone = typeof data.phone === "string" ? data.phone : "";
+  const tin = typeof data.tin === "string" ? data.tin : "";
+  const ownerName = typeof data.ownerName === "string" ? data.ownerName : "";
+  return {
+    requested: data.requested === true && Boolean(ownerName.trim()) && Boolean((usePhone ? phone : tin).trim()),
+    storeId,
+    usePhone,
+    phone: usePhone ? phone : "",
+    tin: usePhone ? "" : tin,
+    ownerName,
+    purchaseCode: typeof data.purchaseCode === "string" ? data.purchaseCode : "",
+  };
+}
+
 export type CartChoiceSelection = {
   groupId: string;
   groupName: string;

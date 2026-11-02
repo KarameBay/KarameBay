@@ -91,3 +91,89 @@
 .admin-rating-columns li span { display: grid; }
 .admin-rating-columns li small { color: #756d62; }
 @media (max-width: 760px) { .admin-rating-columns { grid-template-columns: 1fr; } }
+
+/* Customer help: contact first, then concise help and policy links. */
+.customer-help-heading { margin-bottom: 17px; }
+.customer-help-heading h1 { margin: 4px 0; font-size: clamp(27px, 3vw, 34px); line-height: 1.1; }
+.customer-help-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.customer-portal-help .customer-help-grid { gap: 10px; }
+.customer-portal-help .customer-help-grid a {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center;
+  gap: 2px 9px; min-height: 78px; padding: 12px; background: #fff;
+}
+.customer-portal-help .customer-help-grid a:hover { border-color: #d5b06b; background: #fffaf0; }
+.customer-portal-help .customer-help-grid svg { grid-row: 1 / 3; width: 23px; height: 23px; }
+.customer-portal-help .customer-help-grid b { font-size: 13px; }
+.customer-portal-help .customer-help-grid span { font-size: 11px; line-height: 1.4; }
+.customer-help-section { margin-top: 22px; }
+.customer-help-section h2 { margin: 0 0 10px; font-size: 18px; }
+.customer-portal-help .customer-help-links { margin-top: 0; gap: 8px; }
+.customer-portal-help .customer-help-links a { padding: 11px 13px; font-size: 12px; background: #fff; }
+.customer-portal-help .customer-help-links a:hover { border-color: #d5b06b; background: #fffaf0; }
+.customer-portal-help a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+@media (max-width: 700px) {
+  .customer-portal-help .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-help .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-help .customer-portal-sidebar>h1,
+  .customer-portal-help .customer-portal-sidebar>p { display: none; }
+  .customer-portal-help .customer-portal-nav { margin-top: 0; }
+  .customer-portal-help .customer-help-grid { grid-template-columns: 1fr; }
+  .customer-portal-help .customer-help-grid a { min-height: 64px; }
+}
+
+/* Customer reviews: compact feedback without shrinking rating controls. */
+.reviews-ready-section { margin-bottom: 14px; padding: 15px; border: 1px solid #ead7b6; border-radius: 15px; background: #fffaf1; }
+.reviews-ready-section>div:first-child { margin-bottom: 10px; }
+.reviews-ready-section h2 { margin: 0 0 3px; font: 800 18px var(--font-display); }
+.reviews-ready-section p { margin: 0; color: var(--muted); font-size: 12px; }
+.reviews-ready-list { display: grid; gap: 8px; }
+.reviews-ready-list article { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid #eadfca; border-radius: 10px; background: #fff; }
+.reviews-ready-list small { color: var(--muted); font-size: 10px; }
+.reviews-ready-list h3 { margin: 2px 0 0; font: 800 15px var(--font-display); }
+.reviews-ready-list a { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border-radius: 9px; background: #bc7b1d; color: #fff; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.reviews-ready-list a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-portal-reviews .customer-portal-content>header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.customer-portal-reviews .customer-portal-content>header h1 { margin: 4px 0; font-size: clamp(25px, 3vw, 32px); }
+.customer-portal-reviews .customer-portal-content>header p { margin: 0; color: var(--muted); font-size: 12px; }
+.customer-portal-reviews .customer-portal-content>header>a,
+.my-reviews-list>article>a,
+.review-unavailable>a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid #dfd7c9; border-radius: 10px; color: var(--green); font-size: 12px; font-weight: 800; text-decoration: none; }
+.my-reviews-list { gap: 10px; }
+.my-reviews-list>article { padding: 16px; background: #fff; }
+.my-reviews-list>article>div { min-width: 0; }
+.my-reviews-list h2 { font-size: 18px; }
+.my-reviews-list small { color: var(--muted); font-size: 11px; }
+.my-reviews-list p { margin: 8px 0; line-height: 1.5; }
+.my-reviews-list blockquote { line-height: 1.5; overflow-wrap: anywhere; }
+.customer-rating-page { padding: 20px 0 70px; }
+.customer-rating-page>header { margin: 14px 0 18px; }
+.customer-rating-page>header h1 { font-size: clamp(27px, 4vw, 38px); margin: 4px 0; }
+.customer-rating-page>header p { margin: 0; font-size: 13px; }
+.customer-review-form { gap: 14px; }
+.customer-review-form>section,
+.review-unavailable { padding: 20px; }
+.customer-review-form h2 { margin: 5px 0 13px; font-size: 21px; }
+.review-aspect-grid { gap: 10px; margin-top: 11px; }
+.star-rating-field { padding: 11px; }
+.star-rating-field>small { font-size: 11px; }
+.review-comment { font-size: 13px; }
+.review-comment textarea { min-height: 100px; font-size: 13px; }
+.review-submit { min-height: 48px; }
+.star-rating-field button:focus-visible,
+.review-submit:focus-visible,
+.customer-rating-page>a:focus-visible,
+.customer-portal-reviews .customer-portal-content a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+@media (max-width: 700px) {
+  .reviews-ready-list article { align-items: flex-start; }
+  .customer-portal-reviews .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-reviews .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-reviews .customer-portal-sidebar>h1,
+  .customer-portal-reviews .customer-portal-sidebar>p { display: none; }
+  .customer-portal-reviews .customer-portal-nav { margin-top: 0; }
+  .customer-portal-reviews .customer-portal-content>header { flex-wrap: wrap; }
+  .customer-rating-page { width: calc(100% - 24px); padding-top: 15px; }
+  .customer-review-form>section,
+  .review-unavailable { padding: 15px; }
+  .review-aspect-grid { grid-template-columns: 1fr; }
+  .star-rating-field { padding: 9px 11px; }
+}

@@ -128,6 +128,10 @@
   text-align: center;
   text-decoration: none;
 }
+.notification-panel-error { margin: 0; padding: 10px 16px; border-bottom: 1px solid #e7c6ae; background: #fff8f1; color: #714021; font-size: 12px; line-height: 1.4; }
+.header-notifications:focus-visible,
+.notification-panel a:focus-visible,
+.notification-panel button:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
 .header-notifications svg {
   width: 17px;
 }
@@ -310,6 +314,10 @@
     right: -8px;
     width: min(360px, calc(100vw - 20px));
   }
+  .notification-panel-list article { grid-template-columns: 1fr; gap: 8px; }
+  .notification-panel-list article > div:last-child { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .notification-panel-list a,
+  .notification-panel-list button { min-height: 40px; font-size: 11px; }
   .notifications-page {
     padding: 40px 13px 90px;
   }
@@ -340,4 +348,48 @@
     flex-direction: row;
     flex-wrap: wrap;
   }
+}
+
+/* Embedded customer inbox: remove full-page spacing and clarify actions. */
+.notifications-page.notifications-embedded { max-width: none; padding: 0; }
+.notifications-page.notifications-embedded>header { margin-bottom: 14px; gap: 12px; }
+.notifications-page.notifications-embedded h1 { margin: 3px 0; font-size: clamp(25px, 3vw, 32px); }
+.notifications-page.notifications-embedded>header p { font-size: 12px; }
+.notifications-page>header button { min-height: 40px; font-size: 11px; }
+.notifications-list { gap: 8px; }
+.notifications-list article { grid-template-columns: 40px minmax(0, 1fr) auto; padding: 13px 15px; gap: 12px; }
+.notifications-list article>span { width: 38px; height: 38px; }
+.notifications-list article>div small { font-size: 10px; }
+.notifications-list h2 { font-size: 15px; margin: 3px 0; }
+.notifications-list p { font-size: 12px; line-height: 1.45; margin-bottom: 5px; }
+.notifications-list em { font-size: 10px; }
+.notifications-list aside>b { font-size: 10px; }
+.notifications-list aside a,
+.notifications-list aside button { min-height: 28px; font-size: 11px; }
+.notifications-list aside a:focus-visible,
+.notifications-list aside button:focus-visible,
+.notifications-page>header button:focus-visible,
+.notifications-empty a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.notifications-error { margin: 0 0 12px; padding: 10px 12px; border-radius: 9px; background: #fff0ed; color: #9d3f37; font-size: 12px; }
+.notifications-refresh-error { margin: 0 0 12px; padding: 10px 12px; border: 1px solid #e7c6ae; border-radius: 9px; background: #fff8f1; color: #714021; font-size: 12px; line-height: 1.45; }
+.notifications-refresh-error a { color: inherit; font-weight: 800; }
+.notifications-refresh-error a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.notifications-empty { min-height: 210px; padding: 20px; }
+.notifications-empty p { font-size: 12px; }
+@media (max-width: 700px) {
+  .customer-portal-notifications .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-notifications .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-notifications .customer-portal-sidebar>h1,
+  .customer-portal-notifications .customer-portal-sidebar>p { display: none; }
+  .customer-portal-notifications .customer-portal-nav { margin-top: 0; }
+}
+@media (max-width: 680px) {
+  .notifications-page.notifications-embedded>header { align-items: flex-start; flex-wrap: wrap; }
+  .notifications-page>header button { width: auto; padding: 0 11px; font-size: 11px; }
+  .notifications-list article { grid-template-columns: 34px minmax(0, 1fr); padding: 12px; gap: 9px; }
+  .notifications-list article>span { width: 34px; height: 34px; }
+  .notifications-list aside { grid-column: 2; align-items: center; gap: 6px 11px; }
+  .notifications-list aside>b { margin-right: auto; }
+  .notifications-list aside a,
+  .notifications-list aside button { min-height: 44px; }
 }

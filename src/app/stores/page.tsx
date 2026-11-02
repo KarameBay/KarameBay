@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { BrowseHeader } from "@/components/catalog/browse-header";
 import { PublicFooter } from "@/components/catalog/public-footer";
 import { StoreCard } from "@/components/catalog/store-card";
 import { HomeSearch } from "@/components/catalog/home-search";
 import { getStores } from "@/lib/catalog";
-import { MapPin, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export default async function StoresPage({
@@ -20,11 +21,9 @@ export default async function StoresPage({
       <main className="browse-page">
         <section className="browse-hero">
           <div>
-            <span className="catalog-kicker">
-              KIGALI&apos;S LOCAL MARKETPLACE
-            </span>
-            <h1>What can we bring you?</h1>
-            <p>Browse trusted local stores and businesses near you.</p>
+            <span className="catalog-kicker">SHOP KIGALI</span>
+            <h1>All local shops</h1>
+            <p>Choose a partner or search for a product.</p>
           </div>
           <HomeSearch
             action="/stores"
@@ -32,31 +31,24 @@ export default async function StoresPage({
             formClassName="browse-search"
             placeholder="Search stores or products"
           />
-          <div className="browse-location">
-            <MapPin />
-            <span>
-              <small>DELIVERING TO</small>Choose delivery location
-            </span>
-          </div>
         </section>
-        <section className="browse-stores">
+        <section className="browse-stores" aria-label="Shop directory">
           <div className="browse-title">
-            <div>
-              <span className="catalog-kicker">EXPLORE</span>
-              <h2>{query ? `Results for “${query}”` : "Stores near you"}</h2>
+            <p>{query ? `Results for "${query}"` : "Browse local partners in Kigali"}</p>
+            <p>{stores.length} {stores.length === 1 ? "shop" : "shops"}</p>
+          </div>
+          {stores.length > 0 ? (
+            <div className={`browse-store-grid directory-store-grid directory-store-grid-${Math.min(stores.length, 4)}`}>
+              {stores.map((store) => (
+                <StoreCard key={store.id} store={store} />
+              ))}
             </div>
-            <p>{stores.length} stores available</p>
-          </div>
-          <div className="browse-store-grid">
-            {stores.map((store) => (
-              <StoreCard key={store.id} store={store} />
-            ))}
-          </div>
-          {!stores.length && (
+          ) : (
             <div className="catalog-empty">
-              <Search />
-              <h3>No matching stores or products</h3>
-              <p>Try a store, product, or category name.</p>
+              <Search aria-hidden="true" />
+              <h3>{query ? "No matching shops or products" : "No shops available yet"}</h3>
+              <p>{query ? "Try another shop, product, or category name." : "Approved partners will appear here when available."}</p>
+              {query && <Link href="/stores">Clear search</Link>}
             </div>
           )}
         </section>

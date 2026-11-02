@@ -63,8 +63,9 @@ export function ProductCard({
   return (
     <article className="catalog-product-card">
       {product.catalogEngine === "RESTAURANT" && detailHref ? (
-        <Link href={detailHref} className="catalog-product-link">
+        <Link href={detailHref} prefetch={false} className="catalog-product-link" aria-label={`View ${product.name} options`}>
           {cardContent}
+          <span className="catalog-product-view">View options <span aria-hidden="true">→</span></span>
         </Link>
       ) : (
         cardContent

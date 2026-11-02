@@ -48,10 +48,12 @@ export function StoreCard({ store }: { store: StoreCardData }) {
             <Package />
             {store._count.products} {store._count.products === 1 ? "product" : "products"}
           </span>
-          <span>
-            <Star />
-            {store.rating.toFixed(1)}
-          </span>
+          {store.rating > 0 && (
+            <span>
+              <Star />
+              {store.rating.toFixed(1)}
+            </span>
+          )}
         </div>
       </div>
     </Link>

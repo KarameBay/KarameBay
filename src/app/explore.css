@@ -13,11 +13,11 @@
 }
 
 .explore-hero {
-  padding: clamp(36px, 4.5vw, 64px) 0 clamp(30px, 3.5vw, 52px);
+  padding: clamp(20px, 2.4vw, 32px) 0 clamp(18px, 2vw, 28px);
   display: grid;
-  grid-template-columns: minmax(320px, 0.8fr) minmax(620px, 1.2fr);
-  align-items: end;
-  gap: clamp(36px, 6vw, 90px);
+  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp(22px, 3vw, 42px);
 }
 
 .explore-hero-copy h1,
@@ -25,6 +25,12 @@
   margin: 10px 0 14px;
   font: 800 clamp(39px, 4.3vw, 68px)/0.98 var(--font-display);
   letter-spacing: -0.055em;
+}
+
+.explore-hero-copy h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.05;
 }
 
 .explore-hero-copy p,
@@ -36,24 +42,29 @@
   line-height: 1.65;
 }
 
+.explore-hero-copy p { font-size: 13px; line-height: 1.45; }
+
 .explore-jump-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 9px;
 }
 
 .explore-jump-grid > a {
   min-width: 0;
-  min-height: 156px;
-  padding: 18px;
+  min-height: 82px;
+  padding: 11px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 14px;
   background: #fff;
   color: var(--ink);
   text-decoration: none;
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-content: end;
+  grid-template-columns: 38px minmax(0, 1fr) 16px;
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 9px;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
@@ -63,38 +74,45 @@
   transform: translateY(-3px);
 }
 
+.explore-jump-grid > a:focus-visible,
+.explore-section-heading > a:focus-visible,
+.explore-parcel > a:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+
 .explore-jump-grid > a > span {
-  width: 46px;
-  height: 46px;
-  margin-bottom: 20px;
-  border-radius: 13px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: var(--cream);
   color: var(--green);
   display: grid;
   place-items: center;
-  grid-column: 1 / -1;
+  grid-column: 1;
+  grid-row: 1 / 3;
 }
 
-.explore-jump-grid > a > span svg { width: 23px; }
+.explore-jump-grid > a > span svg { width: 20px; }
 .explore-jump-grid > a > span img,
 .directory-icon img {
   width: 28px;
   height: 28px;
   object-fit: contain;
 }
-.explore-jump-grid strong { font: 800 16px var(--font-display); }
-.explore-jump-grid small { margin-top: 5px; color: var(--muted); font-size: 10px; grid-column: 1; }
-.explore-jump-grid > a > svg { width: 17px; color: var(--green); grid-column: 2; grid-row: 2 / 4; align-self: center; }
+.explore-jump-grid strong { min-width: 0; font: 800 14px var(--font-display); grid-column: 2; grid-row: 1; }
+.explore-jump-grid small { min-width: 0; overflow: hidden; color: var(--muted); font-size: 10px; grid-column: 2; grid-row: 2; text-overflow: ellipsis; white-space: nowrap; }
+.explore-jump-grid > a > svg { width: 16px; color: var(--green); grid-column: 3; grid-row: 1 / 3; align-self: center; }
 
 .explore-section {
-  padding-block: clamp(42px, 5vw, 72px);
+  padding-block: clamp(22px, 2.6vw, 36px);
   border-top: 1px solid var(--line);
   scroll-margin-top: 90px;
 }
 
 .explore-section-heading,
 .directory-results-heading {
-  margin-bottom: 25px;
+  margin-bottom: 16px;
   display: flex;
   align-items: end;
   justify-content: space-between;
@@ -287,20 +305,17 @@
 }
 
 @media (max-width: 620px) {
-  .explore-hero { padding-top: 34px; }
-  .explore-jump-grid { grid-template-columns: 1fr; gap: 9px; }
+  .explore-hero { padding-top: 18px; gap: 15px; }
+  .explore-jump-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .explore-jump-grid > a {
-    min-height: 96px;
-    padding: 15px;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    align-content: center;
-    column-gap: 12px;
+    min-height: 72px;
+    padding: 9px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    column-gap: 8px;
   }
-  .explore-jump-grid > a > span { grid-column: 1; grid-row: 1 / 3; margin: 0; }
-  .explore-jump-grid strong { grid-column: 2; grid-row: 1; align-self: end; }
-  .explore-jump-grid small { grid-column: 2; grid-row: 2; align-self: start; }
-  .explore-jump-grid > a > svg { grid-column: 3; grid-row: 1 / 3; }
+  .explore-jump-grid > a > span { width: 34px; height: 34px; }
+  .explore-jump-grid > a > svg { display: none; }
+  .explore-jump-grid strong { font-size: 12px; }
   .explore-section-heading,
   .directory-results-heading { align-items: flex-start; }
   .explore-section-heading p { font-size: 12px; }
@@ -315,4 +330,31 @@
   .directory-hero p { font-size: 12px; }
   .directory-search { min-height: 48px; max-width: none; }
   .directory-search button { height: 42px; padding-inline: 14px; }
+}
+
+@media (max-width: 420px) {
+  .explore-jump-grid small { display: none; }
+  .explore-jump-grid > a { min-height: 60px; }
+  .explore-jump-grid > a > span { grid-row: 1; }
+  .explore-jump-grid strong { grid-row: 1; }
+}
+
+/* Compact discovery headers keep the first partner cards visible. */
+.directory-page .directory-hero { padding-block: 20px 16px; gap: 24px; }
+.directory-page .directory-hero > div { padding-left: 55px; }
+.directory-page .directory-icon { width: 42px; height: 42px; border-radius: 12px; }
+.directory-page .directory-hero h1 { margin: 3px 0 4px; font-size: clamp(29px, 3vw, 39px); }
+.directory-page .directory-hero p { font-size: 12px; line-height: 1.45; }
+.directory-page .directory-search { min-height: 49px; box-shadow: none; }
+.directory-page .directory-search:focus-within { outline: 3px solid #d79b31; outline-offset: 2px; }
+.directory-page .directory-results { padding-block: 17px 54px; }
+.directory-page .directory-results-heading { margin-bottom: 12px; align-items: center; }
+.directory-page .directory-results-heading p:first-child { color: var(--ink); font-size: 13px; font-weight: 700; }
+.directory-page .directory-results-heading p:last-child { flex: none; font-size: 11px; }
+@media (max-width: 1100px) {
+  .directory-page .directory-hero { gap: 13px; }
+}
+@media (max-width: 620px) {
+  .directory-page .directory-hero { padding-block: 17px 14px; }
+  .directory-page .directory-results { padding-block: 15px 48px; }
 }

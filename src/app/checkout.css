@@ -6,3 +6,110 @@
 .ebm-card{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:15px 17px;background:linear-gradient(135deg,#fffaf0,#fff);border:1px solid #ead9b7;border-radius:14px}.ebm-card-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#fff0cf;color:#9a640f}.ebm-card-icon svg{width:21px}.ebm-card-copy h2{margin:0 0 4px;font:800 14px var(--font-display)}.ebm-card-copy p{margin:0;color:var(--muted);font-size:9px;line-height:1.5}.ebm-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--green);font-size:9px;white-space:nowrap}.ebm-toggle input{position:absolute;opacity:0}.ebm-toggle span{width:34px;height:20px;border-radius:999px;background:#d9dfd8;position:relative;transition:.18s}.ebm-toggle span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:.18s}.ebm-toggle input:checked + span{background:var(--green)}.ebm-toggle input:checked + span::after{transform:translateX(14px)}.ebm-toggle input:focus-visible + span{outline:3px solid #d79b31;outline-offset:3px}
 @media(max-width:600px){.ebm-card{grid-template-columns:36px minmax(0,1fr);padding:13px}.ebm-card-icon{width:36px;height:36px}.ebm-toggle{grid-column:2;justify-self:start}}
 .ebm-edit-link{padding:8px 11px;border-radius:9px;background:#edf5e8;color:var(--green);font-size:9px;font-weight:900;text-decoration:none;white-space:nowrap}.ebm-edit-link:focus-visible{outline:3px solid #d79b31;outline-offset:3px}
+
+/* Final review: clearer payment instructions and an accessible submit action. */
+.review-title { text-align: left; margin: 14px 0 20px; }
+.review-title h1 { font-size: clamp(28px, 3vw, 34px); margin: 4px 0; }
+.review-title p { font-size: 13px; line-height: 1.5; }
+.review-back { font-size: 12px; }
+.review-item b { font-size: 13px; }
+.review-item small { font-size: 10px; }
+.review-item>strong { font-size: 12px; }
+.address-card label { font-size: 12px; }
+.address-card textarea { font-size: 13px; line-height: 1.5; }
+.address-card>div span { font-size: 11px; }
+.momo-brand small, .momo-code small { font-size: 9px; }
+.momo-name, .momo-card li { font-size: 12px; }
+.payment-confirm b { font-size: 12px; }
+.payment-confirm small { font-size: 10px; line-height: 1.4; }
+.review-summary>div:not(.review-status):not(.review-error) { font-size: 12px; }
+.review-total b { font-size: 18px; }
+.place-order { font-size: 13px; }
+.review-back:focus-visible, .place-order:focus-visible,
+.payment-confirm:focus-within { outline: 3px solid #d79b31; outline-offset: 2px; }
+@media (max-width: 850px) {
+  .review-page:has(.review-layout) { padding-bottom: 200px; }
+  .review-summary {
+    position: fixed;
+    z-index: 60;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 28px rgba(18, 27, 21, 0.16);
+  }
+  .review-summary h2, .review-status, .review-summary>p { display: none; }
+  .review-summary>div:not(.review-status):not(.review-error) { padding: 2px 0; }
+  .review-total { margin-top: 4px; padding-top: 7px !important; }
+  .place-order { margin-top: 8px; }
+}
+@media (max-width: 600px) {
+  .review-page { padding-top: 16px; }
+  .review-title { margin: 10px 0 16px; }
+  .review-title h1 { font-size: 27px; }
+  .review-item { grid-template-columns: 42px minmax(0, 1fr) auto; padding: 10px 12px; }
+  .review-item>div { width: 42px; height: 42px; }
+}
+
+.review-summary .review-action-hint {
+  display: block;
+  margin: 9px 0 0;
+  color: #70430e;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
+}
+.review-error { font-size: 12px; line-height: 1.45; }
+.review-error a {
+  display: inline-block;
+  margin-top: 7px;
+  color: #753027;
+  font-weight: 800;
+}
+.review-error a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+.review-error-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 9px; }
+.review-error-actions button { min-height: 38px; border: 1px solid #a44238; border-radius: 8px; background: #fff; color: #753027; padding: 7px 12px; font: inherit; font-weight: 800; cursor: pointer; }
+.review-error-actions button:hover { background: #fff8f6; }
+.review-error-actions button:disabled { opacity: .65; cursor: wait; }
+.review-error-actions button:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+.review-error-actions a { margin-top: 0; }
+@media (max-width: 600px) {
+  .address-card textarea { font-size: 16px; }
+}
+
+/* Keep the mobile checkout action compact while leaving form details readable. */
+@media (max-width: 850px) {
+  .review-page:has(.review-layout) { padding-bottom: 150px; }
+  .review-page:has(.review-error-actions) { padding-bottom: 245px; }
+  .review-summary > div:nth-of-type(-n + 2) { display: none !important; }
+  .review-summary .review-total {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0 !important;
+    font-size: 14px !important;
+  }
+  .review-summary .review-total b { font-size: 20px; }
+  .place-order { min-height: 52px; height: auto; font-size: 15px; }
+  .review-summary:has(.review-error-actions) .place-order { display: none; }
+  .review-error-actions button,
+  .review-error-actions a { min-height: 44px; display: inline-flex; align-items: center; }
+}
+@media (max-width: 600px) {
+  .review-item b { font-size: 14px; line-height: 1.35; }
+  .review-item small { font-size: 12px; line-height: 1.4; }
+  .review-item > strong { font-size: 12px; white-space: nowrap; }
+  .review-card > header span { font-size: 12px; }
+  .address-card label { font-size: 14px; }
+  .address-card > div span { font-size: 12px; }
+  .ebm-card-copy p { font-size: 12px; }
+  .ebm-edit-link { min-height: 44px; display: inline-flex; align-items: center; font-size: 12px; }
+  .momo-brand small, .momo-code small { font-size: 11px; }
+  .momo-code { min-height: 64px; }
+  .momo-card li { font-size: 13px; line-height: 1.4; }
+  .payment-confirm { min-height: 52px; align-items: flex-start; }
+  .payment-confirm b { font-size: 13px; }
+  .payment-confirm small { font-size: 12px; }
+}

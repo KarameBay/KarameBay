@@ -444,7 +444,7 @@
   max-width: 330px;
   margin: 10px 0;
   color: #bdb3a7;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
 }
 
@@ -460,7 +460,7 @@
   flex-direction: row;
   align-items: center;
   color: #d2c9bd;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .public-footer-brand svg,
@@ -476,7 +476,7 @@
 .public-footer nav b,
 .public-footer address b {
   margin-bottom: 5px;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .public-footer nav a,
@@ -485,7 +485,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.4;
   text-decoration: none;
 }
@@ -500,7 +500,13 @@
   padding-top: 18px;
   border-top: 1px solid #3a3025;
   color: #8f857a;
-  font-size: 8px;
+  font-size: 11px;
+}
+
+.public-footer a:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 @media (max-width: 1280px) {

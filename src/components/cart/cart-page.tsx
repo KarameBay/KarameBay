@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,45 +17,105 @@ import {
 import { useCart } from "./cart-provider";
 import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
-import { EBM_DETAILS_STORAGE_KEY, EbmDetails } from "@/lib/cart-types";
+import { EBM_DETAILS_STORAGE_KEY, EbmDetails, readStoredEbm } from "@/lib/cart-types";
 
 function itemKey(item: { lineKey?: string; id: string }) {
   return item.lineKey || item.id;
 }
+
+const emptyEbm: EbmDetails = { requested: false, storeId: "", usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" };
 
 export function CartPage() {
   const cart = useCart();
   const router = useRouter();
   const storeName = cart.items[0]?.storeName;
   const currentStoreId = cart.items[0]?.storeId ?? "";
-  const [ebm, setEbm] = useState<EbmDetails>({ requested: false, storeId: "", usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" });
+  const [ebm, setEbm] = useState<EbmDetails>(emptyEbm);
   const [ebmOpen, setEbmOpen] = useState(false);
   const [ebmError, setEbmError] = useState("");
+  const ebmSheetRef = useRef<HTMLElement>(null);
+  const ebmCloseRef = useRef<HTMLButtonElement>(null);
+  const ebmActionRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (!currentStoreId) return;
     try {
       const saved = JSON.parse(localStorage.getItem(EBM_DETAILS_STORAGE_KEY) ?? "null");
-      if (saved && typeof saved === "object" && (!saved.storeId || !currentStoreId || saved.storeId === currentStoreId)) queueMicrotask(() => setEbm((current) => ({ ...current, ...saved })));
-    } catch {}
+      queueMicrotask(() => setEbm(readStoredEbm(saved, currentStoreId) ?? emptyEbm));
+    } catch {
+      queueMicrotask(() => setEbm(emptyEbm));
+    }
   }, [currentStoreId]);
+
+  useEffect(() => {
+    if (!ebmOpen) return;
+    const actionButton = ebmActionRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    ebmCloseRef.current?.focus();
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setEbmOpen(false);
+      }
+      if (event.key !== "Tab") return;
+      const focusable = ebmSheetRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), a[href], select:not([disabled]), textarea:not([disabled])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      actionButton?.focus();
+    };
+  }, [ebmOpen]);
 
   function saveEbm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const next = { ...ebm, requested: true, storeId: cart.items[0]?.storeId ?? "", phone: ebm.usePhone ? ebm.phone.trim() : ebm.phone.trim() };
-    if (!next.tin.trim() || !next.ownerName.trim() || !next.purchaseCode.trim() || (next.usePhone && !next.phone.trim())) {
-      setEbmError("Enter the TIN, owner name, purchase code, and phone number when selected.");
+    const next = {
+      ...ebm,
+      requested: true,
+      storeId: currentStoreId,
+      phone: ebm.usePhone ? ebm.phone.trim() : "",
+      tin: ebm.usePhone ? "" : ebm.tin.trim(),
+      ownerName: ebm.ownerName.trim(),
+      purchaseCode: ebm.purchaseCode.trim(),
+    };
+    if (!next.ownerName || (next.usePhone ? !next.phone : !next.tin)) {
+      setEbmError(next.usePhone ? "Enter a phone number and billing name." : "Enter a TIN and billing name.");
       return;
     }
-    localStorage.setItem(EBM_DETAILS_STORAGE_KEY, JSON.stringify(next));
+    try {
+      localStorage.setItem(EBM_DETAILS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      setEbmError("Could not save EBM details on this device. Check browser storage and try again.");
+      return;
+    }
     setEbm(next);
     setEbmError("");
     setEbmOpen(false);
   }
 
   function removeEbm() {
-    const cleared = { requested: false, storeId: "", usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" };
-    setEbm(cleared);
-    localStorage.setItem(EBM_DETAILS_STORAGE_KEY, JSON.stringify(cleared));
+    try {
+      localStorage.removeItem(EBM_DETAILS_STORAGE_KEY);
+    } catch {
+      setEbmError("Could not remove EBM details on this device. Please try again.");
+      return;
+    }
+    setEbm(emptyEbm);
+    setEbmOpen(false);
   }
 
   if (!cart.hydrated) {
@@ -76,6 +136,7 @@ export function CartPage() {
             : "Your cart is ready for something good."}
         </p>
       </div>
+      {cart.storageError && <p className="cart-storage-warning" role="alert">Your basket cannot be saved in this browser. Keep this tab open until you finish checkout.</p>}
       {!cart.items.length ? (
         <section className="cart-empty">
           <span>
@@ -182,9 +243,9 @@ export function CartPage() {
                 </div>
               </article>
             ))}
-            <button type="button" className="cart-ebm-action" onClick={() => { setEbmError(""); setEbmOpen(true); }}>
+            <button ref={ebmActionRef} type="button" className="cart-ebm-action" onClick={() => { setEbmError(""); setEbmOpen(true); }}>
               <span><FileCheck2 /></span>
-              <span><b>{ebm.requested ? "EBM information saved" : "Request an EBM receipt"}</b><small>{ebm.requested ? `${ebm.ownerName} · TIN ${ebm.tin}` : "Add billing details for this merchant"}</small></span>
+              <span><b>{ebm.requested ? "EBM information saved" : "Request an EBM receipt"}</b><small>{ebm.requested ? `${ebm.ownerName} · ${ebm.usePhone ? `Phone ${ebm.phone}` : `TIN ${ebm.tin}`}` : "Add billing details for this merchant"}</small></span>
               <ArrowRight />
             </button>
           </section>
@@ -209,16 +270,19 @@ export function CartPage() {
       )}
       {ebmOpen && (
         <div className="cart-ebm-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setEbmOpen(false); }}>
-          <section className="cart-ebm-sheet" role="dialog" aria-modal="true" aria-labelledby="cart-ebm-title">
-            <button type="button" className="cart-ebm-close" aria-label="Close EBM information" onClick={() => setEbmOpen(false)}><X /></button>
-            <div className="cart-ebm-heading"><span><FileCheck2 /></span><div><h2 id="cart-ebm-title">EBM information</h2><p>Add billing details for {storeName}.</p></div></div>
-            <div className="cart-ebm-merchant"><b>{storeName}</b><small>Use the billing details that should appear on your receipt.</small></div>
+          <section ref={ebmSheetRef} className="cart-ebm-sheet" role="dialog" aria-modal="true" aria-labelledby="cart-ebm-title" aria-describedby="cart-ebm-description">
+            <button ref={ebmCloseRef} type="button" className="cart-ebm-close" aria-label="Close EBM information" onClick={() => setEbmOpen(false)}><X /></button>
+            <div className="cart-ebm-heading"><span><FileCheck2 /></span><div><h2 id="cart-ebm-title">EBM information</h2><p id="cart-ebm-description">Add billing details for {storeName}.</p></div></div>
+            <div className="cart-ebm-merchant"><b>{storeName}</b><small>Use a phone number or TIN with the name for this receipt.</small></div>
             <form onSubmit={saveEbm} className="cart-ebm-form">
-              <label className="cart-ebm-phone-toggle"><input type="checkbox" checked={ebm.usePhone} onChange={(event) => setEbm((current) => ({ ...current, usePhone: event.target.checked }))} /><span>Use my phone number</span></label>
-              {ebm.usePhone && <label>Phone number<input required value={ebm.phone} onChange={(event) => setEbm((current) => ({ ...current, phone: event.target.value }))} placeholder="2507XXXXXXXX" inputMode="tel" /></label>}
-              <label>TIN<input required value={ebm.tin} onChange={(event) => setEbm((current) => ({ ...current, tin: event.target.value }))} placeholder="Enter TIN" /></label>
-              <label>TIN owner name<input required value={ebm.ownerName} onChange={(event) => setEbm((current) => ({ ...current, ownerName: event.target.value }))} placeholder="Enter TIN owner name" /></label>
-              <label>Purchase code<input required value={ebm.purchaseCode} onChange={(event) => setEbm((current) => ({ ...current, purchaseCode: event.target.value }))} placeholder="Enter purchase code" /></label>
+              <label className="cart-ebm-phone-toggle"><input type="checkbox" checked={ebm.usePhone} onChange={(event) => setEbm((current) => ({ ...current, usePhone: event.target.checked }))} /><span>Use phone number instead of TIN</span></label>
+              {ebm.usePhone ? (
+                <label>Phone number<input required value={ebm.phone} onChange={(event) => setEbm((current) => ({ ...current, phone: event.target.value }))} placeholder="2507XXXXXXXX" inputMode="tel" autoComplete="tel" maxLength={30} /></label>
+              ) : (
+                <label>TIN<input required value={ebm.tin} onChange={(event) => setEbm((current) => ({ ...current, tin: event.target.value }))} placeholder="Enter TIN" inputMode="numeric" maxLength={40} /></label>
+              )}
+              <label>Billing name<input required value={ebm.ownerName} onChange={(event) => setEbm((current) => ({ ...current, ownerName: event.target.value }))} placeholder="Name for the receipt" autoComplete="name" maxLength={160} /></label>
+              <label>Purchase code (optional)<input value={ebm.purchaseCode} onChange={(event) => setEbm((current) => ({ ...current, purchaseCode: event.target.value }))} placeholder="Enter purchase code if you have one" maxLength={80} /></label>
               {ebmError && <p className="cart-ebm-error" role="alert">{ebmError}</p>}
               <button type="submit" className="cart-ebm-confirm">Save EBM details</button>
               {ebm.requested && <button type="button" className="cart-ebm-remove" onClick={removeEbm}>Remove saved EBM details</button>}

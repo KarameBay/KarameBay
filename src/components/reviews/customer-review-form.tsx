@@ -39,16 +39,21 @@ export function CustomerReviewForm({
     event.preventDefault();
     if (!values.storeRating) { setMessage("Choose an overall store rating."); return; }
     setPending(true); setMessage("");
-    const response = await fetch(reviewId ? `/api/reviews/${reviewId}` : "/api/reviews", {
-      method: reviewId ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...values, orderNumber }),
-    });
-    const result = (await response.json().catch(() => ({}))) as { error?: string };
-    setPending(false);
-    if (!response.ok) { setMessage(result.error ?? "Could not save your review."); return; }
-    router.push("/customer/reviews");
-    router.refresh();
+    try {
+      const response = await fetch(reviewId ? `/api/reviews/${reviewId}` : "/api/reviews", {
+        method: reviewId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, orderNumber }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) { setMessage(result.error ?? "Could not save your review."); return; }
+      router.push("/customer/reviews");
+      router.refresh();
+    } catch {
+      setMessage("Could not save your review. Check your connection and try again.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -58,7 +63,7 @@ export function CustomerReviewForm({
         <h2>How was {storeName}?</h2>
         <RatingField label="Overall rating" value={values.storeRating} required onChange={(value) => setRating("storeRating", value)} />
         <div className="review-aspect-grid">
-          <RatingField label="Food quality" value={values.foodQualityRating} onChange={(value) => setRating("foodQualityRating", value)} />
+          <RatingField label="Item quality" value={values.foodQualityRating} onChange={(value) => setRating("foodQualityRating", value)} />
           <RatingField label="Packaging" value={values.packagingRating} onChange={(value) => setRating("packagingRating", value)} />
           <RatingField label="Order accuracy" value={values.orderAccuracyRating} onChange={(value) => setRating("orderAccuracyRating", value)} />
         </div>

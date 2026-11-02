@@ -243,3 +243,38 @@
     margin-bottom: 18px;
   }
 }
+
+/* Customer entry: keep the brand visible while bringing the form forward. */
+.customer-auth .auth-brand {
+  background:
+    linear-gradient(145deg, rgba(16, 52, 36, .87), rgba(20, 37, 29, .78)),
+    url('/images/karame-rider-hero.png') 68% center / cover;
+}
+.customer-auth .auth-card { border-radius: 20px; padding: 30px; box-shadow: 0 18px 48px rgba(26, 37, 26, .08); }
+.customer-auth .auth-card h2 { font-size: clamp(25px, 2.5vw, 30px); margin: 5px 0; }
+.customer-auth .auth-card>p { margin-bottom: 18px; line-height: 1.5; }
+.customer-auth .auth-card form { gap: 13px; }
+.customer-auth .auth-card label { font-size: 13px; }
+.customer-auth .auth-card input { background: #fff; font-size: 15px; }
+.customer-auth .auth-card input[type=file] { height: auto; min-height: 46px; padding: 10px 12px; }
+.customer-auth .auth-field-hint { color: var(--muted); font-size: 11px; font-weight: 500; }
+.customer-auth .auth-submit { min-height: 48px; font-size: 14px; }
+.customer-auth .auth-switch { font-size: 13px; }
+.customer-auth a:focus-visible,
+.customer-auth button:focus-visible,
+.customer-auth input:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+@media (max-width: 800px) {
+  .customer-auth .auth-brand { min-height: 164px; padding: 16px 20px; gap: 16px; background-position: 68% center; }
+  .customer-auth .auth-brand h1 { font-size: 23px; line-height: 1.1; letter-spacing: -1px; margin: 5px 0 0; }
+  .customer-auth .auth-brand .kicker { font-size: 9px; }
+  .customer-auth .auth-main { padding: 12px; place-items: start center; }
+  .customer-auth .auth-card { width: min(100%, 500px); padding: 22px; }
+  .customer-auth .auth-card input { font-size: 16px; }
+}
+@media (max-width: 420px) {
+  .customer-auth .auth-brand { min-height: 146px; }
+  .customer-auth .auth-logo { font-size: 20px; }
+  .customer-auth .auth-logo img { width: 42px; height: 42px; }
+  .customer-auth .auth-brand h1 { font-size: 20px; }
+  .customer-auth .auth-card { padding: 19px 16px; }
+}

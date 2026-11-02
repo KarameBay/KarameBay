@@ -645,6 +645,8 @@ model Order {
   id                     String                 @id @default(cuid())
   orderNumber            String                 @unique
   customerId             String
+  checkoutRequestId      String?
+  checkoutRequestFingerprint String?
   customer               User                   @relation("CustomerOrders", fields: [customerId], references: [id])
   riderId                String?
   rider                  User?                  @relation("RiderDeliveries", fields: [riderId], references: [id], onDelete: SetNull)
@@ -686,6 +688,7 @@ model Order {
   updatedAt              DateTime               @updatedAt
 
   @@index([customerId, createdAt])
+  @@unique([customerId, checkoutRequestId])
   @@index([riderId, status, createdAt])
   @@index([storeId, status, createdAt])
   @@index([status, createdAt])

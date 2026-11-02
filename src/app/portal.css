@@ -852,3 +852,137 @@
 .admin-customer-list .verified { display: inline-flex; align-items: center; gap: 5px; font-weight: 800; }
 .admin-customer-list .verified svg { width: 16px; }
 .admin-customer-list button { border: 0; border-radius: 9px; padding: 9px 12px; color: white; background: #c58018; font-weight: 800; }
+
+/* Customer orders: keep the list ahead of redundant portal copy. */
+.customer-portal-orders .customer-orders { max-width: none; padding: 0; }
+.customer-portal-orders .customer-orders>header { padding: 16px 18px; }
+.customer-portal-orders .customer-orders>section { margin-top: 14px; }
+.customer-orders-filters { margin-top: 12px; padding: 5px; border-radius: 12px; background: #f2eee7; display: flex; gap: 5px; width: fit-content; max-width: 100%; }
+.customer-orders-filters button { min-height: 40px; padding: 0 13px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.customer-orders-filters button.active { background: #fff; color: var(--ink); box-shadow: 0 4px 16px rgba(52, 36, 17, .08); }
+.customer-orders-filters span { min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: #e7dfd1; display: grid; place-items: center; font-size: 10px; }
+.customer-orders-filters button:focus-visible, .customer-no-orders button:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-no-orders button { margin-top: 10px; min-height: 40px; padding: 0 13px; border: 1px solid #dfe7da; border-radius: 9px; background: #f6faf3; color: var(--green); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.customer-orders-refresh-error { margin: 12px 0 0; padding: 10px 12px; border: 1px solid #e8d6b4; border-radius: 10px; background: #fff8ed; color: #694813; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.customer-orders-refresh-error button, .customer-orders-refresh-error a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 1px solid #d7b36e; border-radius: 8px; background: #fff; color: #694813; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.customer-orders-refresh-error svg { width: 15px; height: 15px; }
+.customer-orders-refresh-error button:focus-visible, .customer-orders-refresh-error a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-portal-orders .customer-orders section>article {
+  min-height: 0;
+  gap: 12px;
+  padding: 13px 16px;
+}
+.customer-portal-orders .customer-orders article small { font-size: 11px; }
+.customer-portal-orders .customer-orders article p { font-size: 11px; }
+.customer-portal-orders .customer-status { font-size: 11px; }
+.customer-portal-orders .customer-order-actions a { min-height: 44px; font-size: 12px; }
+.customer-portal-orders .customer-order-actions a:focus-visible,
+.customer-portal-orders .customer-orders>header a:focus-visible {
+  outline: 3px solid #d79b31; outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .customer-portal-orders { padding-top: 8px; }
+  .customer-portal-orders .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-orders .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-orders .customer-portal-sidebar>h1,
+  .customer-portal-orders .customer-portal-sidebar>p { display: none; }
+  .customer-portal-orders .customer-portal-nav { margin-top: 0; }
+  .customer-portal-orders .customer-portal-content { padding: 12px; }
+  .customer-portal-orders .customer-orders>header { padding: 14px; gap: 10px; }
+  .customer-portal-orders .customer-orders>header>div:last-child { align-self: flex-start; }
+  .customer-portal-orders .customer-orders section>article { grid-template-columns: minmax(0, 1fr) auto; }
+  .customer-portal-orders .customer-orders article>div:nth-child(2) { grid-column: 1; }
+  .customer-portal-orders .customer-orders article>b { grid-column: 2; grid-row: 1; }
+  .customer-portal-orders .customer-order-actions { grid-column: 1 / -1; }
+}
+
+/* Account overview and saved places: useful actions before secondary details. */
+.customer-portal-account .customer-account-hero { padding: 18px 20px; }
+.customer-portal-account .customer-account-hero h2 { margin: 4px 0 6px; font-size: 25px; }
+.customer-portal-account .customer-account-hero p { margin: 0; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.customer-portal-account .customer-account-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 15px; }
+.customer-portal-account .customer-account-stats article { padding: 11px 13px; }
+.customer-portal-account .customer-account-stats strong { font-size: 23px; }
+.customer-portal-account .customer-account-stats span { font-size: 11px; }
+.customer-portal-account .customer-account-grid { margin-top: 13px; }
+.customer-portal-account .customer-account-card { min-height: 0; padding: 13px; align-items: center; }
+.customer-portal-account .customer-account-card:first-child,
+.customer-portal-account .customer-account-card:nth-child(2),
+.customer-portal-account .customer-account-card:nth-child(3) { background: #f8fbf5; border-color: #dce8d7; }
+.customer-portal-account .customer-account-card small { font-size: 11px; line-height: 1.35; }
+.customer-portal-account .customer-account-card:focus-visible,
+.customer-address-actions a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-address-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.customer-address-heading h2 { margin: 4px 0; font-size: 26px; }
+.customer-address-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+.customer-address-actions { display: grid; justify-items: end; gap: 5px; text-align: right; }
+.customer-address-actions a { display: inline-flex; align-items: center; min-height: 42px; padding: 0 14px; border-radius: 10px; background: var(--green); color: #fff; text-decoration: none; font-size: 12px; font-weight: 800; }
+.customer-address-actions small { max-width: 33ch; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.customer-portal-addresses .customer-address-list { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-top: 14px; }
+.customer-portal-addresses .customer-address-list article { padding: 16px; min-width: 0; }
+.customer-portal-addresses .customer-address-list .customer-no-orders { grid-column: 1 / -1; }
+.customer-portal-addresses .customer-address-list h2 { font-size: 17px; }
+.customer-portal-addresses .customer-address-list p,
+.customer-portal-addresses .customer-address-list small { overflow-wrap: anywhere; font-size: 12px; line-height: 1.5; }
+@media (max-width: 700px) {
+  .customer-portal-account .customer-portal-sidebar,
+  .customer-portal-addresses .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-account .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-account .customer-portal-sidebar>h1,
+  .customer-portal-account .customer-portal-sidebar>p,
+  .customer-portal-addresses .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-addresses .customer-portal-sidebar>h1,
+  .customer-portal-addresses .customer-portal-sidebar>p { display: none; }
+  .customer-portal-account .customer-portal-nav,
+  .customer-portal-addresses .customer-portal-nav { margin-top: 0; }
+  .customer-portal-account .customer-account-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-portal-account .customer-account-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-portal-account .customer-account-card { flex-direction: column; align-items: flex-start; }
+  .customer-address-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .customer-address-actions { justify-items: start; text-align: left; }
+  .customer-address-actions small { max-width: none; }
+  .customer-portal-addresses .customer-address-list { grid-template-columns: 1fr; }
+}
+
+/* Profile and settings: direct forms and working account destinations. */
+.customer-portal-profile .customer-summary-card,
+.customer-portal-settings .customer-summary-card { padding: 20px; }
+.customer-portal-profile .customer-summary-card h2,
+.customer-portal-settings .customer-summary-card h2 { margin: 6px 0; font-size: clamp(24px, 3vw, 31px); }
+.customer-portal-profile .customer-summary-card>p,
+.customer-portal-settings .customer-summary-card>p { margin: 0; font-size: 13px; line-height: 1.5; }
+.customer-portal-profile .customer-profile-form { margin-top: 17px; gap: 13px; }
+.customer-portal-profile .customer-profile-form label { font-size: 13px; }
+.customer-portal-profile .customer-profile-form input:focus-visible {
+  outline: 3px solid #d79b31; outline-offset: 2px;
+}
+.customer-portal-profile .customer-profile-form label small { font-size: 11px; line-height: 1.4; }
+.customer-portal-profile .customer-profile-form .auth-submit { max-width: 220px; }
+.customer-settings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 19px; }
+.customer-settings-grid a {
+  display: flex; align-items: flex-start; gap: 11px; min-width: 0;
+  padding: 16px; border: 1px solid var(--line); border-radius: 14px;
+  background: #fff; color: var(--ink); text-decoration: none;
+}
+.customer-settings-grid a:hover { border-color: #aac9a8; background: #f8fbf5; }
+.customer-settings-grid a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-settings-grid svg { width: 23px; height: 23px; flex: none; color: var(--green); }
+.customer-settings-grid span { display: grid; gap: 5px; min-width: 0; }
+.customer-settings-grid b { font-size: 14px; }
+.customer-settings-grid small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+@media (max-width: 850px) {
+  .customer-settings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .customer-portal-profile .customer-portal-sidebar,
+  .customer-portal-settings .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-profile .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-profile .customer-portal-sidebar>h1,
+  .customer-portal-profile .customer-portal-sidebar>p,
+  .customer-portal-settings .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-settings .customer-portal-sidebar>h1,
+  .customer-portal-settings .customer-portal-sidebar>p { display: none; }
+  .customer-portal-profile .customer-portal-nav,
+  .customer-portal-settings .customer-portal-nav { margin-top: 0; }
+  .customer-portal-profile .customer-profile-form .auth-submit { max-width: none; width: 100%; }
+}

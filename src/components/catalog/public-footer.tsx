@@ -20,6 +20,7 @@ export async function PublicFooter() {
         <Link href="/explore">Explore</Link>
         <Link href="/restaurants">Restaurants</Link>
         <Link href="/markets">Markets</Link>
+        <Link href="/stores">Shops</Link>
         <Link href="/customer/orders">Track orders</Link>
         <Link href="/customer/parcels/new">Send a parcel</Link>
         <Link href="/customer/parcels">Track parcels</Link>

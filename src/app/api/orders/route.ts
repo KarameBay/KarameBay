@@ -1,4 +1,5 @@
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/restaurant-menu";
 
 const schema = z.object({
+  checkoutRequestId: z.string().uuid().optional(),
   items: z
     .array(
       z.object({
@@ -86,6 +88,53 @@ function orderNumber() {
   return `KB-${date}-${randomBytes(3).toString("hex").toUpperCase()}`;
 }
 
+export async function GET() {
+  const customer = await getCurrentUser("CUSTOMER");
+  if (!customer)
+    return NextResponse.json({ error: "Sign in to view your orders." }, { status: 401 });
+  const orders = await db.order.findMany({
+    where: { customerId: customer.id },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      grandTotalRwf: true,
+      createdAt: true,
+      store: { select: { name: true } },
+      payment: { select: { status: true } },
+      review: { select: { id: true, editableUntil: true } },
+      _count: { select: { items: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  return NextResponse.json({ orders });
+}
+
+async function replayCheckout(customerId: string, requestId: string, fingerprint: string) {
+  const existing = await db.order.findUnique({
+    where: { customerId_checkoutRequestId: { customerId, checkoutRequestId: requestId } },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      grandTotalRwf: true,
+      ebmRequested: true,
+      checkoutRequestFingerprint: true,
+      payment: { select: { status: true } },
+    },
+  });
+  if (!existing) return null;
+  if (existing.checkoutRequestFingerprint !== fingerprint)
+    return NextResponse.json(
+      { error: "Your checkout details changed. Please review and submit again.", code: "CHECKOUT_REQUEST_CHANGED" },
+      { status: 409 },
+    );
+  const { checkoutRequestFingerprint: _fingerprint, ...order } = existing;
+  void _fingerprint;
+  return NextResponse.json({ order, replayed: true });
+}
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser("CUSTOMER");
   if (!user)
@@ -103,11 +152,6 @@ export async function POST(request: NextRequest) {
       { error: "Verify your email before placing an order.", verificationRequired: true },
       { status: 403 },
     );
-  if (!rateLimit(`order:${user.id}`, 5, 60_000))
-    return NextResponse.json(
-      { error: "Please wait before submitting another order." },
-      { status: 429 },
-    );
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success)
     return NextResponse.json(
@@ -117,6 +161,19 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   const input = parsed.data;
+  const { checkoutRequestId, ...checkoutDetails } = input;
+  const fingerprint = checkoutRequestId
+    ? createHash("sha256").update(JSON.stringify(checkoutDetails)).digest("hex")
+    : null;
+  if (checkoutRequestId && fingerprint) {
+    const replay = await replayCheckout(user.id, checkoutRequestId, fingerprint);
+    if (replay) return replay;
+  }
+  if (!rateLimit(`order:${user.id}`, 5, 60_000))
+    return NextResponse.json(
+      { error: "Please wait before submitting another order." },
+      { status: 429 },
+    );
   const uniqueKeys = [...new Set(input.items.map((item) => item.lineKey ?? item.productId))];
   if (uniqueKeys.length !== input.items.length)
     return NextResponse.json(
@@ -398,11 +455,22 @@ export async function POST(request: NextRequest) {
       { status: 409 },
     );
   const grandTotalRwf = itemsSubtotalRwf + route.deliveryFeeRwf;
-  const order = await db.$transaction(async (tx) => {
+  let order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    grandTotalRwf: number;
+    ebmRequested: boolean;
+    payment: { status: string };
+  };
+  try {
+    order = await db.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
         orderNumber: orderNumber(),
         customerId: user.id,
+        checkoutRequestId: checkoutRequestId ?? null,
+        checkoutRequestFingerprint: fingerprint,
         storeId,
         status: "PENDING",
         itemsSubtotalRwf,
@@ -519,7 +587,18 @@ export async function POST(request: NextRequest) {
       ebmRequested: created.ebmRequested,
       payment: { status: "PENDING_VERIFICATION" },
     };
-  });
+    });
+  } catch (error) {
+    if (
+      checkoutRequestId && fingerprint &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const replay = await replayCheckout(user.id, checkoutRequestId, fingerprint);
+      if (replay) return replay;
+    }
+    throw error;
+  }
 
   try {
     const adminEmail = await sendAdminNewOrderEmail({

@@ -326,3 +326,13 @@
 .market-taxonomy-list{max-height:220px}
 .market-taxonomy-list article{grid-template-columns:minmax(0,1fr) auto auto}
 .market-taxonomy-list button{width:auto!important;height:34px!important;padding:0 10px!important;display:inline-flex!important;align-items:center;justify-content:center;gap:5px}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

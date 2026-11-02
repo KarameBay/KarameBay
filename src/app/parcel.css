@@ -726,3 +726,87 @@
 @media (max-width: 640px) {
   .parcel-prohibited-rules ul { columns: 1; }
 }
+
+/* Parcel journeys: put current progress and actions ahead of decoration. */
+.customer-portal-parcels .customer-parcel-list>header h2 { font-size: clamp(23px, 2.5vw, 29px); margin: 3px 0; }
+.customer-portal-parcels .customer-parcel-list>header p { font-size: 12px; }
+.customer-portal-parcels .customer-parcel-list>header>a { font-size: 12px; }
+.customer-portal-parcels .parcel-list-tabs { margin: 15px 0 12px; }
+.customer-portal-parcels .parcel-list-tabs button { font-size: 11px; }
+.customer-portal-parcels .parcel-list-tabs span { font-size: 9px; }
+.parcel-list-refresh-error { margin: 0 0 12px; padding: 10px 12px; border: 1px solid #e8d6b4; border-radius: 10px; background: #fff8ed; color: #694813; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.parcel-list-refresh-error button, .parcel-list-refresh-error a { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 1px solid #d7b36e; border-radius: 8px; background: #fff; color: #694813; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.parcel-list-refresh-error svg { width: 15px; height: 15px; }
+.parcel-list-refresh-error button:focus-visible, .parcel-list-refresh-error a:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.customer-portal-parcels .customer-parcel-card-head { padding: 12px 15px; }
+.customer-portal-parcels .customer-parcel-card-head small { font-size: 10px; }
+.customer-portal-parcels .customer-parcel-card-head h3 { font-size: 16px; }
+.customer-portal-parcels .customer-parcel-card-head p { font-size: 10px; }
+.customer-portal-parcels .parcel-status-badge { font-size: 10px; }
+.customer-portal-parcels .customer-parcel-route { padding: 12px 15px; }
+.customer-portal-parcels .customer-parcel-route small,
+.customer-portal-parcels .customer-parcel-meta small { font-size: 9px; }
+.customer-portal-parcels .customer-parcel-route b,
+.customer-portal-parcels .customer-parcel-meta b { font-size: 11px; }
+.customer-portal-parcels .customer-parcel-meta { padding: 0 15px 12px; }
+.customer-portal-parcels .customer-parcel-card>footer { padding: 9px 15px; }
+.customer-portal-parcels .customer-parcel-card>footer button,
+.customer-portal-parcels .customer-parcel-card>footer a { font-size: 11px; }
+.customer-portal-parcels .customer-parcel-list a:focus-visible,
+.customer-portal-parcels .customer-parcel-list button:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+.parcel-booking-heading { max-width: 1080px; margin-bottom: 15px; text-align: left; }
+.parcel-booking-heading>a,
+.parcel-booking-heading>.parcel-heading-back { margin-bottom: 10px; }
+.parcel-booking-heading h1 { font-size: clamp(27px, 3vw, 37px); letter-spacing: -1.2px; }
+.parcel-booking-heading p { margin: 0; font-size: 12px; }
+.parcel-progress { margin-bottom: 14px; }
+.parcel-wizard-card>header { padding: 16px 22px; }
+.parcel-wizard-card>header h2 { font-size: 23px; }
+.parcel-step-content { padding: 20px 22px; }
+.parcel-field { font-size: 12px; }
+.parcel-field>small { font-size: 10px; }
+.parcel-tracking-page { padding-top: 20px; }
+.parcel-tracking-head { margin-bottom: 13px; }
+.parcel-tracking-head h1 { font-size: clamp(26px, 3vw, 34px); }
+.parcel-tracking-head p,
+.parcel-tracking-head>div:first-child>a { font-size: 11px; }
+.parcel-tracking-layout>div { display: flex; flex-direction: column; gap: 12px; }
+.parcel-timeline-card { order: 0; padding: 15px; }
+.parcel-tracking-map-card { order: 1; }
+.parcel-timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }
+.parcel-timeline>div { min-height: 0; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fafbf9; }
+.parcel-timeline>div.current { border-color: var(--green); background: #f1f7ee; }
+.parcel-timeline>div::after { display: none; }
+.parcel-timeline>div>span { width: 24px; height: 24px; }
+.parcel-timeline b { font-size: 11px; }
+.parcel-timeline small { font-size: 9px; }
+.parcel-tracking-details>section>div b { font-size: 11px; overflow-wrap: anywhere; }
+.parcel-tracking-details>section>div small { font-size: 9px; }
+.parcel-support-link { font-size: 11px; }
+.parcel-tracking-head a:focus-visible,
+.parcel-tracking-head button:focus-visible,
+.parcel-support-link:focus-visible { outline: 3px solid #d79b31; outline-offset: 2px; }
+@media (max-width: 680px) {
+  .customer-portal-parcels .customer-portal-sidebar { padding: 10px; }
+  .customer-portal-parcels .customer-portal-sidebar>.catalog-kicker,
+  .customer-portal-parcels .customer-portal-sidebar>h1,
+  .customer-portal-parcels .customer-portal-sidebar>p { display: none; }
+  .customer-portal-parcels .customer-portal-nav { margin-top: 0; }
+  .customer-portal-parcels .customer-parcel-list>header { gap: 10px; }
+  .customer-portal-parcels .customer-parcel-card-head { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .customer-portal-parcels .parcel-status-badge { grid-column: auto; }
+  .customer-portal-parcels .customer-parcel-route { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .customer-portal-parcels .customer-parcel-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parcel-booking-page,
+  .parcel-tracking-page { padding-top: 16px; }
+  .parcel-booking-heading h1 { font-size: 27px; }
+  .parcel-wizard-card>header { padding: 14px 16px; }
+  .parcel-step-content { padding: 16px; }
+  .parcel-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parcel-tracking-map-card .parcel-route-map { height: 260px; }
+}
+@media (max-width: 400px) {
+  .customer-portal-parcels .customer-parcel-card-head { grid-template-columns: 36px minmax(0, 1fr); }
+  .customer-portal-parcels .parcel-status-badge { grid-column: 1 / -1; }
+  .customer-portal-parcels .customer-parcel-route { grid-template-columns: 1fr; }
+}

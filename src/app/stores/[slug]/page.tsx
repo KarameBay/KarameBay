@@ -102,12 +102,13 @@ export default async function StorePage({ params, searchParams }: Props) {
               defaultValue={query.q}
               formClassName="catalog-search"
               placeholder={`Search in ${store.name}`}
-                storeSlug={slug}
+              storeSlug={slug}
             />
             <nav className="catalog-categories" aria-label="Product categories">
               <Link
                 className={!query.category ? "active" : ""}
                 href={`/stores/${slug}`}
+                aria-current={!query.category ? "page" : undefined}
               >
                 All <span>{store._count.products}</span>
               </Link>
@@ -115,6 +116,7 @@ export default async function StorePage({ params, searchParams }: Props) {
                 <Link
                   className={query.category === category.slug ? "active" : ""}
                   href={`/stores/${slug}?category=${category.slug}`}
+                  aria-current={query.category === category.slug ? "page" : undefined}
                   key={category.id}
                 >
                   {category.name}
@@ -156,28 +158,31 @@ export default async function StorePage({ params, searchParams }: Props) {
             </div>
           ) : (
             <div className="catalog-empty">
-              <Search />
-              <h3>No products found</h3>
-              <p>Try another search or category.</p>
+              <Search aria-hidden="true" />
+              <h3>{query.q || query.category ? "No matching products" : "Products are being added"}</h3>
+              <p>{query.q || query.category ? "Try another search or category." : "Check back soon for this partner's products."}</p>
+              {(query.q || query.category) && <Link href={`/stores/${slug}`}>Show all products</Link>}
             </div>
           )}
           {catalog.pages > 1 && (
-            <nav className="catalog-pages">
-              <Link
-                aria-disabled={catalog.page === 1}
-                href={href(catalog.page - 1)}
-              >
-                <ChevronLeft /> Previous
-              </Link>
+            <nav className="catalog-pages" aria-label="Catalog pages">
+              {catalog.page > 1 ? (
+                <Link href={href(catalog.page - 1)}>
+                  <ChevronLeft aria-hidden="true" /> Previous
+                </Link>
+              ) : (
+                <span className="catalog-page-disabled" aria-disabled="true"><ChevronLeft aria-hidden="true" /> Previous</span>
+              )}
               <span>
                 Page {catalog.page} of {catalog.pages}
               </span>
-              <Link
-                aria-disabled={catalog.page === catalog.pages}
-                href={href(catalog.page + 1)}
-              >
-                Next <ChevronRight />
-              </Link>
+              {catalog.page < catalog.pages ? (
+                <Link href={href(catalog.page + 1)}>
+                  Next <ChevronRight aria-hidden="true" />
+                </Link>
+              ) : (
+                <span className="catalog-page-disabled" aria-disabled="true">Next <ChevronRight aria-hidden="true" /></span>
+              )}
             </nav>
           )}
           <section className="store-reviews-section">
