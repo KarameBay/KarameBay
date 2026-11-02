@@ -36,6 +36,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:staging:prepare": "node scripts/prepare-staging.mjs",
     "db:setup": "prisma db push && npm run db:seed",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
