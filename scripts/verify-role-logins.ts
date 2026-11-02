@@ -1,3 +1,5 @@
+export {};
+
 const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
 const testPassword = process.env.TEST_ACCOUNT_PASSWORD;
 if (!testPassword) throw new Error("TEST_ACCOUNT_PASSWORD is required.");

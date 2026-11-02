@@ -1,3 +1,5 @@
+export {};
+
 const base = process.env.TEST_BASE_URL;
 const password = process.env.TEST_ACCOUNT_PASSWORD;
 if (!base || !password) throw new Error("TEST_BASE_URL and TEST_ACCOUNT_PASSWORD are required.");
