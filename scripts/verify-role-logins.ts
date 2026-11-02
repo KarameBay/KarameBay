@@ -28,6 +28,14 @@ const accounts = [
     cookie: "karame_rider_session",
     redirectTo: "/rider",
   },
+  {
+    email: "partner@karamebay.rw",
+    audience: "partner",
+    portal: "partner",
+    role: "PARTNER",
+    cookie: "karame_partner_session",
+    redirectTo: "/partner",
+  },
 ] as const;
 
 async function main() {

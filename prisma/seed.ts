@@ -55,12 +55,14 @@ async function main() {
     "Admin",
     "ADMIN",
   );
+  let stagingPartnerId: string | null = null;
   if (process.env.STAGING_SEED_ACCOUNTS === "true") {
     if (String(process.env.NODE_ENV) !== "staging")
       throw new Error("Staging test accounts require NODE_ENV=staging.");
     await user("customer@karamebay.rw", "+250788000002", "Staging", "Customer", "CUSTOMER");
     const rider = await user("rider@karamebay.rw", "+250788000003", "Staging", "Rider", "RIDER");
     const partner = await user("partner@karamebay.rw", "+250788000004", "Staging", "Partner", "PARTNER");
+    stagingPartnerId = partner.id;
     await db.user.update({ where: { id: partner.id }, data: { emailVerifiedAt: new Date() } });
     await db.riderProfile.upsert({
       where: { userId: rider.id },
@@ -109,7 +111,7 @@ async function main() {
 
   const stores = [
     {
-      ownerId: admin.id,
+      ownerId: stagingPartnerId ?? admin.id,
       slug: "java-house-kigali-heights",
       name: "Java House Kigali Heights",
       type: "RESTAURANT",
