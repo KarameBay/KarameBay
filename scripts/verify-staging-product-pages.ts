@@ -19,6 +19,11 @@ async function main() {
   const cookie = login.headers.get("set-cookie")?.split(";")[0];
   if (!cookie) throw new Error("Customer session cookie missing.");
 
+  const homepage = await fetch(`${base}/`, { headers: { cookie } });
+  const homeHtml = await homepage.text();
+  if (!homepage.ok || !homeHtml.includes("Choose a local shop") || !homeHtml.includes("home-partner-grid"))
+    throw new Error(`Customer shopping homepage failed: ${homepage.status}`);
+
   const storePath = "/stores/java-house-kigali-heights";
   const store = await fetch(base + storePath, { headers: { cookie } });
   const storeHtml = await store.text();
