@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { formatRwf } from "@/lib/money";
-import { productImage } from "@/lib/product-images";
+import { hasProductPhoto, productImage } from "@/lib/product-images";
 import { AddToCart } from "./add-to-cart";
 import { ProductFallbackArt } from "./product-fallback-art";
 
@@ -35,7 +35,7 @@ export function ProductCard({
     categoryName: product.category.name,
     productName: product.name,
   });
-  const usesPlaceholder = imageSrc.includes("/images/default-");
+  const usesPlaceholder = !hasProductPhoto(product.imageUrl);
   const cardContent = (
     <>
       <div className="catalog-product-image">

@@ -28,7 +28,7 @@ import {
   type RestaurantConfiguration,
 } from "@/lib/restaurant-menu";
 import type { CartProduct } from "@/lib/cart-types";
-import { productImage } from "@/lib/product-images";
+import { hasProductPhoto, productImage } from "@/lib/product-images";
 
 type SelectionMap = Record<string, string[]>;
 type AddOnGroup = {
@@ -43,7 +43,7 @@ type AddOnGroup = {
 export function RestaurantProductDetail({ product }: { product: RestaurantMenuProduct }) {
   const router = useRouter();
   const cart = useCart();
-  const hasProductPhoto = Boolean(product.imageUrl?.trim() && product.imageUrl !== "/images/default-product.jpg");
+  const hasPhoto = hasProductPhoto(product.imageUrl);
   const initialVariant =
     product.variants.find((variant) => variant.isDefault && variant.isAvailable) ??
     product.variants.find((variant) => variant.isAvailable) ??
@@ -341,7 +341,7 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
           </div>
           <div className="menu-engine-product-overview">
             <div className="menu-engine-product-photo">
-              {hasProductPhoto ? (
+              {hasPhoto ? (
                 <Image src={product.imageUrl!} alt={product.name} fill sizes="(max-width: 720px) 100vw, 250px" unoptimized />
               ) : (
                 <ProductFallbackArt category={product.category.name} restaurant />

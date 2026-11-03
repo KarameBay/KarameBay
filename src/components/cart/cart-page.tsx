@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { formatRwf } from "@/lib/money";
-import { productImage } from "@/lib/product-images";
+import { hasProductPhoto, productImage } from "@/lib/product-images";
+import { ProductFallbackArt } from "@/components/catalog/product-fallback-art";
 import { EBM_DETAILS_STORAGE_KEY, EbmDetails, readStoredEbm } from "@/lib/cart-types";
 
 function itemKey(item: { lineKey?: string; id: string }) {
@@ -168,12 +169,11 @@ export function CartPage() {
             {cart.items.map((item) => (
               <article className="cart-item" key={itemKey(item)}>
                 <div className="cart-item-image">
-                  <img
-                    src={productImage(item.imageUrl, { catalogEngine: item.catalogEngine, productName: item.name })}
-                    alt={item.name}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  {hasProductPhoto(item.imageUrl) ? (
+                    <img src={productImage(item.imageUrl, { catalogEngine: item.catalogEngine, productName: item.name })} alt={item.name} loading="lazy" decoding="async" />
+                  ) : (
+                    <ProductFallbackArt category={item.catalogEngine === "RESTAURANT" ? "Menu item" : "Product"} restaurant={item.catalogEngine === "RESTAURANT"} />
+                  )}
                 </div>
                 <div className="cart-item-name">
                   <h2>{item.name}</h2>

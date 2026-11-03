@@ -25,7 +25,8 @@ import {
   validSavedDeliveryQuote,
 } from "@/lib/delivery";
 import { formatRwf } from "@/lib/money";
-import { productImage } from "@/lib/product-images";
+import { hasProductPhoto, productImage } from "@/lib/product-images";
+import { ProductFallbackArt } from "@/components/catalog/product-fallback-art";
 import { EBM_DETAILS_STORAGE_KEY, EbmDetails, readStoredEbm } from "@/lib/cart-types";
 
 const emptyEbm: EbmDetails = { requested: false, usePhone: false, phone: "", tin: "", ownerName: "", purchaseCode: "" };
@@ -270,12 +271,11 @@ export function CheckoutReview() {
             {cart.items.map((item) => (
               <article className="review-item" key={item.lineKey ?? item.id}>
                 <div>
-                  <img
-                    src={productImage(item.imageUrl, { catalogEngine: item.catalogEngine, productName: item.name })}
-                    alt={item.name}
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  {hasProductPhoto(item.imageUrl) ? (
+                    <img src={productImage(item.imageUrl, { catalogEngine: item.catalogEngine, productName: item.name })} alt={item.name} loading="lazy" decoding="async" />
+                  ) : (
+                    <ProductFallbackArt category={item.catalogEngine === "RESTAURANT" ? "Menu item" : "Product"} restaurant={item.catalogEngine === "RESTAURANT"} />
+                  )}
                 </div>
                 <span>
                   <b>{item.name}</b>

@@ -86,6 +86,10 @@
 .cart-summary>div { font-size: 14px; }
 .cart-summary p { font-size: 12px; line-height: 1.45; }
 .cart-checkout { min-height: 48px; font-size: 14px; }
+.cart-item-image .catalog-product-fallback { padding: 4px; }
+.cart-item-image .catalog-product-fallback-mark { width: 34px; height: 34px; border-radius: 10px; }
+.cart-item-image .catalog-product-fallback-mark svg { width: 20px; height: 20px; }
+.cart-item-image .catalog-product-fallback-label, .cart-item-image .catalog-product-fallback small { display: none; }
 @media (max-width: 600px) {
   .cart-item-name h2 { font-size: 14px; }
   .cart-summary p { font-size: 11px; }
