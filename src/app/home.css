@@ -629,3 +629,67 @@
 @media (prefers-reduced-motion: reduce) {
   .home-partner-grid .browse-store-card { transition: none; }
 }
+
+/* A compact shopping first entrance with the Karame rider kept in view. */
+.home-hero { height: 264px; background: #f7f0e4; border-bottom: 1px solid #e9decc; }
+.home-hero-image {
+  background-image: linear-gradient(90deg, #f7f0e4 0%, #f7f0e4 39%, #f7f0e4c9 54%, #f7f0e400 74%), url("/images/karame-rider-hero.png");
+  background-size: auto 170%;
+  background-position: right 34%;
+}
+.home-hero-content { max-width: 1320px; padding: 24px 28px; }
+.home-hero-intro { width: min(58%, 680px); }
+.home-hero .eyebrow { padding: 6px 11px; background: #eddfc7; color: #945b0f; font-size: 10px; letter-spacing: .14em; }
+.home-hero h1 { max-width: 650px; margin: 11px 0 9px; font-size: clamp(34px, 3.7vw, 52px); line-height: 1.01; letter-spacing: -.055em; }
+.home-hero-copy > p { color: #675a49; font-size: 15px; line-height: 1.45; }
+.home-hero .home-search-shell { max-width: 590px; margin-top: 17px; }
+.home-hero .home-search { height: 52px; border-color: #dfcfb6; border-radius: 13px; box-shadow: 0 12px 28px #48311320; }
+.home-hero .home-search input { font-size: 14px; }
+.home-hero .home-search button { height: 42px; min-width: 94px; font-size: 13px; }
+.home-stores { max-width: 1320px; padding: 23px 28px 30px; }
+.home-stores .home-section-title { margin-bottom: 18px; }
+.home-stores .home-section-title h2 { margin: 4px 0 3px; font-size: clamp(29px, 2.8vw, 38px); letter-spacing: -.04em; }
+.home-stores .home-section-title p { color: #706455; font-size: 13px; }
+.home-stores .home-section-title > a { font-size: 12px; }
+.home-partner-grid { gap: 18px; }
+.home-partner-grid .browse-store-card { border-radius: 20px; }
+.home-partner-grid .store-artwork { height: 162px; flex-basis: 162px; }
+.home-partner-grid .browse-store-content { padding: 15px 17px 16px; }
+.home-partner-grid .browse-store-content h2 { margin: 2px 0 7px; font-size: 19px; }
+.home-partner-grid .browse-store-content > p { font-size: 12px; }
+.home-partner-grid .browse-store-meta { margin-top: 13px; padding-top: 12px; gap: 8px 17px; }
+.home-partner-grid .browse-store-meta span { font-size: 11px; }
+.home-partner-grid .browse-store-meta svg { width: 15px; }
+.home-partner-grid .status-pill { padding: 7px 10px; font-size: 10px; }
+.home-services { max-width: 1320px; padding: 24px 28px 34px; border-top: 1px solid #f0e9de; }
+.home-services-heading h2 { font-size: 27px; }
+.home-service-card { min-height: 82px; border-color: #e9ded0; border-radius: 15px; }
+.home-service-card b { font-size: 14px; }
+.home-service-card small { font-size: 11px; }
+.home-service-card > span { width: 42px; height: 42px; border-radius: 12px; }
+.home-trust { max-width: 1264px; }
+.home-trust b { font-size: 13px; }
+.home-trust small { font-size: 11px; }
+
+@media (max-width: 850px) {
+  .home-hero { height: 240px; }
+  .home-hero-intro { width: min(68%, 570px); }
+  .home-hero h1 { font-size: clamp(32px, 4.5vw, 43px); }
+  .home-hero-image { background-size: auto 148%; }
+}
+@media (max-width: 680px) {
+  .home-hero { height: 244px; }
+  .home-hero-image { background-image: linear-gradient(90deg, #f7f0e4 0%, #f7f0e4f0 48%, #f7f0e477 86%), url("/images/karame-rider-hero.png"); background-size: auto 120%; }
+  .home-hero-content { padding: 17px 16px; }
+  .home-hero-intro { width: min(100%, 390px); }
+  .home-hero h1 { max-width: 300px; margin: 9px 0 7px; font-size: clamp(29px, 8vw, 36px); }
+  .home-hero-copy > p { max-width: 265px; font-size: 12px; }
+  .home-hero .home-search-shell { margin-top: 14px; }
+  .home-stores { padding: 20px 15px 26px; }
+  .home-stores .home-section-title h2 { font-size: 27px; }
+  .home-partner-grid .store-artwork { height: 148px; flex-basis: 148px; }
+  .home-partner-grid .browse-store-content { padding: 13px 15px 14px; }
+  .home-partner-grid .browse-store-content h2 { font-size: 18px; }
+  .home-services { padding: 22px 15px 28px; }
+  .home-service-card { min-height: 74px; }
+}
