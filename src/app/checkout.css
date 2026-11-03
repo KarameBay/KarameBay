@@ -70,6 +70,17 @@
   font-weight: 800;
 }
 .review-error a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+
+/* Keep payment and order details legible at every checkout width. */
+.review-item b { font-size: 15px; }
+.review-item small, .review-item>strong { font-size: 12px; }
+.address-card>div span { font-size: 12px; }
+.momo-brand small, .momo-code small { font-size: 11px; }
+.momo-name, .momo-card li { font-size: 13px; }
+.payment-confirm b { font-size: 13px; }
+.payment-confirm small { font-size: 12px; }
+.review-summary>div:not(.review-status):not(.review-error) { font-size: 13px; }
+.place-order { min-height: 48px; font-size: 14px; }
 .review-error-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 9px; }
 .review-error-actions button { min-height: 38px; border: 1px solid #a44238; border-radius: 8px; background: #fff; color: #753027; padding: 7px 12px; font: inherit; font-weight: 800; cursor: pointer; }
 .review-error-actions button:hover { background: #fff8f6; }
