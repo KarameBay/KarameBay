@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/cart-provider";
+import { ProductFallbackArt } from "@/components/catalog/product-fallback-art";
 import { formatRwf } from "@/lib/money";
 import {
   buildRestaurantConfigurationKey,
@@ -42,6 +43,7 @@ type AddOnGroup = {
 export function RestaurantProductDetail({ product }: { product: RestaurantMenuProduct }) {
   const router = useRouter();
   const cart = useCart();
+  const hasProductPhoto = Boolean(product.imageUrl?.trim() && product.imageUrl !== "/images/default-product.jpg");
   const initialVariant =
     product.variants.find((variant) => variant.isDefault && variant.isAvailable) ??
     product.variants.find((variant) => variant.isAvailable) ??
@@ -339,17 +341,11 @@ export function RestaurantProductDetail({ product }: { product: RestaurantMenuPr
           </div>
           <div className="menu-engine-product-overview">
             <div className="menu-engine-product-photo">
-              <Image
-                src={productImage(product.imageUrl, {
-                  catalogEngine: "RESTAURANT",
-                  categoryName: product.category.name,
-                  productName: product.name,
-                })}
-                alt={product.name}
-                fill
-                sizes="(max-width: 720px) 100vw, 250px"
-                unoptimized
-              />
+              {hasProductPhoto ? (
+                <Image src={product.imageUrl!} alt={product.name} fill sizes="(max-width: 720px) 100vw, 250px" unoptimized />
+              ) : (
+                <ProductFallbackArt category={product.category.name} restaurant />
+              )}
             </div>
             <div className="menu-engine-heading-copy">
               <span className="catalog-kicker">{product.category.name}</span>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatRwf } from "@/lib/money";
 import { productImage } from "@/lib/product-images";
 import { AddToCart } from "./add-to-cart";
+import { ProductFallbackArt } from "./product-fallback-art";
 
 type ProductCardData = {
   id: string;
@@ -38,15 +39,11 @@ export function ProductCard({
   const cardContent = (
     <>
       <div className="catalog-product-image">
-        <img
-          src={imageSrc}
-          alt={product.name}
-          width={480}
-          height={360}
-          className={usesPlaceholder ? "placeholder" : undefined}
-          loading="lazy"
-          decoding="async"
-        />
+        {usesPlaceholder ? (
+          <ProductFallbackArt category={product.category.name} restaurant={product.catalogEngine === "RESTAURANT"} />
+        ) : (
+          <img src={imageSrc} alt={product.name} width={480} height={360} loading="lazy" decoding="async" />
+        )}
         <em className={product.isAvailable ? "available" : "unavailable"}>
           {product.isAvailable ? "Available" : "Unavailable"}
         </em>
