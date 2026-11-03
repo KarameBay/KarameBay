@@ -24,6 +24,8 @@ async function main() {
   const storeHtml = await store.text();
   if (!store.ok || !storeHtml.includes("Java House Kigali Heights"))
     throw new Error(`Restaurant page failed: ${store.status}`);
+  if (!storeHtml.includes("catalog-product-fallback"))
+    throw new Error("Missing product photos did not render the branded fallback.");
 
   const productPaths = [...new Set(
     [...storeHtml.matchAll(/\/stores\/java-house-kigali-heights\/products\/[a-z0-9]+/gi)]
